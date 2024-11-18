@@ -1,10 +1,9 @@
-export default function Products() {
-    return (
-      <div>
-        <h1>Nos Produits</h1>
-        <p>Découvrez notre sélection de produits.</p>
-        {/* Affichez la liste des produits ici */}
-      </div>
-    );
-  }
-  
+import ProductsSection from "./ProductsSection"
+
+export default function ProductsPage() {
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-10">
+      <ProductsSection />
+    </div>
+  );
+}

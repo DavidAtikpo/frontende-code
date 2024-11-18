@@ -12,8 +12,17 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
         customYellow: "#fbbf24",
+        customBlue: "#0505A8",
+        Primary:"#FFCEAD",
+        peach: {
+          100: "#fde8df",
+          200: "#fcd6c9",
+        },
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require("tailwindcss"),
+    require("autoprefixer"),
+  ],
 } satisfies Config;
