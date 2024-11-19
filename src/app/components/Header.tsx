@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FaShoppingCart, FaHeart, FaUser } from "react-icons/fa";
+import Link from "next/link";
 
 // Déclaration de l'interface pour les éléments du panier
 interface CartItem {
@@ -97,14 +98,63 @@ const Header = ({ cart }: { cart: CartItem[] }) => {
             <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="relative">
               <FaUser size={18} />
             </button>
-            {isProfileOpen && !isAuthenticated && (
-              <div className="absolute right-0 mt-2 w-72 bg-white text-gray-800 rounded-lg shadow-lg p-4 z-20">
-                <h3 className="font-bold text-lg mb-4">Connectez-vous</h3>
+            {isProfileOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg p-6 z-50">
+                <h3 className="text-xl font-bold text-center mb-6 text-gray-800">Connectez-vous</h3>
+                
                 <form className="space-y-4">
-                  <input type="email" placeholder="Adresse mail" className="w-full border px-2 py-1" />
-                  <input type="password" placeholder="Mot de passe" className="w-full border px-2 py-1" />
-                  <button className="w-full bg-blue-600 text-white py-2 rounded">Connexion</button>
+                  <div>
+                    <input 
+                      type="email" 
+                      placeholder="Adresse mail" 
+                      className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  
+                  <div className="relative">
+                    <input 
+                      type="password" 
+                      placeholder="Mot de passe" 
+                      className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                    />
+                    <button 
+                      type="button"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Link
+                      href="/forgot-password" 
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      Mot de passe oublié
+                    </Link>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors"
+                  >
+                    CONNEXION →
+                  </button>
                 </form>
+
+                <div className="mt-4 text-center">
+                  <p className="text-sm text-gray-600">Pas de compte déjà ?</p>
+                  <Link 
+                    href="/register" 
+                    className="block w-full mt-2 py-2 text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors"
+                  >
+                    CRÉER VOTRE COMPTE
+                  </Link>
+                </div>
+
               </div>
             )}
           </div>
