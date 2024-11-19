@@ -1,4 +1,5 @@
 const BASE_URL = "http://localhost:5000/api";
+
 // Route pour avoir tous les produits
 export const fetchProducts = async () => {
   try {
@@ -9,7 +10,6 @@ export const fetchProducts = async () => {
     console.error(error);
     return [];
   }
- 
 };
 
 // recuperer les produits par Id
@@ -93,6 +93,18 @@ export const fetchNewArrivals = async () => {
     const response = await fetch(`${BASE_URL}/products/new-arrivals`);
     if (!response.ok) throw new Error("Erreur lors de la récupération des nouveaux arrivages");
     return await response.json();
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+};
+
+// route pour que admin ajoute des produits 
+export const addProduct = async () => {
+  try {
+    const response = await fetch(`${BASE_URL}/product/add-product`);
+    if (!response.ok) throw new Error("Erreur lors de la récupération des ventes rapides");
+    return response.json();
   } catch (error) {
     console.error(error);
     return [];
