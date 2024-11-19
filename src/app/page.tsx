@@ -5,10 +5,14 @@ import Banner from "./components/Banner";
 import DualBanner from "./components/DualBanner";
 import CategoriesGrid from "./components/ProductCategories";
 import LatestNews from "./components/Articles";
+import BenefitsSection from "./components/BenefitsSection";
+import ProductSlider from "./components/ProductSlider";
 
 export default function Home() {
   return (
     <div>
+      <ProductSlider/>
+      <BenefitsSection/>
       <PromotionsSection/>
       <CategoriesSection/>
       <HomeProducts />
