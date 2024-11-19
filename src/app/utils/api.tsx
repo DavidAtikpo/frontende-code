@@ -12,19 +12,6 @@ export const fetchProducts = async () => {
   }
 };
 
-// recuperer les produits par Id
-export const fetchProductById = async (id: string) => {
-  try {
-    const response = await fetch(`${BASE_URL}/product/${id}`);
-    if (!response.ok) throw new Error("Erreur lors de la récupération des ventes rapides");
-    return response.json();
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
- 
-};
-
 // Connexion utilisateur
 export const userLogin = async () =>{
   try {
@@ -39,7 +26,7 @@ export const userLogin = async () =>{
 }
 
 // inscription de l'utilisateur
-export const register = async () =>{
+export const userRegister = async () =>{
   try {
     const response = await fetch(`${BASE_URL}/user/register`)
     if (!response.ok) throw new Error("Erreur lors de la récupération des ventes rapides");
@@ -110,3 +97,5 @@ export const addProduct = async () => {
     return [];
   }
 };
+
+//

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { FaHeart, FaShareAlt } from "react-icons/fa";
+import { FaHeart, FaShareAlt, FaStar } from "react-icons/fa";
 
 const BASE_URL = "http://localhost:5000/api";
 
@@ -18,31 +18,30 @@ interface Product {
   category: string;
   availability: string;
   description: string;
-  features?: string[]; // Marked as optional to handle undefined
-  shippingInfo?: { type: string; details: string }[]; // Optional
-  images?: string[]; // Optional
+  features?: string[];
+  shippingInfo?: { type: string; details: string }[];
+  images?: string[];
 }
 
-export default function ProductDetailPage() {
+const ProductDetailPage = () => {
   const params = useParams();
   const productId = params?.productId;
 
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
 
-  // Fetch the product data
+  // Fetch product data
   useEffect(() => {
-    if (!productId) return; // Ensure productId exists
+    if (!productId) return;
+
     const fetchProduct = async () => {
       try {
         const response = await fetch(`${BASE_URL}/product/product-detail/${productId}`);
-        if (!response.ok) {
-          throw new Error("Product not found");
-        }
+        if (!response.ok) throw new Error("Product not found");
         const data = await response.json();
         setProduct(data);
       } catch (error) {
-        console.error("Error fetching the product:", error);
+        console.error("Error fetching product:", error);
       }
     };
 
@@ -54,11 +53,23 @@ export default function ProductDetailPage() {
   };
 
   if (!product) {
-    return <p className="text-center py-10">Loading product...</p>;
+    return <p className="text-center py-10">Chargement du produit...</p>;
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto px-6 py-10">
+      {/* Breadcrumb */}
+      <nav className="text-gray-600 text-sm mb-6">
+        <a href="/" className="hover:underline">
+          Accueil
+        </a>{" "}
+        /{" "}
+        <a href="/products" className="hover:underline">
+          Boutique
+        </a>{" "}
+        / {product.title}
+      </nav>
+
       {/* Upper Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Images */}
@@ -70,7 +81,7 @@ export default function ProductDetailPage() {
               className="w-full h-96 object-cover"
             />
           </div>
-          <div className="flex mt-4 space-x-2">
+          <div className="flex mt-4 space-x-2 overflow-x-auto">
             {product.images?.map((img, index) => (
               <img
                 key={index}
@@ -85,11 +96,25 @@ export default function ProductDetailPage() {
         {/* Product Information */}
         <div>
           <h1 className="text-2xl font-bold mb-2">{product.title}</h1>
-          <p className="text-sm text-gray-600 mb-4">SKU: {product.sku}</p>
-          <p className="text-sm text-gray-600 mb-4">Vendor: {product.vendor}</p>
+          <div className="flex items-center mb-4">
+            <FaStar className="text-yellow-500 mr-1" />
+            <FaStar className="text-yellow-500 mr-1" />
+            <FaStar className="text-yellow-500 mr-1" />
+            <FaStar className="text-yellow-500 mr-1" />
+            <FaStar className="text-gray-300" />
+            <span className="text-sm text-gray-500 ml-2">(26 avis)</span>
+          </div>
+          <p className="text-sm text-gray-600 mb-2">SKU: {product.sku}</p>
+          <p className="text-sm text-gray-600 mb-2">Vendeur: {product.vendor}</p>
+          <p className="text-sm text-gray-600 mb-2">
+            Catégorie: <span className="text-blue-600">{product.category}</span>
+          </p>
           <p className="text-2xl font-bold text-blue-600 mb-2">{product.price} FCFA</p>
           <p className="text-sm text-gray-500 line-through mb-2">{product.oldPrice} FCFA</p>
-          <p className="text-sm text-green-600">{product.discount}% off</p>
+          <p className="text-sm text-green-600 mb-4">{product.discount}% de réduction</p>
+          <p className={`mb-4 ${product.availability === "Disponible" ? "text-green-600" : "text-red-600"}`}>
+            {product.availability}
+          </p>
           <div className="flex items-center mt-4 space-x-4">
             <div className="flex items-center">
               <button
@@ -107,39 +132,66 @@ export default function ProductDetailPage() {
               </button>
             </div>
             <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
-              Add to Cart
+              Ajouter au panier
             </button>
             <button className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
-              Buy Now
+              Acheter
             </button>
           </div>
           <div className="flex items-center mt-4 space-x-4">
             <button className="flex items-center text-gray-600">
               <FaHeart className="mr-2" />
-              Add to Wishlist
+              Ajouter à la liste de souhaits
             </button>
             <button className="flex items-center text-gray-600">
               <FaShareAlt className="mr-2" />
-              Share
+              Partager
             </button>
           </div>
         </div>
       </div>
 
-      {/* Tabs for Description */}
+      {/* Tabs */}
       <div className="mt-8">
         <div className="flex space-x-6 border-b pb-2">
           <button className="font-bold text-blue-600">DESCRIPTION</button>
+          <button className="text-gray-600">INFORMATIONS SUPPL.</button>
+          <button className="text-gray-600">SPÉCIFICATION</button>
+          <button className="text-gray-600">AVIS</button>
         </div>
         <div className="mt-4">
           <p>{product.description}</p>
           <ul className="mt-4 list-disc pl-6">
             {product.features?.map((feature, index) => (
               <li key={index}>{feature}</li>
-            )) || <li>No features available</li>}
+            )) || <li>Pas de caractéristiques disponibles</li>}
+          </ul>
+        </div>
+      </div>
+
+      {/* Shipping Info */}
+      <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <h3 className="font-bold mb-2">Caractéristiques</h3>
+          <ul className="list-disc pl-6">
+            {product.features?.map((feature, index) => (
+              <li key={index}>{feature}</li>
+            )) || <li>Pas de caractéristiques disponibles</li>}
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-bold mb-2">Informations sur la livraison</h3>
+          <ul className="list-disc pl-6">
+            {product.shippingInfo?.map((info, index) => (
+              <li key={index}>
+                <strong>{info.type}:</strong> {info.details}
+              </li>
+            )) || <li>Pas d'informations disponibles</li>}
           </ul>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default ProductDetailPage;

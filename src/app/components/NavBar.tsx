@@ -162,7 +162,7 @@ const NavigationBar = () => {
 
         {/* Autres liens de navigation */}
         <li>
-          <a href="#" className="hover:underline text-gray-800">
+          <a href="/evenement" className="hover:underline text-gray-800">
             Événements
           </a>
         </li>
