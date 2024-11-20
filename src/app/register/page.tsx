@@ -10,16 +10,20 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import AuthTabs from "../components/auth/AuthTabs";
 
+const BASE_URL = "http://localhost:5000/api";
+
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,13 +31,46 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
+
     if (formData.password !== formData.confirmPassword) {
-      alert("Les mots de passe ne correspondent pas");
+      setError("Les mots de passe ne correspondent pas.");
       return;
     }
+
     setIsLoading(true);
-    // Logique d'inscription à implémenter
-    setTimeout(() => setIsLoading(false), 2000);
+    try {
+      const response = await fetch(`${BASE_URL}/user/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Une erreur est survenue.");
+      }
+
+      const data = await response.json();
+      setSuccess("Compte créé avec succès !");
+      console.log("Inscription réussie :", data);
+
+      // Redirection ou autres actions après succès
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -41,16 +78,29 @@ export default function RegisterPage() {
       <Card className="w-full max-w-[400px]">
         <CardContent className="pt-6">
           <AuthTabs />
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nom complet</Label>
-              <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">Adresse mail</Label>
-              <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
             </div>
 
             <div className="space-y-2">
@@ -72,7 +122,11 @@ export default function RegisterPage() {
                   className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
@@ -95,7 +149,11 @@ export default function RegisterPage() {
                   className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
@@ -106,54 +164,30 @@ export default function RegisterPage() {
                 J'accepte les{" "}
                 <Link href="/terms" className="text-[#1D4ED8] hover:underline">
                   conditions d'utilisation
-                </Link>
-                {" "}et la{" "}
-                <Link href="/privacy" className="text-[#1D4ED8] hover:underline">
+                </Link>{" "}
+                et la{" "}
+                <Link
+                  href="/privacy"
+                  className="text-[#1D4ED8] hover:underline"
+                >
                   politique de confidentialité
                 </Link>
               </label>
             </div>
 
-            <Button 
-              type="submit" 
+            {error && <div className="text-sm text-red-600">{error}</div>}
+            {success && <div className="text-sm text-green-600">{success}</div>}
+
+            <Button
+              type="submit"
               className="w-full bg-[#1D4ED8] hover:bg-[#1e40af]"
               disabled={isLoading}
             >
               {isLoading ? "Création en cours..." : "CRÉER UN COMPTE"}
             </Button>
           </form>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">
-                OU UTILISER
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <Button variant="outline" className="w-full" type="button">
-              <img src="/google-icon.png" alt="Google" className="w-5 h-5 mr-2" />
-              Continuer avec Google
-            </Button>
-            <Button variant="outline" className="w-full" type="button">
-              <img src="/apple-icon.png" alt="Apple" className="w-5 h-5 mr-2" />
-              Continuer avec Apple
-            </Button>
-          </div>
-
-          <div className="text-center text-sm text-gray-500">
-            Déjà un compte ?{" "}
-            <Link href="/login" className="text-[#1D4ED8] hover:underline">
-              Se connecter
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>
   );
 }
-  
