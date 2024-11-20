@@ -1,15 +1,111 @@
-export default function Login() {
-    return (
-      <div>
-        <h1>Connexion</h1>
-        <form>
-          <label>Email :</label>
-          <input type="email" name="email" />
-          <label>Mot de passe :</label>
-          <input type="password" name="password" />
-          <button type="submit">Se connecter</button>
-        </form>
-      </div>
-    );
-  }
-  
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import AuthTabs from "../components/auth/AuthTabs";
+
+export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    // Logique de connexion à implémenter
+    setTimeout(() => setIsLoading(false), 2000);
+  };
+
+  return (
+    <div className="container flex min-h-screen w-full items-center justify-center p-4">
+      <Card className="w-full max-w-[400px]">
+        <CardContent className="pt-6">
+          <AuthTabs />
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold">Connexion</h1>
+            <p className="text-sm text-gray-500 mt-2">
+              Connectez-vous à votre compte
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Adresse mail</Label>
+              <Input id="email" type="email" required />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Mot de passe</Label>
+                <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+                  Mot de passe oublié
+                </Link>
+              </div>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full bg-[#1D4ED8] hover:bg-[#1e40af]"
+              disabled={isLoading}
+            >
+              {isLoading ? "Connexion en cours..." : "CONNEXION"}
+            </Button>
+          </form>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">
+                OU UTILISER
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Button variant="outline" className="w-full" type="button">
+              <img src="/google-icon.png" alt="Google" className="w-5 h-5 mr-2" />
+              Connexion avec Google
+            </Button>
+            <Button variant="outline" className="w-full" type="button">
+              <img src="/apple-icon.png" alt="Apple" className="w-5 h-5 mr-2" />
+              Connexion avec Apple
+            </Button>
+          </div>
+
+          <div className="text-center text-sm text-gray-500">
+            Pas encore de compte ?{" "}
+            <Link href="/register" className="text-[#1D4ED8] hover:underline">
+              Créer un compte
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
