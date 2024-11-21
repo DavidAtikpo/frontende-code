@@ -1,233 +1,121 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, MapPin, Users, Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 const BASE_URL = "http://localhost:5000/api";
 
-export default function AddEventPage() {
-  const router = useRouter();
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    date: "",
-    time: "",
-    location: "",
-    maxParticipants: "",
-    price: "",
-    image: null as File | null,
-  });
-  const [isLoading, setIsLoading] = useState(false);
+interface Order {
+  id: string;
+  orderNumber: string;
+  status: "IN PROGRESS" | "COMPLETED" | "CANCELED";
+  date: string;
+  total: number;
+  productsCount: number;
+}
+
+export default function OrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [imagePreview, setImagePreview] = useState<string>("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setFormData({ ...formData, image: file });
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-    setSuccess("");
-
-    const formDataToSend = new FormData();
-    Object.entries(formData).forEach(([key, value]) => {
-      if (value !== null) {
-        formDataToSend.append(key, value);
-      }
-    });
-
-    try {
-      const response = await fetch(`${BASE_URL}/events`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-        body: formDataToSend,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Une erreur est survenue.");
-      }
-
-      setSuccess("Événement créé avec succès !");
-      setTimeout(() => {
-        router.push("/admin/events");
-      }, 2000);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "IN PROGRESS": return "text-blue-600";
+      case "COMPLETED": return "text-green-600";
+      case "CANCELED": return "text-red-600";
+      default: return "text-gray-600";
     }
   };
 
   return (
-    <div className="container max-w-2xl mx-auto p-4">
-      <div className="flex items-center mb-6">
-        <Link href="/admin/events">
-          <Button variant="ghost" className="mr-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour
+    <div className="container mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">HISTORIQUE DES COMMANDES</h1>
+
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                  NUMÉRO DE COMMANDE
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                  STATUT
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                  DATE
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                  TOTAL
+                </th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">
+                  ACTION
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {orders.map((order) => (
+                <tr key={order.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    #{order.orderNumber}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <span className={`font-medium ${getStatusColor(order.status)}`}>
+                      {order.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {new Date(order.date).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    ${order.total.toLocaleString()} ({order.productsCount} Produits)
+                  </td>
+                  <td className="px-6 py-4 text-right text-sm">
+                    <Link 
+                      href={`/admin/orders/${order.id}`}
+                      className="text-blue-600 hover:text-blue-900 font-medium"
+                    >
+                      Voir Détails →
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex items-center justify-center space-x-2 py-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
           </Button>
-        </Link>
-        <h1 className="text-2xl font-bold">Ajouter un événement</h1>
-      </div>
-
-      <Card>
-        <CardContent className="pt-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Titre de l'événement</Label>
-              <Input
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={4}
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="date">Date</Label>
-                <Input
-                  id="date"
-                  name="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="time">Heure</Label>
-                <Input
-                  id="time"
-                  name="time"
-                  type="time"
-                  value={formData.time}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="location">Lieu</Label>
-              <Input
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="maxParticipants">Nombre maximum de participants</Label>
-                <Input
-                  id="maxParticipants"
-                  name="maxParticipants"
-                  type="number"
-                  value={formData.maxParticipants}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="price">Prix (FCFA)</Label>
-                <Input
-                  id="price"
-                  name="price"
-                  type="number"
-                  value={formData.price}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="image">Image de l'événement</Label>
-              <div className="flex items-center space-x-4">
-                <Input
-                  id="image"
-                  name="image"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('image')?.click()}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Choisir une image
-                </Button>
-                {imagePreview && (
-                  <img 
-                    src={imagePreview} 
-                    alt="Aperçu" 
-                    className="h-20 w-20 object-cover rounded"
-                  />
-                )}
-              </div>
-            </div>
-
-            {error && <div className="text-sm text-red-600">{error}</div>}
-            {success && <div className="text-sm text-green-600">{success}</div>}
-
-            <div className="flex justify-end space-x-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push('/admin/events')}
-              >
-                Annuler
-              </Button>
-              <Button
-                type="submit"
-                className="bg-[#1D4ED8] hover:bg-[#1e40af]"
-                disabled={isLoading}
-              >
-                {isLoading ? "Création en cours..." : "Créer l'événement"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
+          {[1, 2, 3, 4, 5, 6].map((page) => (
+            <Button
+              key={page}
+              variant={currentPage === page ? "default" : "outline"}
+              size="icon"
+              onClick={() => setCurrentPage(page)}
+            >
+              {page.toString().padStart(2, '0')}
+            </Button>
+          ))}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setCurrentPage(prev => prev + 1)}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </Card>
     </div>
   );
