@@ -15,10 +15,12 @@ import {
   Settings,
   LogOut
 } from "lucide-react";
+import LogoutButton from "@/components/auth/LogoutButton";
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(true);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   const menuItems = [
     { 
@@ -40,6 +42,12 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       icon: Users, 
       label: "Utilisateurs", 
       href: "/admin/users" 
+    },
+    {
+      icon: Users,
+      label: "Demandes vendeurs",
+      href: "/admin/seller-requests",
+      badge: true // Pour afficher le nombre de demandes en attente
     },
     { 
       icon: MessageSquare, 
@@ -72,6 +80,11 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       href: "/logout" 
     }
   ];
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    window.location.href = "/";
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -125,6 +138,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </header>
         <div className="p-6">
+          <LogoutButton />
           {children}
         </div>
       </main>
