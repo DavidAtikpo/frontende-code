@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Stepper } from "@/components/ui/stepper";
@@ -66,7 +66,50 @@ interface SellerFormData {
 export default function SellerOnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<SellerFormData>({
-    // ... initialisation des données
+    type: "individual",
+    personalInfo: {
+      fullName: "",
+      companyName: "",
+      address: "",
+      phone: "",
+      email: "",
+      idNumber: "",
+      taxNumber: "",
+      legalRepName: "",
+      rccmNumber: "",
+    },
+    documents: {
+      idCard: null,
+      proofOfAddress: null,
+      photos: [],
+      taxCertificate: null,
+      rccm: null,
+      companyStatutes: null,
+    },
+    contract: {
+      signed: false,
+      signedDocument: null,
+    },
+    videoVerification: {
+      completed: false,
+      recordingUrl: "",
+    },
+    businessInfo: {
+      category: "",
+      description: "",
+      products: [],
+      bankDetails: {
+        type: "bank",
+        accountNumber: "",
+        bankName: "",
+      },
+      returnPolicy: "",
+    },
+    compliance: {
+      termsAccepted: false,
+      qualityStandardsAccepted: false,
+      antiCounterfeitingAccepted: false,
+    },
   });
 
   const steps = [
