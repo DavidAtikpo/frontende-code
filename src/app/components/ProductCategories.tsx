@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { fetchQuickSales, fetchBestSellers, fetchTopRated, fetchNewArrivals } from "../utils/api";
+// import { fetchQuickSales, fetchBestSellers, fetchTopRated, fetchNewArrivals } from "../utils/api";
 
 interface Product {
   _id: number;
@@ -18,10 +18,10 @@ const CategoriesGrid = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setQuickSales(await fetchQuickSales());
-      setBestSellers(await fetchBestSellers());
-      setTopRated(await fetchTopRated());
-      setNewArrivals(await fetchNewArrivals());
+      // setQuickSales(await fetchQuickSales());
+      // setBestSellers(await fetchBestSellers());
+      // setTopRated(await fetchTopRated());
+      // setNewArrivals(await fetchNewArrivals());
     };
 
     fetchProducts();
@@ -66,7 +66,7 @@ const CategoriesGrid = () => {
               <div key={product._id} className="border rounded-lg p-4 hover:shadow-lg transition">
                 <img src={product.image} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
                 <h4 className="text-sm font-semibold">{product.title}</h4>
-                <p className="text-blue-800 font-bold">${product.price}</p>
+                <p className="text-blue-800 font-bold">{product.price}cfa</p>
               </div>
             ))}
           </div>
@@ -80,7 +80,7 @@ const CategoriesGrid = () => {
               <div key={product._id} className="border rounded-lg p-4 hover:shadow-lg transition">
                 <img src={product.image} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
                 <h4 className="text-sm font-semibold">{product.title}</h4>
-                <p className="text-blue-800 font-bold">${product.price}</p>
+                <p className="text-blue-800 font-bold">{product.price}cfa</p>
               </div>
             ))}
           </div>

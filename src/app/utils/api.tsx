@@ -39,16 +39,16 @@ export const userRegister = async () =>{
 }
 
 // recuperer les plus vendu
-export const fetchQuickSales = async () => {
-  try {
-    const response = await fetch(`${BASE_URL}/products/quick-sales`);
-    if (!response.ok) throw new Error("Erreur lors de la récupération des ventes rapides");
-    return await response.json();
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
-};
+// export const fetchQuickSales = async () => {
+//   try {
+//     const response = await fetch(`${BASE_URL}/products/quick-sales`);
+//     if (!response.ok) throw new Error("Erreur lors de la récupération des ventes rapides");
+//     return await response.json();
+//   } catch (error) {
+//     console.error(error);
+//     return [];
+//   }
+// };
 
 // recuperer les meilleurs vendeurs
 export const fetchBestSellers = async () => {

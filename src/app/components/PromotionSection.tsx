@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { FaHeart, FaShoppingCart, FaEye } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import { useCartContext } from "../context/CartContext"; // Import du contexte
 
 interface Product {
   _id: number;
@@ -10,20 +11,20 @@ interface Product {
   images: string | string[];
   category: string;
   price: number;
-  discountPrice: number;
+  finalPrice: number;
   rating: number;
   discount?: number;
   isHot?: boolean;
   isBestSeller?: boolean;
-  quantity?: number; // Ajout pour gérer les quantités
+  quantity?: number;
 }
 
 const PromotionsSection = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [countdown, setCountdown] = useState<string>(""); // Compte à rebours
-  const [cart, setCart] = useState<Product[]>([]); // Panier
-  const [wishlist, setWishlist] = useState<Product[]>([]); // Liste de souhaits
   const router = useRouter();
+
+  const { state, dispatch } = useCartContext(); // Accès au contexte global
 
   // Récupérer les produits en promotion
   useEffect(() => {
@@ -71,32 +72,23 @@ const PromotionsSection = () => {
 
   // Ajouter un produit au panier
   const handleAddToCart = (product: Product) => {
-    setCart((prev) => {
-      const existingProduct = prev.find((item) => item._id === product._id);
-      if (existingProduct) {
-        return prev.map((item) =>
-          item._id === product._id
-            ? { ...item, quantity: (item.quantity || 1) + 1 }
-            : item
-        );
-      } else {
-        return [...prev, { ...product, quantity: 1 }];
-      }
+    dispatch({
+      type: "ADD_TO_CART",
+      payload: { ...product, quantity: 1 },
     });
-    console.log("Panier mis à jour :", product);
-    alert(`Ajouté au panier : ${product.title}`);
+    // alert(`Ajouté au panier : ${product.title}`);
   };
 
-  // Ajouter un produit à la liste de souhaits
-  const handleAddToWishlist = (product: Product) => {
-    setWishlist((prev) => {
-      if (prev.some((item) => item._id === product._id)) {
-        alert("Produit déjà ajouté à la liste de souhaits !");
-        return prev;
-      }
-      return [...prev, product];
-    });
-    alert(`Ajouté à la liste de souhaits : ${product.title}`);
+  // Ajouter ou retirer un produit de la wishlist
+  const handleToggleWishlist = (product: Product) => {
+    const isInWishlist = state.wishlist.find((item) => item._id === product._id);
+    if (isInWishlist) {
+      dispatch({ type: "REMOVE_FROM_WISHLIST", payload: product._id });
+      // alert(`Retiré de la liste de souhaits : ${product.title}`);
+    } else {
+      dispatch({ type: "ADD_TO_WISHLIST",payload: { ...product, quantity: 1 } });
+      // alert(`Ajouté à la liste de souhaits : ${product.title}`);
+    }
   };
 
   // Rediriger vers la page de détail du produit
@@ -134,8 +126,12 @@ const PromotionsSection = () => {
               />
               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
-                  onClick={() => handleAddToWishlist(product)}
-                  className="text-white bg-blue-600 p-2 rounded-full hover:bg-blue-800 transition"
+                  onClick={() => handleToggleWishlist(product)}
+                  className={`text-white p-2 rounded-full transition ${
+                    state.wishlist.find((item) => item._id === product._id)
+                      ? "bg-red-600 hover:bg-red-800"
+                      : "bg-blue-600 hover:bg-blue-800"
+                  }`}
                 >
                   <FaHeart size={20} />
                 </button>
@@ -160,10 +156,10 @@ const PromotionsSection = () => {
 
             {/* Prix */}
             <div className="flex items-center justify-between">
-              <span className="text-blue-800 font-bold">${product.discountPrice}</span>
+              <span className="text-blue-800 font-bold">{product.finalPrice}cfa</span>
               {product.discount && (
                 <span className="text-gray-500 line-through text-sm ml-2">
-                  ${product.price}
+                  {product.price}cfa
                 </span>
               )}
             </div>

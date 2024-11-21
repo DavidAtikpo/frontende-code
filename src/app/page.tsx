@@ -7,10 +7,13 @@ import CategoriesGrid from "./components/ProductCategories";
 import LatestNews from "./components/Articles";
 import BenefitsSection from "./components/BenefitsSection";
 import ProductSlider from "./components/ProductSlider";
+import NavigationBar from "./components/NavBar";
+
 
 export default function Home() {
   return (
     <div>
+      <NavigationBar/>
       <ProductSlider/>
       <BenefitsSection/>
       <PromotionsSection/>

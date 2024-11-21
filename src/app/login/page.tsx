@@ -44,8 +44,8 @@ export default function LoginPage() {
       console.log("Connexion réussie :", data);
 
       // Stockez le token ou effectuez une redirection
-      localStorage.setItem("authToken", data.token);
-      window.location.href = "/dashboard"; // Redirection après connexion réussie
+      localStorage.setItem("token", data.token);
+      window.location.href = "/"; // Redirection après connexion réussie
     } catch (err: any) {
       setError(err.message);
     } finally {
