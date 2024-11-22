@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation"; // Import correct pour Next.js 13
 import { Search, Eye, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 const BASE_URL = "http://localhost:5000/api";
 
 interface User {
-  id: string;
+  _id: string;
   name?: string;
   displayName?: string;
   email?: string;
@@ -27,6 +27,7 @@ export default function UsersListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const router = useRouter(); // Assurez-vous d'utiliser le bon hook pour le routage
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -61,6 +62,10 @@ export default function UsersListPage() {
       email.includes(searchTerm.toLowerCase())
     );
   });
+
+  const handleViewUser = (id: string) => {
+    router.push(`/admin/users/${id}`);
+  };
 
   if (isLoading) {
     return (
@@ -121,11 +126,11 @@ export default function UsersListPage() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
+                <tr key={user._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <img
-                        src={user.avatar || "/user-profile-svgrepo-com (1).svg"} // Avatar par défaut si absent
+                        src={user.avatar || "/user-profile-svgrepo-com (1).svg"}
                         alt={user.name || "Utilisateur"}
                         className="h-10 w-10 rounded-full object-cover"
                       />
@@ -150,8 +155,12 @@ export default function UsersListPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{user.region || "Non renseigné"}</div>
-                    <div className="text-sm text-gray-500">{user.zipCode || "Non renseigné"}</div>
+                    <div className="text-sm text-gray-900">
+                      {user.region || "Non renseigné"}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {user.zipCode || "Non renseigné"}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <span
@@ -165,11 +174,13 @@ export default function UsersListPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <Link href={`/admin/users/${user.id}`}>
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </Link>
+                    <Button
+                      onClick={() => handleViewUser(user._id)}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                   </td>
                 </tr>
               ))}

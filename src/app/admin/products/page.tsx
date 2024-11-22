@@ -1,17 +1,18 @@
 "use client";
 
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, Edit, Trash2, Eye, Grid, List as ListIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+
 const BASE_URL = "http://localhost:5000/api";
 
 interface Product {
   _id: string;
   name: string;
-  title:string;
+  title: string;
   price: number;
   category: string;
   status: "En stock" | "Rupture" | "En commande";
@@ -23,7 +24,7 @@ export default function ProductsListPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -31,7 +32,7 @@ export default function ProductsListPage() {
       try {
         const response = await fetch(`${BASE_URL}/product/get-all`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
 
@@ -51,14 +52,43 @@ export default function ProductsListPage() {
     fetchProducts();
   }, []);
 
+  const handleDeleteProduct = async (productId: string) => {
+    const confirm = window.confirm("Êtes-vous sûr de vouloir supprimer ce produit ?");
+    if (!confirm) return;
+
+    try {
+      const response = await fetch(`${BASE_URL}/product/delete-product/${productId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la suppression du produit");
+      }
+
+      setProducts((prevProducts) => prevProducts.filter((p) => p._id !== productId));
+      alert("Produit supprimé avec succès");
+    } catch (err: any) {
+      console.error("Erreur :", err);
+      alert(err.message || "Une erreur est survenue lors de la suppression");
+    }
+  };
+  const filteredProducts = products.filter((product) => {
+    const name = product.title ? product.title.toLowerCase() : ""; // Valeur par défaut si product.name est undefined
+    return name.includes(searchTerm.toLowerCase());
+  });
+  
+
   const renderGridView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {products.map((product) => (
+      {filteredProducts.map((product) => (
         <div key={product._id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
           <div className="relative group">
-            <img 
-              src={product.images} 
-              alt={product.name}
+            <img
+              src={product.images}
+              alt={product.title}
               className="w-full h-48 object-cover rounded-t-lg"
             />
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -73,33 +103,33 @@ export default function ProductsListPage() {
                     <Edit className="h-4 w-4" />
                   </Button>
                 </Link>
-                <Button size="sm" variant="secondary" className="text-red-600">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="text-red-600"
+                  onClick={() => handleDeleteProduct(product._id)}
+                >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
           </div>
-          
+
           <div className="p-4">
-            <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
-            <div className="flex items-center mb-2">
-              <div className="flex text-yellow-400">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className={i < Math.floor(product.rating) ? "text-yellow-400" : "text-gray-300"}>
-                    ★
-                  </span>
-                ))}
-              </div>
-              <span className="text-sm text-gray-500 ml-2">({product.reviews})</span>
-            </div>
+            <h3 className="font-semibold text-lg mb-1">{product.title}</h3>
             <p className="text-lg font-bold text-blue-600">
               {product.price.toLocaleString()} FCFA
             </p>
             <div className="mt-2">
-              <span className={`px-2 py-1 text-xs rounded-full
-                ${product.status === "En stock" ? "bg-green-100 text-green-800" : 
-                  product.status === "Rupture" ? "bg-red-100 text-red-800" : 
-                  "bg-yellow-100 text-yellow-800"}`}>
+              <span
+                className={`px-2 py-1 text-xs rounded-full ${
+                  product.status === "En stock"
+                    ? "bg-green-100 text-green-800"
+                    : product.status === "Rupture"
+                    ? "bg-red-100 text-red-800"
+                    : "bg-yellow-100 text-yellow-800"
+                }`}
+              >
                 {product.status}
               </span>
             </div>
@@ -136,38 +166,34 @@ export default function ProductsListPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {products.map((product) => (
-              <tr key={product.title} className="hover:bg-gray-50">
+            {filteredProducts.map((product) => (
+              <tr key={product._id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <img 
-                      src={product.images} 
-                      alt={product.name}
+                    <img
+                      src={product.images}
+                      alt={product.title}
                       className="h-10 w-10 rounded-lg object-cover"
                     />
                     <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {product.name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                         {product.title}
-                      </div>
+                      <div className="text-sm font-medium text-gray-900">{product.title}</div>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">
-                    {product.price.toLocaleString()} FCFA
-                  </div>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {product.price.toLocaleString()} FCFA
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{product.category}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{product.category}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                    ${product.status === "En stock" ? "bg-green-100 text-green-800" : 
-                      product.status === "Rupture" ? "bg-red-100 text-red-800" : 
-                      "bg-yellow-100 text-yellow-800"}`}>
+                  <span
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      product.status === "En stock"
+                        ? "bg-green-100 text-green-800"
+                        : product.status === "Rupture"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
                     {product.status}
                   </span>
                 </td>
@@ -186,7 +212,12 @@ export default function ProductsListPage() {
                         <Edit className="h-4 w-4" />
                       </Button>
                     </Link>
-                    <Button variant="ghost" size="sm" className="text-red-600">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600"
+                      onClick={() => handleDeleteProduct(product._id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -198,6 +229,22 @@ export default function ProductsListPage() {
       </div>
     </Card>
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p>Chargement des produits...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-red-600">Erreur : {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -244,4 +291,4 @@ export default function ProductsListPage() {
       {viewMode === "grid" ? renderGridView() : renderListView()}
     </div>
   );
-} 
+}

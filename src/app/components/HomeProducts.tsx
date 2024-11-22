@@ -119,7 +119,7 @@ const HomeProducts = () => {
                   {/* Price and Actions */}
                   <div className="flex items-center justify-between">
                     <span className="text-blue-800 font-bold">
-                      ${product.price}
+                      {product.price}cfa
                     </span>
                   </div>
                 </div>

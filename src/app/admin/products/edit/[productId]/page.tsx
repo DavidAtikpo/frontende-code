@@ -52,7 +52,7 @@ export default function EditProductPage() {
     const fetchProduct = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`${BASE_URL}/products/${productId}`);
+        const response = await fetch(`${BASE_URL}/product/product-detail/${productId}`);
         if (!response.ok) {
           throw new Error("Produit non trouvé");
         }
@@ -107,7 +107,7 @@ export default function EditProductPage() {
     setIsSaving(true);
 
     try {
-      const response = await fetch(`${BASE_URL}/products/${productId}`, {
+      const response = await fetch(`${BASE_URL}/product/update-product/${productId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
