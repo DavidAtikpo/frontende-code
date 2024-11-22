@@ -60,12 +60,8 @@ export default function RegisterPage() {
 
       const data = await response.json();
       setSuccess("Compte créé avec succès !");
-      console.log("Inscription réussie :", data);
-
-      // Redirection ou autres actions après succès
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 2000);
+      localStorage.setItem("authToken", data.token);
+      window.location.href = "/account-type";
     } catch (err: any) {
       setError(err.message);
     } finally {

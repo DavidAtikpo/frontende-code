@@ -388,7 +388,7 @@ const Header = () => {
                         </Link>
                       </li>
                       <li>
-                        <Link href="/become-seller" className="block hover:underline">
+                        <Link href="/seller/onboarding" className="block hover:underline">
                           Devenir Vendeur
                         </Link>
                       </li>

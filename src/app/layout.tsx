@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const pathname = usePathname(); // Utilisation de `usePathname` pour Next.js (app directory)
   
   // Liste des routes où le layout global ne doit pas être rendu
-  const noLayoutRoutes = ['/admin', '/admin/login'];
+  const noLayoutRoutes = ['/admin', '/admin/login', '/user'];
 
   // Vérifie si la route actuelle nécessite le layout
   const shouldRenderLayout = !noLayoutRoutes.some((route) => pathname.startsWith(route));
