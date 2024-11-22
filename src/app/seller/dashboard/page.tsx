@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ProductDialog } from "@/components/dashboard/ProductDialog";
+import { RecentSalesTable } from "@/components/dashboard/RecentSalesTable";
+import { SalesChart } from "@/components/dashboard/SalesChart";
 import {
   BarChart3,
   DollarSign,
@@ -12,9 +15,11 @@ import {
   Users,
   ArrowUp,
   ArrowDown,
+  Plus,
 } from "lucide-react";
 
-export default function SellerDashboardPage() {
+export default function DashboardPage() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
     revenue: {
@@ -61,15 +66,15 @@ export default function SellerDashboardPage() {
         },
       });
       setIsLoading(false);
-    }, 1500);
+    }, 1000);
   }, []);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Tableau de bord</h1>
-        <Button>
-          <Package className="mr-2 h-4 w-4" />
+        <Button onClick={() => setIsDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
           Ajouter un produit
         </Button>
       </div>
@@ -102,36 +107,36 @@ export default function SellerDashboardPage() {
         {/* Autres cartes statistiques similaires pour Orders, Products, Customers */}
       </div>
 
-      {/* Graphiques et tableaux */}
+      {/* Graphique et Tableau */}
       <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Aperçu des ventes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SalesChart />
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Ventes récentes</CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Tableau des ventes récentes */}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Meilleures ventes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Liste des produits les plus vendus */}
+            <RecentSalesTable />
           </CardContent>
         </Card>
       </div>
 
-      {/* Graphique des ventes */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Aperçu des ventes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Intégration future d'un graphique */}
-        </CardContent>
-      </Card>
+      {/* Dialog pour ajouter un produit */}
+      <ProductDialog 
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onSuccess={() => {
+          // Rafraîchir les données du dashboard
+          // À implémenter avec l'API
+        }}
+      />
     </div>
   );
 } 
