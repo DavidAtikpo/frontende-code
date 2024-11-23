@@ -38,12 +38,12 @@ const DualBanner = () => {
           </div>
           <div className="relative">
             <img
-              src="/images/xiaomi.jpg" // Remplacez par le chemin de votre image
+              src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGRzY3ZncXBodWtmY2lhMDZ4MDIxcHF2cGhkdGNjbDBmNDQyMGV0aiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/GaAcYeVdorvBk3eiQY/giphy.webp" // Remplacez par le chemin de votre image
               alt="Xiaomi Mi 11 Ultra"
-              className="w-40 h-auto object-cover"
+              className="w-80 h-auto object-cover"
             />
             <div className="absolute top-0 right-0 bg-blue-800 text-white px-4 py-2 text-sm rounded-full">
-              $590
+              590
             </div>
           </div>
         </div>

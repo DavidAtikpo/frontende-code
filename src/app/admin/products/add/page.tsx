@@ -9,50 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Link from "next/link";
+
 const BASE_URL = "http://localhost:5000/api";
 
 export default function AddProductPage() {
   const [isLoading, setIsLoading] = useState(false);
-  // const [formData, setFormData] = useState({
-  //   name: "",
-  //   description: "",
-  //   price: "",
-  //   category: "",
-  //   status: "En stock",
-  //   image: null as File | null,
-  // });
-
-  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-  //   const { name, value } = e.target;
-  //   setProduct({ ...product, [name]: value });
-  // };
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   setIsLoading(true);
-
-  //   const formDataToSend = new FormData();
-  //   Object.entries(formData).forEach(([key, value]) => {
-  //     if (value !== null) {
-  //       formDataToSend.append(key, value);
-  //     }
-  //   });
-
-  //   try {
-  //     const response = await fetch(`${BASE_URL}/api/product/new-product`, {
-  //       method: "POST",
-  //       body: formDataToSend,
-  //     });
-
-  //     if (response.ok) {
-  //       window.location.href = "/admin/products";
-  //     }
-  //   } catch (error) {
-  //     console.error("Erreur lors de l'ajout du produit:", error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
   const [product, setProduct] = useState({
     title: "",
     sku: "",
@@ -65,7 +26,7 @@ export default function AddProductPage() {
     description: "",
     features: "",
     shippingInfo: "",
-    images: "",
+    images: null, // Pour stocker le fichier image
   });
 
   const [successMessage, setSuccessMessage] = useState("");
@@ -76,30 +37,32 @@ export default function AddProductPage() {
     setProduct({ ...product, [name]: value });
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setProduct({ ...product, images: file });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const formattedProduct = {
-      ...product,
-      price: parseFloat(product.price),
-      oldPrice: parseFloat(product.oldPrice),
-      discount: parseFloat(product.discount),
-      features: product.features.split(","), // Convertir en tableau
-      shippingInfo: product.shippingInfo.split(",").map((info) => ({
-        type: info.split(":")[0].trim(),
-        details: info.split(":")[1]?.trim(),
-      })), // Convertir en tableau d'objets
-      images: product.images.split(","), // Convertir en tableau
-    };
-
     try {
+      const formData = new FormData();
+      Object.keys(product).forEach((key) => {
+        if (key === "features" || key === "shippingInfo") {
+          // Convertir les chaînes en tableaux
+          formData.append(key, product[key as keyof typeof product].split(",").join(","));
+        } else if (key === "images" && product.images) {
+          // Ajouter le fichier image
+          formData.append("images", product.images);
+        } else {
+          formData.append(key, product[key as keyof typeof product] || "");
+        }
+      });
+
       const response = await fetch(`${BASE_URL}/product/new-product`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formattedProduct),
+        body: formData,
       });
 
       if (!response.ok) {
@@ -120,12 +83,14 @@ export default function AddProductPage() {
         description: "",
         features: "",
         shippingInfo: "",
-        images: "",
+        images: null,
       });
     } catch (error) {
       console.error(error);
       setErrorMessage("Erreur lors de l'ajout du produit.");
       setSuccessMessage("");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -143,191 +108,70 @@ export default function AddProductPage() {
         </div>
       </div>
 
-      {/* <form onSubmit={handleSubmit}>
-        <Card className="p-6 space-y-6">
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom du produit</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="price">Prix (FCFA)</Label>
-              <Input
-                id="price"
-                type="number"
-                value={formData.price}
-                onChange={(e) => setFormData({...formData, price: e.target.value})}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="category">Catégorie</Label>
-              <Select 
-                onValueChange={(value) => setFormData({...formData, category: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une catégorie" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="electronics">Produits Congeles</SelectItem>
-                  <SelectItem value="clothing">Produits frais</SelectItem>
-                  <SelectItem value="books">Epicerie</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Statut</Label>
-              <Select
-                defaultValue="En stock"
-                onValueChange={(value) => setFormData({...formData, status: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="En stock">En stock</SelectItem>
-                  <SelectItem value="Rupture">Rupture</SelectItem>
-                  <SelectItem value="En commande">En commande</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                rows={4}
-                required
-              />
-            </div>
-            <Label htmlFor="image">Image du produit</Label>
-            <textarea
-          name="images"
-          value={formData.image}
-          onChange={handleInputChange}
-          placeholder="URLs des images (séparées par une virgule)"
-          required
-          className="border rounded px-4 py-1 w-full mt-4"
-        ></textarea>
-
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="image">Image du produit</Label>
-              <Input
-                id="image"
-                type="file"
-                accept="image/*"
-                onChange={(e) => setFormData({
-                  ...formData,
-                  image: e.target.files ? e.target.files[0] : null
-                })}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-4">
-            <Link href="/admin/products">
-              <Button variant="outline">Annuler</Button>
-            </Link>
-            <Button 
-              type="submit" 
-              className="bg-[#1D4ED8]"
-              disabled={isLoading}
-            >
-              {isLoading ? "Création en cours..." : "Créer le produit"}
-            </Button>
-          </div>
-        </Card>
-      </form> */}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} encType="multipart/form-data">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
+          <Input
             type="text"
             name="title"
             value={product.title}
             onChange={handleInputChange}
             placeholder="Titre"
             required
-            className="border rounded px-4 py-2"
           />
-          <input
+          <Input
             type="text"
             name="sku"
             value={product.sku}
             onChange={handleInputChange}
             placeholder="SKU (Référence)"
             required
-            className="border rounded px-4 py-2"
           />
-          <input
+          <Input
             type="text"
             name="vendor"
             value={product.vendor}
             onChange={handleInputChange}
             placeholder="Vendeur"
             required
-            className="border rounded px-4 py-2"
           />
-          <input
+          <Input
             type="number"
             name="price"
             value={product.price}
             onChange={handleInputChange}
             placeholder="Prix"
             required
-            className="border rounded px-4 py-2"
           />
-          <input
+          <Input
             type="number"
             name="oldPrice"
             value={product.oldPrice}
             onChange={handleInputChange}
             placeholder="Ancien Prix"
-            className="border rounded px-4 py-2"
           />
-          <input
+          <Input
             type="number"
             name="discount"
             value={product.discount}
             onChange={handleInputChange}
             placeholder="Remise (%)"
-            className="border rounded px-4 py-2"
           />
-          <input
-            type="text"
-            name="category"
-            value={product.category}
-            onChange={handleInputChange}
-            placeholder="Catégorie"
-            required
-            className="border rounded px-4 py-2"
-          />
-          
-          <div className="space-y-2">
-              <Label htmlFor="category">Catégorie</Label>
-              <Select 
-                onValueChange={(value) => setFormData({...formData, category: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une catégorie" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="electronics">Produits Congeles</SelectItem>
-                  <SelectItem value="clothing">Produits frais</SelectItem>
-                  <SelectItem value="books">Epicerie</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+
+          <div>
+            <Label htmlFor="category">Catégorie</Label>
+            <Select
+              onValueChange={(value) => setProduct({ ...product, category: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="electronics">Produits Congelés</SelectItem>
+                <SelectItem value="clothing">Produits Frais</SelectItem>
+                <SelectItem value="books">Épicerie</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <select
             name="availability"
@@ -340,78 +184,54 @@ export default function AddProductPage() {
           </select>
         </div>
 
-        <textarea
+        <Textarea
           name="description"
           value={product.description}
           onChange={handleInputChange}
           placeholder="Description"
           required
-          className="border rounded px-4 py-2 w-full mt-4"
-        ></textarea>
+          className="mt-4"
+        />
 
-        <textarea
+        <Textarea
           name="features"
           value={product.features}
           onChange={handleInputChange}
           placeholder="Caractéristiques (séparées par une virgule)"
-          className="border rounded px-4 py-2 w-full mt-4"
-        ></textarea>
+          className="mt-4"
+        />
 
-        <textarea
+        <Textarea
           name="shippingInfo"
           value={product.shippingInfo}
           onChange={handleInputChange}
           placeholder="Informations de Livraison (type:details, séparées par une virgule)"
-          className="border rounded px-4 py-2 w-full mt-4"
-        ></textarea>
+          className="mt-4"
+        />
 
-        <textarea
-          name="images"
-          value={product.images}
-          onChange={handleInputChange}
-          placeholder="URLs des images (séparées par une virgule)"
-          required
-          className="border rounded px-4 py-2 w-full mt-4"
-        ></textarea>
+        <div className="mt-4">
+          <Label htmlFor="images">Images</Label>
+          <Input
+            type="file"
+            id="images"
+            name="images"
+            accept="image/*"
+            onChange={handleFileChange}
+          />
+        </div>
 
-
-          <div className="col-span-2 space-y-2">
-              <Label htmlFor="image">Image du produit</Label>
-              <Input
-                id="image"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleInputChange({
-                  ...product,
-                  images: e.target.files ? e.target.files[0] : null
-                })}
-                required
-              />
-            </div>
-
-            <div className="flex justify-end space-x-4">
-            <Link href="/admin/products">
-              <Button variant="outline">Annuler</Button>
-            </Link>
-            <Button 
-              type="submit" 
-              className="bg-[#1D4ED8]"
-              disabled={isLoading}
-            >
-              {isLoading ? "Création en cours..." : "Créer le produit"}
-            </Button>
-          </div>
-
-        {/* <button
-          type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded mt-4"
-        >
-          Ajouter le produit
-        </button> */}
+        <div className="flex justify-end space-x-4 mt-6">
+          <Link href="/admin/products">
+            <Button variant="outline">Annuler</Button>
+          </Link>
+          <Button type="submit" disabled={isLoading} className="bg-[#1D4ED8]">
+            {isLoading ? "Création en cours..." : "Créer le produit"}
+          </Button>
+        </div>
       </form>
 
       {successMessage && <p className="text-green-600 mt-4">{successMessage}</p>}
       {errorMessage && <p className="text-red-600 mt-4">{errorMessage}</p>}
     </div>
   );
-} 
+}

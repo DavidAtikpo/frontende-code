@@ -13,7 +13,12 @@ import {
   Laptop2Icon,
   MessageSquare,
   Menu,
-  X
+  X,
+  ShoppingCart,
+  Heart,
+  Store,
+  UserPlus,
+  GraduationCap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -36,31 +41,31 @@ const navigation = [
   {
     name: "Mon Panier",
     href: "/cart",
-    icon: CreditCard
+    icon: ShoppingCart
   },
   {
     name: "Wishlist",
     href: "/wishlist",
-    icon: CreditCard
+    icon: Heart
   },
   {
     name: "Boutique",
-    href: "/user/payments",
-    icon: CreditCard
+    href: "/shop",
+    icon: Store
   },
   {
     name: "Devenir Vendeur",
-    href: "/user/payments",
-    icon: CreditCard
+    href: "/seller/onboarding",
+    icon: UserPlus
   },
   {
     name: "Suivre Une formation",
-    href: "/user/payments",
-    icon: Laptop2Icon
+    href: "/courses",
+    icon: GraduationCap
   },
   {
     name: "Message",
-    href: "/user/payments",
+    href: "/messages",
     icon: MessageSquare
   },
   {

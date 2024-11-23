@@ -7,7 +7,7 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Coucou, X</h1>
+          <h1 className="text-2xl font-bold">Bienvenue, Admin !</h1>
           <p className="text-gray-500">Bienvenue dans votre tableau de bord</p>
         </div>
         <button className="text-blue-600 hover:text-blue-800">
@@ -19,7 +19,7 @@ export default function AdminDashboard() {
         <Card className="p-6 bg-blue-50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-lg font-semibold">154</p>
+              <p className="text-lg font-semibold"> </p>
               <p className="text-sm text-gray-500">Paiements totaux</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-full">
