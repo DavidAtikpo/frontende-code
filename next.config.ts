@@ -1,10 +1,12 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  reactStrictMode: true, // Active strict mode pour trouver des bugs potentiels
+/**
+ * @type {import('next').NextConfig}
+ */
+const nextConfig = {
+  reactStrictMode: true,
   images: {
-    domains: ['cdn-icons-png.flaticon.com','via.placeholder.com', ], // Autorise les domaines pour `next/image`
+    domains: ['cdn-icons-png.flaticon.com', 'via.placeholder.com'], // Ajoutez vos domaines ici
   },
+ 
   async redirects() {
     return [
       {
@@ -16,4 +18,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
