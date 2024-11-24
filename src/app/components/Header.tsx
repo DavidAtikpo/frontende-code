@@ -293,6 +293,8 @@ const Header = () => {
                         src={Array.isArray(item.images) ? item.images[0] : item.images}
                         alt={item.title}
                         className="w-12 h-12 object-cover rounded-md"
+                        width={64}
+                        height={64}
                       />
                       <div className="ml-3 flex-1">
                         <h4 className="text-sm font-bold">{item.title}</h4>
@@ -312,7 +314,7 @@ const Header = () => {
                 <div className="border-t pt-2 mt-2">
                   <div className="flex justify-between text-sm font-bold">
                     <span>Sous-total</span>
-                    <span>${calculateSubtotal().toFixed(2)} USD</span>
+                    <span>{calculateSubtotal()} CFA</span>
                   </div>
                   <div className="mt-3">
                     <button className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
@@ -352,6 +354,8 @@ const Header = () => {
                         src={Array.isArray(item.images) ? item.images[0] : item.images}
                         alt={item.title}
                         className="w-12 h-12 object-cover rounded-md"
+                        width={64}
+                        height={64}
                       />
                       <div className="ml-3 flex-1">
                         <h4 className="text-sm font-bold">{item.title}</h4>

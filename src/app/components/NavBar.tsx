@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
+// import Image from "next/image";
 import { FaPhoneAlt } from "react-icons/fa";
 import {
   AiOutlineMenu,
@@ -38,7 +38,7 @@ const mockData: Category[] = [
       { id: 2, name: "Poulet", price: "1990 cfa" },
       { id: 3, name: "Viande", price: "7990 cfa" },
     ],
-    promotion: { name: "Écran incurvé 4K", price: "4990 cfa", discount: "30%" },
+    promotion: { name: "É", price: "4990 cfa", discount: "30%" },
   },
   {
     category: "Produits Frais",
@@ -47,28 +47,28 @@ const mockData: Category[] = [
   },
 ];
 
-const mockCategories = ["Catégorie 1", "Catégorie 2", "Catégorie 3"];
-const mockTrendingProducts = [
-  {
-    id: 1,
-    name: "PlayStation 5",
-    price: "$160",
-    image: "https://via.placeholder.com/150",
-  },
-  {
-    id: 2,
-    name: "VR Headset",
-    price: "$1,500",
-    image: "https://via.placeholder.com/150",
-  },
-  {
-    id: 3,
-    name: "Smartphone",
-    price: "$2,300",
-    discount: "$3,200",
-    image: "https://via.placeholder.com/150",
-  },
-];
+// const mockCategories = ["Catégorie 1", "Catégorie 2", "Catégorie 3"];
+// const mockTrendingProducts = [
+//   {
+//     id: 1,
+//     name: "PlayStation 5",
+//     price: "$160",
+//     image: "https://via.placeholder.com/150",
+//   },
+//   {
+//     id: 2,
+//     name: "VR Headset",
+//     price: "$1,500",
+//     image: "https://via.placeholder.com/150",
+//   },
+//   {
+//     id: 3,
+//     name: "Smartphone",
+//     price: "$2,300",
+//     discount: "$3,200",
+//     image: "https://via.placeholder.com/150",
+//   },
+// ];
 
 const NavigationBar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
