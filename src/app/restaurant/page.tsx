@@ -21,7 +21,7 @@ const mockData: Restaurant[] = [
     name: "Grandioso Restaurant",
     description: "Livraison de plats au restaurant avec paiement en ligne",
     category: "Italien",
-    price: 65,
+    price: 2000,
     rating: 4.8,
     onSale: true,
     image: "/images/restaurant1.jpg",
@@ -31,7 +31,7 @@ const mockData: Restaurant[] = [
     name: "Basilique Restaurant",
     description: "Réservation de restaurant en ligne - Livraison de repas",
     category: "Français",
-    price: 59,
+    price: 1500,
     rating: 4.5,
     onSale: false,
     image: "/images/restaurant2.jpg",
@@ -41,7 +41,7 @@ const mockData: Restaurant[] = [
     name: "Fidalgo Restaurant",
     description: "Modèles élégants de bistrot, bar et café",
     category: "Fusion",
-    price: 89,
+    price: 1500,
     rating: 4.0,
     onSale: false,
     image: "/images/restaurant3.jpg",
@@ -52,7 +52,7 @@ const ERestaurantPage = () => {
   const [restaurants] = useState<Restaurant[]>(mockData);
   const [filters, setFilters] = useState({
     category: "Toutes les catégories",
-    priceRange: [0, 500],
+    priceRange: [0, 100000],
     rating: 0,
     onSale: false,
   });
@@ -81,17 +81,17 @@ const ERestaurantPage = () => {
             }
           >
             <option value="Toutes les catégories">Toutes les catégories</option>
-            <option value="Italien">Italien</option>
+            <option value="Italien">African</option>
             <option value="Français">Français</option>
-            <option value="Fusion">Fusion</option>
+            <option value="Fusion">Italien</option>
           </select>
         </div>
         <div className="mb-6">
           <label className="block font-semibold mb-2">Prix (Max)</label>
           <input
             type="range"
-            min="0"
-            max="500"
+            min="500"
+            max="10000"
             value={filters.priceRange[1]}
             onChange={(e) =>
               setFilters((prev) => ({
@@ -101,7 +101,7 @@ const ERestaurantPage = () => {
             }
             className="w-full"
           />
-          <p className="text-sm text-gray-600">Max : {filters.priceRange[1]} €</p>
+          <p className="text-sm text-gray-600">Max : {filters.priceRange[1]} CFA</p>
         </div>
         <div className="mb-6">
           <label className="block font-semibold mb-2">Notation</label>
@@ -166,7 +166,7 @@ const ERestaurantPage = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <p className="text-lg font-bold">{restaurant.price} €</p>
+                  <p className="text-lg font-bold">{restaurant.price} CFA</p>
                   <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-800 transition">
                     Voir plus
                   </button>
