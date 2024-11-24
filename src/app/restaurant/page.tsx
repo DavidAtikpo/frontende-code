@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { FaStar } from "react-icons/fa";
+import Image from "next/image";
 
 interface Restaurant {
   id: number;
@@ -48,7 +49,7 @@ const mockData: Restaurant[] = [
 ];
 
 const ERestaurantPage = () => {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>(mockData);
+  const [restaurants] = useState<Restaurant[]>(mockData);
   const [filters, setFilters] = useState({
     category: "Toutes les catégories",
     priceRange: [0, 500],
@@ -141,7 +142,7 @@ const ERestaurantPage = () => {
               key={restaurant.id}
               className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition"
             >
-              <img
+              <Image
                 src={restaurant.image}
                 alt={restaurant.name}
                 className="w-full h-40 object-cover"
