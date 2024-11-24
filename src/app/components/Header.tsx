@@ -243,7 +243,7 @@ const Header = () => {
         {/* Logo */}
         <Link href="/">
   <Image
-    src="/logo blanc.png"
+    src="/Logo blanc.png"
     alt="Dubon Services"
     width={150}
     height={150}
