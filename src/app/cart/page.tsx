@@ -109,13 +109,13 @@ const CartPage = () => {
                       >
                         &#x2715;
                       </button>
-                      <Image
+                      {/* <Image
                         src={item.images || "/logo blanc"} // Remplacez "/default-image.jpg" par une image par défaut valide
                         alt={item.title || "Image par défaut"}
                         width={64}
                         height={64}
                         className="w-16 h-16 object-cover rounded"
-                      />
+                      /> */}
                       <span>{item.title}</span>
                     </td>
                     <td className="py-4">
