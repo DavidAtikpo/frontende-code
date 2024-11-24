@@ -6,7 +6,7 @@ import DualBanner from "./components/DualBanner";
 import CategoriesGrid from "./components/ProductCategories";
 import LatestNews from "./components/Articles";
 import BenefitsSection from "./components/BenefitsSection";
-// import ProductSlider from "./components/ProductSlider";
+import ProductSlider from "./components/ProductSlider";
 import NavigationBar from "./components/NavBar";
 // import AdvertisingBannerWithImage from "./components/publicite/page";
 
@@ -15,7 +15,7 @@ export default function Home() {
   return (
     <div>
       <NavigationBar/>
-      {/* <ProductSlider/> */}
+      <ProductSlider/>
       {/* <AdvertisingBannerWithImage/> */}
       <BenefitsSection/>
       {/* <PromotionsSection/> */}
