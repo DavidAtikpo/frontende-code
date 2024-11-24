@@ -97,7 +97,7 @@ const nextConfig = {
 
       {
         protocol: 'https',
-        hostname: 'cdn-icons-png.flaticon.com',
+        hostname: 'via.placeholder.com',
         pathname: '/**',
       },
 

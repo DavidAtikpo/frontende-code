@@ -401,6 +401,9 @@ import { useCartContext } from "../context/CartContext";
 import Link from "next/link";
 import Image from "next/image";
 
+// const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://dubon-server.vercel.app";
+
 // Interface pour les produits
 interface Product {
   _id: string; // Utilisé comme string pour MongoDB
@@ -425,7 +428,7 @@ const HomeProducts = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/product/get-all");
+        const response = await fetch(`${BASE_URL}/api/product/get-all`);
         const data = await response.json();
         setProducts(data);
         setLoading(false);

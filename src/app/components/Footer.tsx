@@ -9,7 +9,7 @@ const Footer = () => {
         {/* Section 1: Logo et contact */}
         <div>
           <Image
-            src="/Logo blanc.png"
+            src="/logo.png"
             alt="Logo"
             width={81}
             height={68}
