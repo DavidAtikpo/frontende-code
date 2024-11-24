@@ -243,10 +243,10 @@ const Header = () => {
         {/* Logo */}
         <Link href="/">
   <Image
-    src="/favicon.png"
+    src="/logo blanc.png"
     alt="Dubon Services"
-    width={6} // Remplacez par la largeur réelle ou souhaitée
-    height={6} // Remplacez par la hauteur réelle ou souhaitée
+    width={150}
+    height={150}
     className="w-16 cursor-pointer"
   />
 </Link>

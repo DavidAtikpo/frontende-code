@@ -3,16 +3,16 @@
 import React, { useEffect, useState } from "react";
 import { useCartContext } from "../context/CartContext";
 import { useRouter } from "next/navigation";
-// import Image from "next/image";
+import Image from "next/image";
 
-// interface CartItem {
-//   _id: string;
-//   title: string;
-//   images: string; // URL de l'image
-//   price?: number; // Ancien prix (optionnel)
-//   finalPrice: number; // Prix actuel
-//   quantity: number; // Quantité dans le panier
-// }
+interface CartItem {
+  _id: string;
+  title: string;
+  images: string; // URL de l'image
+  price?: number; // Ancien prix (optionnel)
+  finalPrice: number; // Prix actuel
+  quantity: number; // Quantité dans le panier
+}
 
 const CartPage = () => {
   const { state, dispatch } = useCartContext();
@@ -109,13 +109,13 @@ const CartPage = () => {
                       >
                         &#x2715;
                       </button>
-                      {/* <Image
-                        src={item.images || "/placeholder.png"} // Utilise une image par défaut si vide
-                        alt={item.title || "Produit"}
+                      <Image
+                        src={item.images || "/logo blanc"} // Remplacez "/default-image.jpg" par une image par défaut valide
+                        alt={item.title || "Image par défaut"}
                         width={64}
                         height={64}
                         className="w-16 h-16 object-cover rounded"
-                      /> */}
+                      />
                       <span>{item.title}</span>
                     </td>
                     <td className="py-4">

@@ -81,6 +81,8 @@ const ProductDetailPage = () => {
               src={product.images?.[0] || "/placeholder.jpg"} // Fallback image
               alt={product.title}
               className="w-full h-96 object-cover"
+              width={300}
+              height={200}
             />
           </div>
           <div className="flex mt-4 space-x-2 overflow-x-auto">
@@ -90,6 +92,8 @@ const ProductDetailPage = () => {
                 src={img}
                 alt={`Thumbnail ${index + 1}`}
                 className="w-20 h-20 object-cover border rounded cursor-pointer"
+                width={300}
+                height={200}
               />
             )) || <p>No images available</p>}
           </div>
