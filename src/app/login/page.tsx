@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthTabs from "../components/auth/AuthTabs";
+import Image from "next/image";
 
 const BASE_URL = "http://localhost:5000/api";
 
@@ -46,8 +47,10 @@ export default function LoginPage() {
       // Stockez le token ou effectuez une redirection
       localStorage.setItem("token", data.token);
       window.location.href = "/"; // Redirection après connexion réussie
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      console.log(err);
+      
+      // setError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -139,11 +142,11 @@ export default function LoginPage() {
 
           <div className="space-y-3">
             <Button variant="outline" className="w-full" type="button">
-              <img src="/google-icon.png" alt="Google" className="w-5 h-5 mr-2" />
+              <Image src="/google-icon.png" alt="Google" className="w-5 h-5 mr-2" />
               Connexion avec Google
             </Button>
             <Button variant="outline" className="w-full" type="button">
-              <img src="/apple-icon.png" alt="Apple" className="w-5 h-5 mr-2" />
+              <Image src="/apple-icon.png" alt="Apple" className="w-5 h-5 mr-2" />
               Connexion avec Apple
             </Button>
           </div>

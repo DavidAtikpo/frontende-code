@@ -11,7 +11,7 @@ import { CartProvider } from './context/CartContext'; // Importation du contexte
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname(); // Utilisation de `usePathname` pour Next.js (app directory)
-  
+
   // Liste des routes où le layout global ne doit pas être rendu
   const noLayoutRoutes = ['/admin', '/admin/login', '/user', '/seller/dashboard'];
 
@@ -20,6 +20,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.png" />
+        <title>Votre Application</title>
+        <meta name="description" content="Description de votre application" />
+      </head>
       <body>
         {/* Envelopper toute l'application avec CartProvider */}
         <CartProvider>

@@ -1,17 +1,17 @@
  "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PaymentsTable } from "@/components/dashboard/PaymentsTable";
 import { PaymentsStats } from "@/components/dashboard/PaymentsStats";
 import { PaymentsFilter } from "@/components/dashboard/PaymentsFilter";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+// import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { Button } from "@/components/ui/button";
 import { Download, Filter } from "lucide-react";
 
 export default function PaymentsPage() {
-  const [dateRange, setDateRange] = useState({
+  const [dateRange] = useState({
     from: undefined,
     to: undefined,
   });
@@ -36,10 +36,10 @@ export default function PaymentsPage() {
             <TabsTrigger value="failed">Échoués</TabsTrigger>
           </TabsList>
           <div className="flex gap-2">
-            <DatePickerWithRange
+            {/* <DatePickerWithRange
               selected={dateRange}
-              onSelect={(range) => setDateRange(range)}
-            />
+              // onSelect={(range) => setDateRange(range)}
+            /> */}
             <Button variant="outline">
               <Download className="h-4 w-4 mr-2" />
               Exporter

@@ -47,7 +47,7 @@ const ConfidentialitySection = () => {
       <div className="max-w-7xl mx-auto space-y-10">
         <h2 className="text-2xl font-bold text-center mb-6">Confidentialité et Garanties</h2>
         <p className="text-center text-gray-600 mb-10">
-          Nous mettons un point d'honneur à protéger vos informations personnelles, à garantir vos paiements et à assurer votre satisfaction à travers nos services.
+          Nous mettons un point d&apos;honneur à protéger vos informations personnelles, à garantir vos paiements et à assurer votre satisfaction à travers nos services.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {sections.map((section, index) => (

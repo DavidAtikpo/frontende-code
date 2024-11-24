@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { FaHeart, FaShareAlt, FaStar } from "react-icons/fa";
+import Link from "next/link";
+import Image from "next/image";
 
 const BASE_URL = "http://localhost:5000/api";
 
@@ -60,22 +62,22 @@ const ProductDetailPage = () => {
     <div className="max-w-7xl mx-auto px-6 py-10">
       {/* Breadcrumb */}
       <nav className="text-gray-600 text-sm mb-6">
-        <a href="/" className="hover:underline">
-          Accueil
-        </a>{" "}
-        /{" "}
-        <a href="/products" className="hover:underline">
-          Boutique
-        </a>{" "}
-        / {product.title}
-      </nav>
+  <Link href="/" className="hover:underline">
+    Accueil
+  </Link>{" "}
+  /{" "}
+  <Link href="/products" className="hover:underline">
+    Boutique
+  </Link>{" "}
+  / {product.title}
+</nav>
 
       {/* Upper Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Images */}
         <div className="flex flex-col">
           <div className="border rounded-lg overflow-hidden">
-            <img
+            <Image
               src={product.images?.[0] || "/placeholder.jpg"} // Fallback image
               alt={product.title}
               className="w-full h-96 object-cover"
@@ -83,7 +85,7 @@ const ProductDetailPage = () => {
           </div>
           <div className="flex mt-4 space-x-2 overflow-x-auto">
             {product.images?.map((img, index) => (
-              <img
+              <Image
                 key={index}
                 src={img}
                 alt={`Thumbnail ${index + 1}`}
@@ -186,7 +188,7 @@ const ProductDetailPage = () => {
               <li key={index}>
                 <strong>{info.type}:</strong> {info.details}
               </li>
-            )) || <li>Pas d'informations disponibles</li>}
+            )) || <li>Pas d&apos;informations disponibles</li>}
           </ul>
         </div>
       </div>

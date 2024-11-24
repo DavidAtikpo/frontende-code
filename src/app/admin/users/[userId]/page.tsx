@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"; // Correct pour Next.js 13+
 import { ArrowLeft, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import Image from "next/image";
 import Link from "next/link";
 
 const BASE_URL = "http://localhost:5000/api";
@@ -34,9 +35,8 @@ export default function UserDetailPage() {
         }
         const data = await response.json();
         setUser(data);
-      } catch (err: any) {
-        console.error("Erreur lors du chargement de l'utilisateur :", err.message);
-        setError(err.message || "Une erreur est survenue");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Une erreur est survenue");
       } finally {
         setIsLoading(false);
       }
@@ -76,7 +76,7 @@ export default function UserDetailPage() {
       <div className="grid grid-cols-3 gap-6">
         <Card className="col-span-1 p-6">
           <div className="flex flex-col items-center">
-            <img
+            <Image
               src={user.avatar || "/user-profile-svgrepo-com.svg"} // Image par défaut
               alt={user.name || "Utilisateur"}
               className="h-32 w-32 rounded-full object-cover"

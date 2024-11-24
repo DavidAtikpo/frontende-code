@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 const FormationPage = () => {
   return (
     <div className="bg-gray-50">
@@ -7,7 +7,7 @@ const FormationPage = () => {
       <header className="bg-yellow-50 py-12">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
           <h1 className="text-3xl font-bold text-gray-800">
-            Des compétences d'aujourd'hui qui ont de l'avenir
+            Des compétences d&apos;aujourd&apos;hui qui ont de l&apos;avenir
           </h1>
           <p className="mt-4 text-lg text-gray-600">
             Notre différence ? Une formation 100 % en ligne et un modèle pédagogique unique qui seront
@@ -17,7 +17,7 @@ const FormationPage = () => {
             <div className="bg-white p-6 rounded-lg w-64 text-left shadow">
               <h2 className="text-xl font-bold text-gray-800">Étudiants</h2>
               <p className="text-sm text-gray-600 mt-2">
-                Faites un grand pas vers votre nouvelle carrière en suivant l’une de nos formations
+                Faites un grand pas vers votre nouvelle carrière en suivant l&apos;une de nos formations
                 diplômantes.
               </p>
               <button className="mt-4 bg-customBlue text-white px-4 py-2 rounded">
@@ -54,7 +54,7 @@ const FormationPage = () => {
           </p>
           <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="flex flex-col items-center">
-              <img
+              <Image
                 src="https://autoecolebertili.com/wp-content/uploads/2021/07/code-route-en-ligne2-apprenez.png"
                 alt="Apprenez"
                 className="w-24 h-24 mb-4 rounded-lg"
@@ -66,7 +66,7 @@ const FormationPage = () => {
               </p>
             </div>
             <div className="flex flex-col items-center">
-              <img
+              <Image
                 src="https://allegiance-educare.in/storage/uploads/Mentoring-Pic-1.jpg"
                 alt="Mentor"
                 className="w-24 h-24 mb-4"
@@ -78,7 +78,7 @@ const FormationPage = () => {
               </p>
             </div>
             <div className="flex flex-col items-center">
-              <img
+              <Image
                 src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTl3wU1tVtY_SGiGNgE5hAHFc27vjqx9USlQg&s"
                 alt="Projets professionnels"
                 className="w-24 h-24 mb-4"

@@ -3,6 +3,16 @@
 import React, { useEffect, useState } from "react";
 import { useCartContext } from "../context/CartContext";
 import { useRouter } from "next/navigation";
+// import Image from "next/image";
+
+// interface CartItem {
+//   _id: string;
+//   title: string;
+//   images: string; // URL de l'image
+//   price?: number; // Ancien prix (optionnel)
+//   finalPrice: number; // Prix actuel
+//   quantity: number; // Quantité dans le panier
+// }
 
 const CartPage = () => {
   const { state, dispatch } = useCartContext();
@@ -21,11 +31,6 @@ const CartPage = () => {
       dispatch({ type: "SET_CART", payload: JSON.parse(savedCart) });
     }
   }, [dispatch]);
-
-  // Sauvegarder le panier dans le stockage local à chaque mise à jour
-  // useEffect(() => {
-  //   localStorage.setItem("cart", JSON.stringify(state.cart));
-  // }, [state.cart]);
 
   // Vérification de l'état d'authentification
   useEffect(() => {
@@ -59,15 +64,14 @@ const CartPage = () => {
   // Gestion du paiement (redirection conditionnelle)
   const handleCheckout = () => {
     if (!isAuthenticated) {
-      // Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
       router.push("/login");
     } else {
-      // Vérifier si l'utilisateur a une adresse enregistrée
-      const hasShippingAddress = localStorage.getItem("hasShippingAddress") === "true";
+      const hasShippingAddress =
+        localStorage.getItem("hasShippingAddress") === "true";
       if (hasShippingAddress) {
-        router.push("/checkout"); // Aller directement au paiement
+        router.push("/checkout");
       } else {
-        router.push("/checkout/shipping-address"); // Aller à la page d'adresse de livraison
+        router.push("/checkout/shipping-address");
       }
     }
   };
@@ -78,76 +82,85 @@ const CartPage = () => {
         {/* Section Panier */}
         <div className="col-span-2 bg-white shadow-md rounded-lg p-6">
           <h2 className="text-2xl font-bold mb-6">Panier</h2>
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b">
-                <th className="py-2">Produits</th>
-                <th className="py-2">Prix</th>
-                <th className="py-2">Quantité</th>
-                <th className="py-2">Sous-total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.cart.map((item) => (
-                <tr key={item._id} className="border-b">
-                  <td className="py-4 flex items-center space-x-4">
-                    <button
-                      onClick={() =>
-                        dispatch({ type: "REMOVE_FROM_CART", payload: item._id })
-                      }
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      &#x2715;
-                    </button>
-                    <img
-                      src={item.images}
-                      alt={item.title}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <span>{item.title}</span>
-                  </td>
-                  <td className="py-4">
-                    {item.price && (
-                      <span className="line-through text-gray-400 mr-2">
-                        {item.price} cfa
-                      </span>
-                    )}
-                    {item.finalPrice} cfa
-                  </td>
-                  <td className="py-4">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() =>
-                          dispatch({
-                            type: "UPDATE_QUANTITY",
-                            payload: { _id: item._id, delta: -1 },
-                          })
-                        }
-                        className="px-2 py-1 border rounded hover:bg-gray-200"
-                      >
-                        -
-                      </button>
-                      <span>{item.quantity}</span>
-                      <button
-                        onClick={() =>
-                          dispatch({
-                            type: "UPDATE_QUANTITY",
-                            payload: { _id: item._id, delta: 1 },
-                          })
-                        }
-                        className="px-2 py-1 border rounded hover:bg-gray-200"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </td>
-                  <td className="py-4">
-                    {(item.finalPrice * item.quantity).toFixed(2)} cfa
-                  </td>
+          {state.cart.length === 0 ? (
+            <p>Votre panier est vide.</p>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="py-2">Produits</th>
+                  <th className="py-2">Prix</th>
+                  <th className="py-2">Quantité</th>
+                  <th className="py-2">Sous-total</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {state.cart.map((item) => (
+                  <tr key={item._id} className="border-b">
+                    <td className="py-4 flex items-center space-x-4">
+                      <button
+                        onClick={() =>
+                          dispatch({
+                            type: "REMOVE_FROM_CART",
+                            payload: item._id,
+                          })
+                        }
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        &#x2715;
+                      </button>
+                      {/* <Image
+                        src={item.images || "/placeholder.png"} // Utilise une image par défaut si vide
+                        alt={item.title || "Produit"}
+                        width={64}
+                        height={64}
+                        className="w-16 h-16 object-cover rounded"
+                      /> */}
+                      <span>{item.title}</span>
+                    </td>
+                    <td className="py-4">
+                      {/* {item.price && (
+                        <span className="line-through text-gray-400 mr-2">
+                          {item.price} cfa
+                        </span>
+                      )} */}
+                      {item.finalPrice} cfa
+                    </td>
+                    <td className="py-4">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() =>
+                            dispatch({
+                              type: "UPDATE_QUANTITY",
+                              payload: { _id: item._id, delta: -1 },
+                            })
+                          }
+                          className="px-2 py-1 border rounded hover:bg-gray-200"
+                        >
+                          -
+                        </button>
+                        <span>{item.quantity}</span>
+                        <button
+                          onClick={() =>
+                            dispatch({
+                              type: "UPDATE_QUANTITY",
+                              payload: { _id: item._id, delta: 1 },
+                            })
+                          }
+                          className="px-2 py-1 border rounded hover:bg-gray-200"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </td>
+                    <td className="py-4">
+                      {(item.finalPrice * item.quantity).toFixed(2)} cfa
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
         {/* Section Résumé */}

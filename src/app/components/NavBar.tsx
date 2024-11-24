@@ -219,6 +219,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 
 const mockCategories = [
   { id: 1, name: "Catégorie 1" },
@@ -292,7 +293,7 @@ const NavigationBar = () => {
                     key={product.id}
                     className="flex items-center space-x-4 hover:bg-gray-100 p-2 rounded"
                   >
-                    <img
+                    <Image
                       src={product.image}
                       alt={product.name}
                       className="w-16 h-16 object-cover rounded"
@@ -319,7 +320,7 @@ const NavigationBar = () => {
             <div className="p-4 bg-yellow-100">
               <h3 className="text-gray-800 font-bold mb-2">PROMOTION</h3>
               <div className="text-center">
-                <img
+                <Image
                   src="https://via.placeholder.com/150"
                   alt="Promotion"
                   className="w-32 h-32 mx-auto object-cover"

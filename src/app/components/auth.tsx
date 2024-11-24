@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
+import Image from 'next/image'
 
 export default function AuthPage() {
   const [showLoginPassword, setShowLoginPassword] = useState(false)
@@ -74,11 +75,11 @@ export default function AuthPage() {
                 </div>
               </div>
               <Button variant="outline" className="w-full" type="button">
-                <img src="/placeholder.svg?height=16&width=16" alt="Google" className="mr-2 h-4 w-4" />
+                <Image src="/placeholder.svg?height=16&width=16" alt="Google" className="mr-2 h-4 w-4" />
                 Connexion avec Google
               </Button>
               <Button variant="outline" className="w-full" type="button">
-                <img src="/placeholder.svg?height=16&width=16" alt="Apple" className="mr-2 h-4 w-4" />
+                <Image src="/placeholder.svg?height=16&width=16" alt="Apple" className="mr-2 h-4 w-4" />
                 Connexion avec Apple
               </Button>
             </CardContent>
@@ -167,11 +168,11 @@ export default function AuthPage() {
                 </div>
               </div>
               <Button variant="outline" className="w-full" type="button">
-                <img src="/placeholder.svg?height=16&width=16" alt="Google" className="mr-2 h-4 w-4" />
+                <Image src="/placeholder.svg?height=16&width=16" alt="Google" className="mr-2 h-4 w-4" />
                 Utiliser votre compte Google
               </Button>
               <Button variant="outline" className="w-full" type="button">
-                <img src="/placeholder.svg?height=16&width=16" alt="Apple" className="mr-2 h-4 w-4" />
+                <Image src="/placeholder.svg?height=16&width=16" alt="Apple" className="mr-2 h-4 w-4" />
                 Sign up with Apple
               </Button>
             </CardContent>

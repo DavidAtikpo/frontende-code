@@ -1,3 +1,5 @@
+// import Image from "next/image";
+
 const Banner = () => {
     return (
       <section className="bg-peach-100 p-10 rounded-lg flex justify-between items-center max-w-7xl mx-auto">
@@ -15,11 +17,11 @@ const Banner = () => {
   
         {/* Image du produit */}
         <div className="relative flex-1 flex justify-center">
-          <img
+          {/* <Image
             src="/images/banna2.jpg" // Assurez-vous que l'image existe dans public/images
             alt="Publicité"
             className="w-[400px] max-h-[350px]  object-contain rounded-lg"
-          />
+          /> */}
           {/* Cercle pour le prix */}
           <div className="absolute top-0 left-20 bg-Primary border-2 border-white text-gray-800 font-bold text-sm px-4 py-6 rounded-full radius-1000">
             1900 CFA

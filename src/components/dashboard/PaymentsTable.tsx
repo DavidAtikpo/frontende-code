@@ -25,7 +25,7 @@ interface PaymentsTableProps {
   showFilters: boolean;
 }
 
-export function PaymentsTable({ status, dateRange, showFilters }: PaymentsTableProps) {
+export function PaymentsTable({ }: PaymentsTableProps) {
   const [payments] = useState([
     {
       id: "PAY-001",

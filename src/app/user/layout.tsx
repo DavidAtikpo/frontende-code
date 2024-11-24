@@ -10,7 +10,7 @@ import {
   Clock, 
   Settings, 
   LogOut,
-  Laptop2Icon,
+  // Laptop2Icon,
   MessageSquare,
   Menu,
   X,

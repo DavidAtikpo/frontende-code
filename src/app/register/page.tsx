@@ -62,8 +62,10 @@ export default function RegisterPage() {
       setSuccess("Compte créé avec succès !");
       localStorage.setItem("authToken", data.token);
       window.location.href = "/account-type";
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      // setError(err.message);
+console.log(err);
+
     } finally {
       setIsLoading(false);
     }
@@ -157,9 +159,9 @@ export default function RegisterPage() {
             <div className="flex items-center space-x-2">
               <Checkbox id="terms" required />
               <label htmlFor="terms" className="text-sm leading-none">
-                J'accepte les{" "}
+                J&apos;accepte les{" "}
                 <Link href="/terms" className="text-[#1D4ED8] hover:underline">
-                  conditions d'utilisation
+                  conditions d&apos;utilisation
                 </Link>{" "}
                 et la{" "}
                 <Link

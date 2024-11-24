@@ -1,9 +1,11 @@
 import React from "react";
+import Image from "next/image";
 
 const articles = [
     {
       id: 1,
       image: "/images/AI.jpg", // Remplacez par le chemin réel de l'image
+      
       author: "Jean Dupont",
       date: new Date().toLocaleDateString("fr-FR", {
         day: "numeric",
@@ -62,10 +64,12 @@ const LatestNews = () => {
               className="bg-white shadow-md  overflow-hidden"
             >
               {/* Image de l'article */}
-              <img
+              <Image
                 src={article.image}
                 alt={article.title}
                 className="w-full h-48 object-cover"
+                width={10}
+                height={10}
               />
 
               {/* Contenu de l'article */}

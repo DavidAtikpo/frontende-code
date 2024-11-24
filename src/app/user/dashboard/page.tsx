@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CreditCard, Clock, MapPin, Settings, LogOut } from "lucide-react";
+// import { CreditCard, Clock, MapPin, Settings, LogOut } from "lucide-react";
 
 interface UserInfo {
   name: string;
@@ -20,23 +20,23 @@ interface PaymentStats {
 }
 
 export default function UserDashboard() {
-  const [userInfo, setUserInfo] = useState<UserInfo>({
+  const [userInfo] = useState<UserInfo>({
     name: "Kevin Gilbert",
     email: "kevin.gilbert@gmail.com",
     address: "East Tejturi Bazar, Word No: 04, Road No: 50...",
     phone: "+1-202-555-0118"
   });
 
-  const [paymentStats, setPaymentStats] = useState<PaymentStats>({
+  const [paymentStats] = useState<PaymentStats>({
     total: 154,
     pending: 5,
     completed: 149
   });
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    window.location.href = "/login";
-  };
+  // const handleLogout = () => {
+  //   localStorage.removeItem("authToken");
+  //   window.location.href = "/login";
+  // };
 
   return (
     <div className="container mx-auto p-6">

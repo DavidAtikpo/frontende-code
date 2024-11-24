@@ -1,5 +1,6 @@
 import React from "react";
 import {FaAppStore} from "react-icons/fa";
+import Image from "next/image";
 
 const Footer = () => {
   return (
@@ -7,7 +8,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Section 1: Logo et contact */}
         <div>
-          <img
+          <Image
             src="/favicon.png"
             alt="Logo"
             width={81}
@@ -83,14 +84,16 @@ const Footer = () => {
         {/* Section 4: Téléchargement et Tags Populaires */}
         <div>
           <h4 className="font-semibold text-gray-100 mb-4">
-            Télécharger l'App
+            Télécharger l&apos;App
           </h4>
           <div className="flex space-x-4 mb-6">
           <a href="https://play.google.com" target="_blank" rel="noopener noreferrer">
-            <img
+            <Image
               src="https://cdn-icons-png.flaticon.com/512/300/300218.png" // Exemple d'URL d'une icône
               alt="Google Play"
               className="w-10"
+              width={10}
+              height={10}
             />
           </a>
             <a href="https://www.apple.com/app-store/" target="_blank" rel="noopener noreferrer">

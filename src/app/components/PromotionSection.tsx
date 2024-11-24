@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { FaHeart, FaShoppingCart, FaEye } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useCartContext } from "../context/CartContext"; // Import du contexte
 
 interface Product {
@@ -86,7 +87,7 @@ const PromotionsSection = () => {
       dispatch({ type: "REMOVE_FROM_WISHLIST", payload: product._id });
       // alert(`Retiré de la liste de souhaits : ${product.title}`);
     } else {
-      dispatch({ type: "ADD_TO_WISHLIST",payload: { ...product, quantity: 1 } });
+    //   dispatch({ type: "ADD_TO_WISHLIST",payload: { ...product, quantity: 1 } });
       // alert(`Ajouté à la liste de souhaits : ${product.title}`);
     }
   };
@@ -119,7 +120,7 @@ const PromotionsSection = () => {
           >
             {/* Image du produit */}
             <div className="relative">
-              <img
+              <Image
                 src={Array.isArray(product.images) ? product.images[0] : product.images}
                 alt={product.title}
                 className="w-full h-40 object-cover rounded-md mb-4"

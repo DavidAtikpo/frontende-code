@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
-const BASE_URL = "http://localhost:5000/api";
+// const BASE_URL = "http://localhost:5000/api";
 
 interface Order {
   id: string;
@@ -18,10 +18,10 @@ interface Order {
 }
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders] = useState<Order[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  // const [isLoading, setIsLoading] = useState(true);
+  // const [error, setError] = useState("");
 
   const getStatusColor = (status: string) => {
     switch (status) {

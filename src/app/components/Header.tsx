@@ -171,6 +171,7 @@
 import { useState, useEffect  } from "react";
 import { FaShoppingCart, FaHeart, FaUser, FaSearch } from "react-icons/fa";
 import Link from "next/link";
+import Image from "next/image";
 import { useCartContext } from "../context/CartContext"; // Import du contexte
 const BASE_URL = "http://localhost:5000/api";
 
@@ -241,8 +242,15 @@ const Header = () => {
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {/* Logo */}
         <Link href="/">
-          <img src="/favicon.png" alt="Dubon Services" className="w-16 cursor-pointer" />
-        </Link>
+  <Image
+    src="/favicon.png"
+    alt="Dubon Services"
+    width={6} // Remplacez par la largeur réelle ou souhaitée
+    height={6} // Remplacez par la hauteur réelle ou souhaitée
+    className="w-16 cursor-pointer"
+  />
+</Link>
+
 {/* Barre de recherche */}
           {!isMobile ? (
           <div className="flex-1 mx-4 px-40">
@@ -281,7 +289,7 @@ const Header = () => {
                 <ul className="divide-y divide-gray-200">
                   {state.cart.map((item) => (
                     <li key={item._id} className="flex items-center py-2">
-                      <img
+                      <Image
                         src={Array.isArray(item.images) ? item.images[0] : item.images}
                         alt={item.title}
                         className="w-12 h-12 object-cover rounded-md"
@@ -340,7 +348,7 @@ const Header = () => {
                 <ul className="divide-y divide-gray-200">
                   {state.wishlist.map((item) => (
                     <li key={item._id} className="flex items-center py-2">
-                      <img
+                      <Image
                         src={Array.isArray(item.images) ? item.images[0] : item.images}
                         alt={item.title}
                         className="w-12 h-12 object-cover rounded-md"
@@ -394,7 +402,7 @@ const Header = () => {
                       </li>
                       <li>
                         <Link href="/help" className="block hover:underline">
-                          Centre d'Aide
+                          Centre d&apos;Aide
                         </Link>
                       </li>
                       <li>

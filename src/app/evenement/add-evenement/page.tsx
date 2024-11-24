@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 
 const AddEventPage = () => {
     const [event, setEvent] = useState<{
@@ -160,7 +161,7 @@ const AddEventPage = () => {
         {/* Titre */}
         <div>
           <label htmlFor="title" className="block text-sm font-medium mb-2">
-            Titre de l'événement
+            Titre de l&apos;événement
           </label>
           <input
             type="text"
@@ -291,7 +292,7 @@ const AddEventPage = () => {
 
         {/* Image (URL ou fichier) */}
         <div>
-          <label className="block text-sm font-medium mb-2">Image de l'événement</label>
+          <label className="block text-sm font-medium mb-2">Image de l&apos;événement</label>
           <div className="flex items-center space-x-4">
             {/* URL */}
             <input
@@ -312,7 +313,7 @@ const AddEventPage = () => {
             />
           </div>
           {imagePreview && (
-            <img
+            <Image
               src={imagePreview}
               alt="Preview"
               className="mt-4 w-40 h-40 object-cover rounded"
@@ -389,7 +390,7 @@ const AddEventPage = () => {
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
           />
         </div>
-        {imagePreview && <img src={imagePreview} alt="Prévisualisation" className="mt-4 max-h-48" />}
+        {imagePreview && <Image src={imagePreview} alt="Prévisualisation" className="mt-4 max-h-48" />}
         <button
           type="submit"
           className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"

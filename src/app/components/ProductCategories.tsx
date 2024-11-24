@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 // import { fetchQuickSales, fetchBestSellers, fetchTopRated, fetchNewArrivals } from "../utils/api";
 
 interface Product {
@@ -11,10 +12,10 @@ interface Product {
 }
 
 const CategoriesGrid = () => {
-  const [quickSales, setQuickSales] = useState<Product[]>([]);
-  const [bestSellers, setBestSellers] = useState<Product[]>([]);
-  const [topRated, setTopRated] = useState<Product[]>([]);
-  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
+  const [quickSales, ] = useState<Product[]>([]);
+  const [bestSellers,] = useState<Product[]>([]);
+  const [topRated, ] = useState<Product[]>([]);
+  const [newArrivals,] = useState<Product[]>([]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -32,11 +33,11 @@ const CategoriesGrid = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Vente Rapide Aujourd'hui */}
         <div>
-          <h3 className="text-lg font-bold mb-4">VENTE RAPIDE AUJOURD'HUI</h3>
+          <h3 className="text-lg font-bold mb-4">VENTE RAPIDE AUJOURD&apos;HUI</h3>
           <div className="space-y-4">
             {quickSales.map((product) => (
               <div key={product._id} className="border rounded-lg p-4 hover:shadow-lg transition">
-                <img src={product.image} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
+                <Image src={product.image} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
                 <h4 className="text-sm font-semibold">{product.title}</h4>
                 <p className="text-blue-800 font-bold">${product.price}</p>
               </div>
@@ -50,7 +51,7 @@ const CategoriesGrid = () => {
           <div className="space-y-4">
             {bestSellers.map((product) => (
               <div key={product._id} className="border rounded-lg p-4 hover:shadow-lg transition">
-                <img src={product.image} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
+                <Image src={product.image} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
                 <h4 className="text-sm font-semibold">{product.title}</h4>
                 <p className="text-blue-800 font-bold">${product.price}</p>
               </div>
@@ -64,7 +65,7 @@ const CategoriesGrid = () => {
           <div className="space-y-4">
             {topRated.map((product) => (
               <div key={product._id} className="border rounded-lg p-4 hover:shadow-lg transition">
-                <img src={product.image} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
+                <Image src={product.image} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
                 <h4 className="text-sm font-semibold">{product.title}</h4>
                 <p className="text-blue-800 font-bold">{product.price}cfa</p>
               </div>
@@ -78,7 +79,7 @@ const CategoriesGrid = () => {
           <div className="space-y-4">
             {newArrivals.map((product) => (
               <div key={product._id} className="border rounded-lg p-4 hover:shadow-lg transition">
-                <img src={product.image} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
+                <Image src={product.image} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
                 <h4 className="text-sm font-semibold">{product.title}</h4>
                 <p className="text-blue-800 font-bold">{product.price}cfa</p>
               </div>

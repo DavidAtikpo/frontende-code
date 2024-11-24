@@ -211,6 +211,8 @@
 
 import React, { useEffect, useState } from "react";
 import { FaStar } from "react-icons/fa";
+import Link from "next/link";
+import Image from "next/image";
 
 // Interface pour les produits
 interface Product {
@@ -278,15 +280,16 @@ const ShopPage = () => {
 
   return (
     <div>
-      <nav className="text-gray-600 text-sm mb-6">
-         <a href="/" className="hover:underline">
-           Accueil
-         </a>{" "}
-         /{" "}
-        <a href="/products" className="hover:underline">
-          Boutique
-         </a>{" "}
-       </nav>
+<nav className="text-gray-600 text-sm mb-6">
+  <Link href="/" className="hover:underline">
+    Accueil
+  </Link>{" "}
+  /{" "}
+  <Link href="/products" className="hover:underline">
+    Boutique
+  </Link>{" "}
+  {/* / {product.title} */}
+</nav>
     <div className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Barre latérale (filtres) */}
       
@@ -383,7 +386,7 @@ const ShopPage = () => {
                     {product.badge}
                   </span>
                 )}
-                <img
+                <Image
                   src={product.images[0]}
                   alt={product.title}
                   className="w-full h-48 object-cover rounded-md mb-4"

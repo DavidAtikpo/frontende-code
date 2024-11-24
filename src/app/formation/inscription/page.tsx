@@ -145,7 +145,7 @@ const InscriptionPage = () => {
                     >
                       <option value="Bénin">Bénin</option>
                       <option value="France">France</option>
-                      <option value="Côte d'Ivoire">Côte d'Ivoire</option>
+                      <option value="Côte d'Ivoire">Côte d&apos;Ivoire</option>
                       <option value="Sénégal">Sénégal</option>
                     </select>
                   </div>
@@ -168,10 +168,10 @@ const InscriptionPage = () => {
 
             {currentStep === 2 && (
               <div>
-                <h3 className="text-lg font-bold text-gray-700 mb-4">Niveau d'études</h3>
+                <h3 className="text-lg font-bold text-gray-700 mb-4">Niveau d&apos;études</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-gray-700">Niveau d'études</label>
+                    <label className="block text-gray-700">Niveau d&apos;études</label>
                     <input
                       type="text"
                       name="educationLevel"

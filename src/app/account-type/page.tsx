@@ -38,8 +38,10 @@ export default function AccountTypePage() {
       } else {
         router.push("/seller/onboarding");
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      console.log(err);
+      
+      // setError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -53,7 +55,7 @@ export default function AccountTypePage() {
             <h1 className="text-2xl font-bold">Bienvenue sur Dubon Services !
                  Que voulez-vous faire ?</h1>
             <p className="text-sm text-gray-500 mt-2">
-              Sélectionnez l'option qui correspond le mieux à vos besoins
+              Sélectionnez l&apos;option qui correspond le mieux à vos besoins
             </p>
           </div>
 

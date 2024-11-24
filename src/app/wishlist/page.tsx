@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useCartContext } from "../context/CartContext"; // Import du contexte
+// import Image from "next/image";
 
 const WishlistPage = () => {
   const { state, dispatch } = useCartContext(); // Accès au contexte global
@@ -40,11 +41,11 @@ const WishlistPage = () => {
             {state.wishlist.map((item) => (
               <tr key={item._id} className="border-b hover:bg-gray-50">
                 <td className="p-4 flex items-center space-x-4">
-                  <img
+                  {/* <Image
                     src={item.images}
                     alt={item.title}
                     className="w-16 h-16 rounded-md object-cover"
-                  />
+                  /> */}
                   <span className="text-sm font-medium text-gray-800">{item.title}</span>
                 </td>
                 <td className="p-4">

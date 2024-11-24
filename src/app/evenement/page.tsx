@@ -233,11 +233,12 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 
 const EventPage = () => {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
-  const [events, setEvents] = useState([
+  const [events] = useState([
     {
       id: 1,
       title: "Mariages Planifiés à la Perfection",
@@ -279,7 +280,7 @@ const EventPage = () => {
     <div className="max-w-7xl mx-auto px-6 py-10">
       {/* Header */}
       <header className="mb-10 text-center">
-        <h1 className="text-4xl font-bold">Organisation d'Événements</h1>
+        <h1 className="text-4xl font-bold">Organisation d&apos;Événements</h1>
         <p className="text-gray-600 mt-4">
           Trouvez et planifiez les meilleurs événements à venir.
         </p>
@@ -313,7 +314,7 @@ const EventPage = () => {
             key={event.id}
             className="border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition"
           >
-            <img
+            <Image
               src={event.image}
               alt={event.title}
               className="w-full h-48 object-cover"
@@ -337,7 +338,7 @@ const EventPage = () => {
       <section className="mt-12 bg-gray-100 p-6 rounded-lg">
         <h2 className="text-2xl font-bold text-center mb-4">Contactez-nous</h2>
         <p className="text-gray-600 text-center mb-6">
-          Pour toute question ou demande d'organisation d'événement, contactez
+          Pour toute question ou demande d&apos;organisation d&apos;événement, contactez
           notre équipe.
         </p>
         <form className="max-w-lg mx-auto space-y-4">

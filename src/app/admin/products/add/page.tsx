@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+// import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,7 +26,7 @@ export default function AddProductPage() {
     description: "",
     features: "",
     shippingInfo: "",
-    images: null, // Pour stocker le fichier image
+    images: null as File | null, // Ajoutez ceci pour résoudre le problème
   });
 
   const [successMessage, setSuccessMessage] = useState("");
@@ -45,30 +45,28 @@ export default function AddProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
+  
     try {
       const formData = new FormData();
       Object.keys(product).forEach((key) => {
         if (key === "features" || key === "shippingInfo") {
-          // Convertir les chaînes en tableaux
-          formData.append(key, product[key as keyof typeof product].split(",").join(","));
+          formData.append(key, (product[key as keyof typeof product] as string)?.split(",").join(",") || "");
         } else if (key === "images" && product.images) {
-          // Ajouter le fichier image
-          formData.append("images", product.images);
+          formData.append("images", product.images as File);
         } else {
-          formData.append(key, product[key as keyof typeof product] || "");
+          formData.append(key, product[key as keyof typeof product]?.toString() || "");
         }
       });
-
+  
       const response = await fetch(`${BASE_URL}/product/new-product`, {
         method: "POST",
         body: formData,
       });
-
+  
       if (!response.ok) {
         throw new Error("Erreur lors de l'ajout du produit");
       }
-
+  
       setSuccessMessage("Produit ajouté avec succès !");
       setErrorMessage("");
       setProduct({
@@ -93,7 +91,7 @@ export default function AddProductPage() {
       setIsLoading(false);
     }
   };
-
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -174,14 +172,15 @@ export default function AddProductPage() {
           </div>
 
           <select
-            name="availability"
-            value={product.availability}
-            onChange={handleInputChange}
-            className="border rounded px-4 py-2"
-          >
-            <option value="Disponible">Disponible</option>
-            <option value="Indisponible">Indisponible</option>
-          </select>
+  name="availability"
+  value={product.availability}
+  onChange={(e) => setProduct({ ...product, availability: e.target.value as "Disponible" | "Indisponible" })}
+  className="border rounded px-4 py-2"
+>
+  <option value="Disponible">Disponible</option>
+  <option value="Indisponible">Indisponible</option>
+</select>
+
         </div>
 
         <Textarea

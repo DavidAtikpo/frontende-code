@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { FaHeart, FaShoppingCart, FaEye } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useCartContext } from "../context/CartContext";
+import Image from "next/image";
 
 interface Product {
   _id: number;
@@ -40,19 +41,19 @@ const HomeProducts = () => {
     fetchProducts();
   }, []);
 
-  const handleAddToCart = (product: Product) => {
-    dispatch({
-      type: "ADD_TO_CART",
-      payload: { ...product, quantity: 1 },
-    });
-  };
+//   const handleAddToCart = (product: Product) => {
+//     dispatch({
+//       type: "ADD_TO_CART",
+//       payload: { ...product, quantity: 1 },
+//     });
+//   };
 
   const handleToggleWishlist = (product: Product) => {
     const isInWishlist = state.wishlist.find((item) => item._id === product._id);
     if (isInWishlist) {
       dispatch({ type: "REMOVE_FROM_WISHLIST", payload: product._id });
     } else {
-      dispatch({ type: "ADD_TO_WISHLIST", payload: { ...product, quantity: 1 } });
+    //   dispatch({ type: "ADD_TO_WISHLIST", payload: { ...product, quantity: 1 } });
     }
   };
 
@@ -69,15 +70,17 @@ const HomeProducts = () => {
           <h2 className="text-3xl font-bold mt-2">30% de réduction !</h2>
           <p className="mt-4">Sur tous vos produits favoris</p>
           <p className="mt-1 text-sm">
-            Offre valide jusqu'à <strong>FIN D'ANNÉE</strong>
+            Offre valide jusqu&apos;à <strong>FIN D&apos;ANNÉE</strong>
           </p>
           <button className="mt-4 bg-blue-800 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
             PROFITEZ MAINTENANT →
           </button>
         </div>
-        <img
+        <Image
           className="h-48 object-cover"
           src="/images/publicite.jpg"
+          width={10}
+          height={10}
           alt="Publicité"
         />
       </div>
@@ -121,7 +124,7 @@ const HomeProducts = () => {
                 )}
 
                 {/* Image du produit */}
-                <img
+                <Image
                   src={Array.isArray(product.images) ? product.images[0] : product.images}
                   alt={product.title}
                   className="w-full h-48 object-cover rounded-md mb-4"
@@ -140,7 +143,7 @@ const HomeProducts = () => {
                     <FaHeart size={20} />
                   </button>
                   <button
-                    onClick={() => handleAddToCart(product)}
+                    // onClick={() => handleAddToCart(product)}
                     className="text-white bg-blue-600 p-2 rounded-full hover:bg-blue-800 transition"
                   >
                     <FaShoppingCart size={20} />
