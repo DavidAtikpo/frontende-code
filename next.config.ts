@@ -115,8 +115,8 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'dubon-server.vercel.app', // Votre backend sur Vercel
-        pathname: '/uploads/**', // Chemin d'accès aux images
+        hostname: 'dubon-server.vercel.app', 
+        pathname: '/**', 
       },
     ],
   },

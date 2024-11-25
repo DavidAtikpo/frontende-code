@@ -187,8 +187,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useCartContext } from "../context/CartContext";
 
-// const BASE_URL = "http//:localhost:5000/api"
-const BASE_URL = "http//:dubon-server.vercel.app"
+// const BASE_URL = "http//:localhost:5000"
+const BASE_URL = "https//:dubon-server.vercel.app"
 
 interface Product {
   _id: string;
