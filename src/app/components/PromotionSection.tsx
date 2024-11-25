@@ -187,6 +187,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useCartContext } from "../context/CartContext";
 
+// const BASE_URL = "http//:localhost:5000/api"
+const BASE_URL = "http//:dubon-server.vercel.app"
+
 interface Product {
   _id: string;
   title: string;
@@ -212,7 +215,7 @@ const PromotionsSection = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/product/promotions");
+        const response = await fetch(`${BASE_URL}/api/product/promotions`);
         const data = await response.json();
 
         if (Array.isArray(data)) {
