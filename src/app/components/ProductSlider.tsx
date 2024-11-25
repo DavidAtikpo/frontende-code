@@ -6,7 +6,7 @@ import Image from "next/image";
 const ProductSlider = () => {
   // Tableau d'images pour le slider
   const images = [
-    "/images/product1.jpg",
+    "https://camo.envatousercontent.com/347a5f3a543ddf7373e833ae8daff6d7c14b9564/68747470733a2f2f69322e77702e636f6d2f746869736b6f2e66696c65732e776f726470726573732e636f6d2f323031372f30332f73656374696f6e5f325f64656d6f312e676966g",
     "/images/product2.jpg",
     "/images/product3.jpg",
   ];
@@ -23,7 +23,7 @@ const ProductSlider = () => {
   }, [images.length]);
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-5 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <section className="w-7xl  px-6 py-5 grid grid-cols-1 lg:grid-cols-3 gap-10">
       {/* Section principale avec Slider */}
       <div className="col-span-2 bg-gray-100 p-6 rounded-lg relative flex items-center">
         <div className="flex-1">
@@ -81,9 +81,10 @@ const ProductSlider = () => {
           <Image
             src="https://via.placeholder.com/400x200?text=Google+Pixel+6+Pro"
             alt="Google Pixel 6 Pro"
-            width={400}
-            height={200}
-            className="mt-4 rounded-lg object-cover w-full"
+            width={30}
+            height={10}
+            className="rounded-lg object-cover w-full"
+            style={{ height: "40px" }} // Réduction de la hauteur à 40px
           />
           <button className="bg-yellow-400 text-black px-4 py-2 rounded mt-4 hover:bg-yellow-500 transition">
             
@@ -94,11 +95,12 @@ const ProductSlider = () => {
         <div className="bg-white text-black p-4 rounded-lg shadow">
           <h4 className="font-bold text-lg mb-2">Viandes</h4>
           <Image
-            src="https://via.placeholder.com/400x200?text=Viande"
+            src="https://i.pinimg.com/originals/79/8d/20/798d20da62546f1d732b5302732ade82.gif"
             alt="Viandes"
-            width={400}
-            height={200}
+            width={30}
+            height={10}
             className="rounded-lg object-cover w-full"
+            style={{ height: "40px" }} // Réduction de la hauteur à 40px
           />
           {/* <p className="text-gray-600 mt-4">1500 FCFA</p> */}
           <button className="bg-blue-700 text-white px-4 py-2 rounded mt-4 hover:bg-blue-500 transition">

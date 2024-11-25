@@ -8,7 +8,7 @@ import LatestNews from "./components/Articles";
 import BenefitsSection from "./components/BenefitsSection";
 import ProductSlider from "./components/ProductSlider";
 import NavigationBar from "./components/NavBar";
-// import AdvertisingBannerWithImage from "./components/publicite/page";
+import AdvertisingBannerWithImage from "./components/publicite/page";
 
 
 export default function Home() {
@@ -16,7 +16,7 @@ export default function Home() {
     <div>
       <NavigationBar/>
       <ProductSlider/>
-      {/* <AdvertisingBannerWithImage/> */}
+      <AdvertisingBannerWithImage/>
       <BenefitsSection/>
       <PromotionsSection/>
       <CategoriesSection/>

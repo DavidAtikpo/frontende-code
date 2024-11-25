@@ -37,7 +37,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'www.alikuyedirect.com',
+        hostname: 'i.pinimg.com',
         pathname: '/**',
       },
       {
@@ -52,7 +52,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'www.alikuyedirect.com',
+        hostname: 'i.pinimg.com',
         pathname: '/**',
       },
       {
@@ -62,7 +62,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'cdn-icons-png.flaticon.com',
+        hostname: 'camo.envatousercontent.com',
         pathname: '/**',
       },
 
