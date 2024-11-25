@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import AuthTabs from "../components/auth/AuthTabs";
 import Image from "next/image";
 
-const BASE_URL = "http://localhost:5000/api";
+// const BASE_URL = "http://localhost:5000/api";
+const BASE_URL = "https//:dubon-server.vercel.app"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -25,7 +26,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await fetch(`${BASE_URL}/user/login`, {
+      const response = await fetch(`${BASE_URL}/api/user/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
