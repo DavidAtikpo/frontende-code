@@ -5,9 +5,6 @@ const TopBar = () => {
     <div className="bg-customBlue text-white py-2 px-6">
       <div className="max-w-7xl mx-auto flex justify-between items-center text-sm">
         {/* Texte de gauche */}
-        <div className="font-medium">
-          Bienvenue sur Dubon Services
-        </div>
 
         {/* Liens sociaux et "Nous contacter" */}
         <div className="flex items-center space-x-4">
