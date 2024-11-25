@@ -501,7 +501,7 @@ import Image from "next/image";
 const BASE_URL = "http://localhost:5000/api";
 
 const Header = () => {
-  const [isMobile, setIsMobile] = useState(false);
+  // const [isMobile, setIsMobile] = useState(false);
   const { state, dispatch } = useCartContext();
   // const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -511,12 +511,12 @@ const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  // useEffect(() => {
+  //   const handleResize = () => setIsMobile(window.innerWidth <= 768);
+  //   handleResize();
+  //   window.addEventListener("resize", handleResize);
+  //   return () => window.removeEventListener("resize", handleResize);
+  // }, []);
 
     const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -563,6 +563,8 @@ const Header = () => {
       alert("Impossible de se déconnecter. Veuillez réessayer.");
     }
   };
+
+  // const isMobile = window.innerWidth <= 768;
 
   return (
     <header className="bg-customBlue text-white py-2 px-4 sticky top-10 z-50">
