@@ -1,6 +1,6 @@
 import HomeProducts from "./components/HomeProducts";
-// import CategoriesSection from "./components/CategoriesSection";
-// import PromotionsSection from "./components/PromotionSection";
+import CategoriesSection from "./components/CategoriesSection";
+import PromotionsSection from "./components/PromotionSection";
 import Banner from "./components/Banner";
 import DualBanner from "./components/DualBanner";
 import CategoriesGrid from "./components/ProductCategories";
@@ -18,8 +18,8 @@ export default function Home() {
       <ProductSlider/>
       {/* <AdvertisingBannerWithImage/> */}
       <BenefitsSection/>
-      {/* <PromotionsSection/> */}
-      {/* <CategoriesSection/> */}
+      <PromotionsSection/>
+      <CategoriesSection/>
       <HomeProducts />
       <DualBanner/>
       <CategoriesGrid/>

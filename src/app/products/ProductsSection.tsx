@@ -214,6 +214,7 @@ import { FaStar } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
 
+
 // Interface pour les produits
 interface Product {
   id: number;
@@ -224,6 +225,7 @@ interface Product {
   rating: number;
   badge?: string; // Pour les badges comme "Belle Offre" ou "Plus Vendus"
 }
+
 
 const ShopPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
