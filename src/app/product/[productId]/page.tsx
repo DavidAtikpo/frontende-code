@@ -6,8 +6,8 @@ import { FaHeart, FaShareAlt, FaStar } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
 
-const BASE_URL = "http://localhost:5000/api";
-
+// const BASE_URL = "http://localhost:5000/api";
+const BASE_URL = "https//:dubon-server.vercel.app"
 // Define the type for the product
 interface Product {
   id: number;
@@ -38,7 +38,7 @@ const ProductDetailPage = () => {
 
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/product/product-detail/${productId}`);
+        const response = await fetch(`${BASE_URL}/api/product/product-detail/${productId}`);
         if (!response.ok) throw new Error("Product not found");
         const data = await response.json();
         setProduct(data);
