@@ -113,6 +113,11 @@ const nextConfig = {
         port: '5000', // Port de votre serveur backend
         pathname: '/uploads/**', // Chemin d'accès aux images
       },
+      {
+        protocol: 'https',
+        hostname: 'dubon-server.vercel.app', // Votre backend sur Vercel
+        pathname: '/uploads/**', // Chemin d'accès aux images
+      },
     ],
   },
 };
