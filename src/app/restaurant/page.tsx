@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { FaStar } from "react-icons/fa";
 import Image from "next/image";
+import Link from "next/link";
 
 interface Restaurant {
   id: number;
@@ -67,6 +68,18 @@ const ERestaurantPage = () => {
   });
 
   return (
+    <div>
+
+        <nav className="text-gray-600 text-sm mb-6">
+        <Link href="/" className="hover:underline">
+          Accueil
+        </Link>{" "}
+        &gt;{" "}
+        <Link href="/restaurant" className="hover:underline">
+          Restaurant
+        </Link>{" "}
+        {/* / {product.title} */}
+      </nav>
     <div className="flex flex-col lg:flex-row max-w-7xl mx-auto px-6 py-10 gap-6">
       {/* Barre latérale */}
       <aside className="w-full lg:w-1/4 bg-gray-100 p-6 rounded-lg shadow-md">
@@ -146,6 +159,8 @@ const ERestaurantPage = () => {
                 src={restaurant.image}
                 alt={restaurant.name}
                 className="w-full h-40 object-cover"
+                width={64}
+                height={64}
               />
               <div className="p-4">
                 <h3 className="font-bold text-lg">{restaurant.name}</h3>
@@ -176,6 +191,7 @@ const ERestaurantPage = () => {
           ))}
         </div>
       </main>
+    </div>
     </div>
   );
 };

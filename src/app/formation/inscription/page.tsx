@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 
 const InscriptionPage = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -70,6 +71,21 @@ const InscriptionPage = () => {
   };
 
   return (
+    <div>
+       <nav className="text-gray-600 text-sm mb-6">
+  <Link href="/" className="hover:underline">
+    Accueil
+  </Link>{" "}
+  &gt;{" "}
+  <Link href="/formation" className="hover:underline">
+    Formation
+  </Link>{" "}
+  &gt;{" "}
+  <Link href="/inscription" className="hover:underline">
+    Formation
+  </Link>{" "}
+  {/* / {product.title} */}
+</nav>
     <div className="max-w-4xl mx-auto py-12 px-6 bg-gray-50">
       {/* En-tête */}
       <h1 className="text-3xl font-bold text-gray-800 mb-6">
@@ -252,6 +268,7 @@ const InscriptionPage = () => {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };

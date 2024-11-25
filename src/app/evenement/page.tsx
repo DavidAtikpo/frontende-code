@@ -234,6 +234,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 const EventPage = () => {
   const [search, setSearch] = useState("");
@@ -277,6 +278,17 @@ const EventPage = () => {
   );
 
   return (
+    <div>
+      <nav className="text-gray-600 text-sm mb-6">
+  <Link href="/" className="hover:underline">
+    Accueil
+  </Link>{" "}
+  /{" "}
+  <Link href="/evenement" className="hover:underline">
+    Evenemnet
+  </Link>{" "}
+  {/* / {product.title} */}
+</nav>
     <div className="max-w-7xl mx-auto px-6 py-10">
       {/* Header */}
       <header className="mb-10 text-center">
@@ -362,6 +374,7 @@ const EventPage = () => {
           </button>
         </form>
       </section>
+    </div>
     </div>
   );
 };

@@ -280,16 +280,16 @@ const ShopPage = () => {
 
   return (
     <div>
-<nav className="text-gray-600 text-sm mb-6">
-  <Link href="/" className="hover:underline">
-    Accueil
-  </Link>{" "}
-  /{" "}
-  <Link href="/products" className="hover:underline">
-    Boutique
-  </Link>{" "}
-  {/* / {product.title} */}
-</nav>
+      <nav className="text-gray-600 text-sm mb-6">
+        <Link href="/" className="hover:underline">
+          Accueil
+        </Link>{" "}
+        &gt;{" "}
+        <Link href="/products" className="hover:underline">
+          Boutique
+        </Link>{" "}
+        {/* / {product.title} */}
+      </nav>
     <div className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Barre latérale (filtres) */}
       

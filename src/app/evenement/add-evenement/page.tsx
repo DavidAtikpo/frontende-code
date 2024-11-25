@@ -152,6 +152,8 @@ const AddEventPage = () => {
   };
 
   return (
+   <div>
+    
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Ajouter un événement</h1>
       {errorMessage && <p className="mb-4 text-red-600">{errorMessage}</p>}
@@ -399,6 +401,7 @@ const AddEventPage = () => {
           {loading ? "Ajout en cours..." : "Ajouter l'événement"}
         </button>
       </form>
+    </div>
     </div>
   );
 };

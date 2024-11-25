@@ -1,38 +1,3 @@
-// /**
-//  * @type {import('next').NextConfig}
-//  */
-// const nextConfig = {
-//   reactStrictMode: true,
-//   // images: {
-//   //   domains: ['cdn-icons-png.flaticon.com', 'via.placeholder.com','localhost'], // Ajoutez vos domaines ici
-//   // },
-
-//   images: {
-//     remotePatterns: [
-//       {
-//         protocol: 'https',
-//         hostname: 'localhost',
-//         port: '5000',
-//         pathname: '/api/product/promotions/**',
-//       },
-//     ],
-//     domains: ['cdn-icons-png.flaticon.com', 'via.placeholder.com',],
-//   },
- 
-//   async redirects() {
-//     return [
-//       {
-//         source: '/uploads/:path*',
-//         destination: 'http://localhost:5000/uploads/:path*',
-//         permanent: true,
-//       },
-//     ];
-//   },
-// };
-
-// module.exports = nextConfig;
-
-
 /**
  * @type {import('next').NextConfig}
  */
@@ -53,6 +18,36 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'barf-naturel.fr',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'allegiance-educare.in',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'encrypted-tbn0.gstatic.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.alikuyedirect.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.alikuyedirect.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.alikuyedirect.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.alikuyedirect.com',
         pathname: '/**',
       },
       {
@@ -91,7 +86,7 @@ const nextConfig = {
 
       {
         protocol: 'https',
-        hostname: 'cdn-icons-png.flaticon.com',
+        hostname: 'autoecolebertili.com',
         pathname: '/**',
       },
 

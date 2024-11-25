@@ -201,7 +201,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         }`}
       >
         <div className="p-4 border-b">
-          <Image src="/logo.png" alt="Logo" width={150} height={32} className="h-8" />
+          <Image src="/LOGO-b.png" alt="Logo" width={60} height={32} className="h-8" />
         </div>
 
         <nav className="mt-6">

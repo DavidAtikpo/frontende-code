@@ -1,7 +1,20 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 const FormationPage = () => {
   return (
+    <div>
+
+    <nav className="text-gray-600 text-sm mb-6">
+      <Link href="/" className="hover:underline">
+        Accueil
+      </Link>{" "}
+      &gt;{" "}
+      <Link href="/formation" className="hover:underline">
+        Formation
+      </Link>{" "}
+      {/* / {product.title} */}
+    </nav>
     <div className="bg-gray-50">
       {/* Section Principale */}
       <header className="bg-yellow-50 py-12">
@@ -34,7 +47,7 @@ const FormationPage = () => {
                 compétences opérationnelles.
               </p>
               <button className="mt-4 bg-customBlue text-white px-4 py-2 rounded">
-                Explorer l’espace employeur
+                Explorer l&apos;espace employeur
               </button>
               <button className="mt-2 text-customBlue underline">
                 Découvrir nos offres business
@@ -58,6 +71,8 @@ const FormationPage = () => {
                 src="https://autoecolebertili.com/wp-content/uploads/2021/07/code-route-en-ligne2-apprenez.png"
                 alt="Apprenez"
                 className="w-24 h-24 mb-4 rounded-lg"
+                width={64}
+                height={64}
               />
               <h3 className="text-xl font-bold text-gray-800">Apprenez où que vous soyez</h3>
               <p className="text-gray-600 text-sm mt-2">
@@ -70,6 +85,8 @@ const FormationPage = () => {
                 src="https://allegiance-educare.in/storage/uploads/Mentoring-Pic-1.jpg"
                 alt="Mentor"
                 className="w-24 h-24 mb-4"
+                width={64}
+                height={64}
               />
               <h3 className="text-xl font-bold text-gray-800">Un mentor pour vous accompagner</h3>
               <p className="text-gray-600 text-sm mt-2">
@@ -82,6 +99,8 @@ const FormationPage = () => {
                 src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTl3wU1tVtY_SGiGNgE5hAHFc27vjqx9USlQg&s"
                 alt="Projets professionnels"
                 className="w-24 h-24 mb-4"
+                width={64}
+                height={64}
               />
               <h3 className="text-xl font-bold text-gray-800">Travaillez sur des projets professionnalisants</h3>
               <p className="text-gray-600 text-sm mt-2">
@@ -127,6 +146,7 @@ const FormationPage = () => {
 
         </div>
       </section>
+    </div>
     </div>
   );
 };

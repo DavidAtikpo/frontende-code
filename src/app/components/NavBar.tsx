@@ -74,6 +74,7 @@ const NavigationBar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
 
   useEffect(() => {
     if (selectedCategory) {

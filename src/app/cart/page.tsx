@@ -414,6 +414,7 @@ import React, { useState } from "react";
 import { useCartContext } from "../context/CartContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 
 const CartPage = () => {
   const { state, dispatch } = useCartContext();
@@ -461,6 +462,17 @@ const CartPage = () => {
   };
 
   return (
+    <div>
+                    <nav className="text-gray-600 text-sm mb-6">
+            <Link href="/" className="hover:underline">
+                Accueil
+            </Link>{" "}
+            /{" "}
+            <Link href="/cart" className="hover:underline">
+                Panier
+            </Link>{" "}
+            {/* / {product.title} */}
+            </nav>
     <div className="bg-gray-100 py-10 px-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Section Panier */}
@@ -594,6 +606,7 @@ const CartPage = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
