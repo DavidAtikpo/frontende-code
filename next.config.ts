@@ -32,7 +32,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'www.alikuyedirect.com',
+        hostname: 'cdn.asp.events',
         pathname: '/**',
       },
       {
@@ -47,12 +47,12 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'i.pinimg.com',
+        hostname: 'images.pexels.com',
         pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'i.pinimg.com',
+        hostname: 'encrypted-tbn0.gstatic.com',
         pathname: '/**',
       },
       {
@@ -92,7 +92,7 @@ const nextConfig = {
 
       {
         protocol: 'https',
-        hostname: 'via.placeholder.com',
+        hostname: 'www.step-services.be',
         pathname: '/**',
       },
 

@@ -68,8 +68,8 @@ const LatestNews = () => {
                 src={article.image}
                 alt={article.title}
                 className="w-full h-48 object-cover"
-                width={10}
-                height={10}
+                width={150}
+                height={15}
               />
 
               {/* Contenu de l'article */}

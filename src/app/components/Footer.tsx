@@ -9,20 +9,12 @@ const Footer = () => {
         {/* Section 1: Logo et contact */}
         <div>
           <Image
-            src="/logo.png"
+            src="/logod.png"
             alt="Logo"
             width={81}
             height={68}
             className="w-16 h-auto mb-4"
           />
-          <p>Customer Supports:</p>
-          <p className="font-semibold text-gray-100">(+229)52 42 31 28</p>
-          <p>N DE PARCELLE Carre sans Bornes</p>
-          <p>MAISON EUSTACHE GBEHOU</p>
-          <p>Agonvezon, Bohicon 2</p>
-          <p>Bohicon,Zou</p>
-          <p>BENIN</p>
-          <p className="mt-2 text-gray-100">info@dubonservice.com</p>
         </div>
 
         {/* Section 2: Meilleures Ventes */}

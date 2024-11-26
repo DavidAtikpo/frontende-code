@@ -398,7 +398,7 @@ import React, { useEffect, useState } from "react";
 import { FaHeart, FaShoppingCart, FaEye } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useCartContext } from "../context/CartContext";
-import Link from "next/link";
+// import Link from "next/link";
 import Image from "next/image";
 
 // const BASE_URL = "http://localhost:5000";
