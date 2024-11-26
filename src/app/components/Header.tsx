@@ -575,7 +575,7 @@ const Header = () => {
             <Image
               src="/logod.png"
               alt="Dubon Services"
-              width={50}
+              width={90}
               height={50}
               className="cursor-pointer"
             />
