@@ -79,7 +79,7 @@ const ProductSlider = () => {
           <h3 className="text-yellow-400 uppercase">Grosses Offres</h3>
           <h4 className="font-bold text-lg mt-2">Pour les produits frais</h4>
           <Image
-            src="https://via.placeholder.com/400x200?text=Google+Pixel+6+Pro"
+            src="https://i.pinimg.com/originals/c4/9a/20/c49a207e0f89c9290d98fd43a87a8cb0.gif"
             alt="Google Pixel 6 Pro"
             width={30}
             height={10}
@@ -93,14 +93,14 @@ const ProductSlider = () => {
 
         {/* Carte 2 */}
         <div className="bg-white text-black p-4 rounded-lg shadow">
-          <h4 className="font-bold text-lg mb-2">Viandes</h4>
+          <h4 className="font-bold text-lg mb-2">Contactez-nous</h4>
           <Image
-            src="https://i.pinimg.com/originals/79/8d/20/798d20da62546f1d732b5302732ade82.gif"
+            src="https://i.pinimg.com/originals/e5/2e/c2/e52ec24f8b7c18ae8eafc24a4b9bbba6.gif"
             alt="Viandes"
-            width={30}
-            height={10}
+            width={60}
+            height={50}
             className="rounded-lg object-cover w-full"
-            style={{ height: "40px" }} // Réduction de la hauteur à 40px
+            style={{ height: "200px" }} // Réduction de la hauteur à 40px
           />
           {/* <p className="text-gray-600 mt-4">1500 FCFA</p> */}
           <button className="bg-blue-700 text-white px-4 py-2 rounded mt-4 hover:bg-blue-500 transition">

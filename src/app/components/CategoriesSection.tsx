@@ -84,8 +84,6 @@
 // };
 
 // export default ProductsShowcase;
-
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -103,7 +101,7 @@ interface Product {
 }
 
 const ProductsShowcase = () => {
-  const [products, setProducts] = useState<Product[]>([]); // Liste des produits sélectionnés
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -131,7 +129,7 @@ const ProductsShowcase = () => {
         const selectedProducts: Product[] = [];
         for (const category in groupedByCategory) {
           if (selectedProducts.length < 6 && groupedByCategory[category].length > 0) {
-            selectedProducts.push(groupedByCategory[category][0]); // Prendre le premier produit de chaque catégorie
+            selectedProducts.push(groupedByCategory[category][0]);
           }
         }
 
@@ -152,28 +150,29 @@ const ProductsShowcase = () => {
 
   // Fonction pour rediriger l'utilisateur
   const handleCategoryClick = (category: string) => {
-    router.push(`/category/${category}`); // Redirige vers une page de catégorie
+    router.push(`/category/${category}`);
   };
 
   return (
-    <section className="max-w-7xl bg-gray-400 mx-auto px-6 py-10">
+    <section className="max-w-7xl bg-gray-400 mx-auto px-4 py-10">
       <h2 className="text-2xl font-bold text-center mb-6">Voir les catégories</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      {/* Conteneur avec défilement horizontal */}
+      <div className="flex overflow-x-auto space-x-4 py-4">
         {products.map((product) => (
           <div
             key={product._id}
-            onClick={() => handleCategoryClick(product.category)} // Redirection sur clic
-            className="bg-white p-4 shadow-md rounded-lg hover:shadow-lg transition cursor-pointer"
+            onClick={() => handleCategoryClick(product.category)}
+            className="bg-white p-4 shadow-md rounded-lg hover:shadow-lg transition cursor-pointer w-64" // Taille des éléments
           >
             <Image
-              src={product.images || "/placeholder.png"} // Image du produit ou un placeholder
+              src={product.images || "/placeholder.png"}
               alt={product.title}
               width={128}
               height={128}
               className="w-full h-32 object-cover mb-4 rounded"
             />
-            <h3 className="text-center font-semibold mb-2">{product.title}</h3>
+            {/* <h3 className="text-center font-semibold mb-2">{product.title}</h3> */}
             <p className="text-center text-blue-600 font-bold">{product.category}</p>
           </div>
         ))}
