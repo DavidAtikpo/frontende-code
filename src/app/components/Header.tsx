@@ -580,7 +580,6 @@ const Header = () => {
               className="cursor-pointer"
             />
           </Link>
-          <span className="text-lg font-bold">DUBON</span>
         </div>
 
         {/* Barre de recherche */}
