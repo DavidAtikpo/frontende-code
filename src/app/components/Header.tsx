@@ -609,9 +609,9 @@ const Header = () => {
               )}
             </button>
             {isCartOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-white text-black rounded shadow-lg">
+              <div className="absolute right-0  mt-2 w-64 bg-white text-black rounded shadow-lg">
                 <p className="p-4">Votre panier ({state.cart.length})</p>
-                <ul className="divide-y divide-gray-200">
+                <ul className="divide-y m-2 divide-gray-200">
                   {state.cart.map((item) => (
                     <li key={item._id} className="flex items-center py-2">
                       <Image
@@ -636,7 +636,7 @@ const Header = () => {
                     </li>
                   ))}
                 </ul>
-                <div className="border-t pt-2 mt-2">
+                <div className="border-t pt-2 m-2 mt-2">
                   <div className="flex justify-between text-sm font-bold">
                     <span>Sous-total</span>
                     <span>{calculateSubtotal()} CFA</span>
@@ -691,7 +691,7 @@ const Header = () => {
                     </li>
                   ))}
                 </ul>
-                <div className="mt-2 text-center">
+                <div className="mt-2 mb-2 text-center">
                   <Link href="/wishlist" className="text-blue-600 hover:underline text-sm">
                     VOIR LA WISHLIST
                   </Link>

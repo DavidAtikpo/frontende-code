@@ -120,6 +120,14 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'https://dubon-server.vercel.app/api/:path*', // Proxy vers votre API
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
