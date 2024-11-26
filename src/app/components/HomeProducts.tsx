@@ -479,79 +479,66 @@ const HomeProducts = () => {
   };
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-10">
-    {/* Section de Publicité */}
-    <div className="bg-orange-400 rounded-lg overflow-hidden flex flex-col justify-between w-full mb-10">
-      <div className="p-6 text-black">
-        <h3 className="text-lg font-bold">PRODUITS CONGELÉS</h3>
-        <h2 className="text-3xl font-bold mt-2">30% de réduction !</h2>
-        <p className="mt-4">Sur tous vos produits favoris</p>
-        <p className="mt-1 text-sm">
-          Offre valide jusqu&apos;à <strong>FIN D&apos;ANNÉE</strong>
-        </p>
-        <button className="mt-4 bg-blue-800 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
-          PROFITEZ MAINTENANT →
-        </button>
+    <section className="max-w-7xl mx-auto  ">
+      <div className="bg-orange-400 rounded-lg overflow-hidden flex flex-col justify-between w-full mb-10">
+        <div className="p-6 text-black">
+          <h3 className="text-base md:text-lg font-bold">PRODUITS CONGELÉS</h3>
+          <h2 className="text-2xl md:text-3xl font-bold mt-2">30% de réduction !</h2>
+          <p className="text-sm md:text-base mt-4">Sur tous vos produits favoris</p>
+          <p className="text-xs md:text-sm mt-1">
+            Offre valide jusqu&apos;à <strong>FIN D&apos;ANNÉE</strong>
+          </p>
+          <button className="mt-4 bg-blue-800 text-white px-3 py-2 rounded-lg text-xs md:text-sm hover:bg-blue-600 transition">
+            PROFITEZ MAINTENANT →
+          </button>
+        </div>
+        <Image
+          className="h-48 w-full object-cover"
+          src="/images/publicite.jpg"
+          width={300}
+          height={300}
+          alt="Publicité"
+        />
       </div>
-      <Image
-        className="h-48 w-full object-cover"
-        src="/images/publicite.jpg"
-        width={300}
-        height={300}
-        alt="Publicité"
-      />
-    </div>
-  
-    {/* Section des produits */}
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Nos produits en promotion</h2>
-        <Link href="/products" className="text-blue-800 hover:underline font-medium">
-          Voir tous les produits →
-        </Link>
-      </div>
-  
+
       {loading ? (
-        <p className="text-gray-500">Chargement des produits...</p>
+        <p className="text-gray-500  text-center">Chargement des produits...</p>
       ) : (
-        <div className="overflow-x-auto py-4">
-          <div className="flex space-x-4 min-w-max">
-            {products.slice(0, 9).map((product) => (
+        <div className="overflow-x-auto p-5 py-4">
+          <div className="flex space-x-4 min-w-max scrollbar-hide">
+            {products.map((product) => (
               <div
                 key={product._id}
-                className="p-4 shadow hover:shadow-lg transition relative group w-48"
+                className="p-1 hover:shadow-lg transition relative group w-32 sm:w-40 md:w-48"
               >
-                {/* Labels des produits */}
                 {product.isHot && (
-                  <span className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 text-xs rounded">
+                  <span className="absolute top-2 left-2 bg-red-500 text-white px-1 py-0.5 text-[10px] sm:text-xs rounded">
                     HOT
                   </span>
                 )}
                 {product.isBestDeal && (
-                  <span className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 text-xs rounded">
+                  <span className="absolute top-2 right-2 bg-blue-500 text-white px-1 py-0.5 text-[10px] sm:text-xs rounded">
                     BEST DEAL
                   </span>
                 )}
                 {product.discount && (
-                  <span className="absolute top-12 right-2 bg-green-500 text-white px-2 py-1 text-xs rounded">
+                  <span className="absolute top-12 right-2 bg-green-500 text-white px-1 py-0.5 text-[10px] sm:text-xs rounded">
                     {product.discount}% OFF
                   </span>
                 )}
-  
-                {/* Image du produit */}
+
                 <Image
                   src={
                     Array.isArray(product.images) && product.images.length > 0
                       ? product.images[0]
-                      : "/default-product.jpg" // Image par défaut
+                      : "/default-product.jpg"
                   }
                   alt={product.title}
-                  className="w-full h-48 object-cover rounded-md mb-4"
+                  className="w-full h-32 sm:h-40 md:h-48 object-cover mb-2 rounded"
                   width={300}
                   height={200}
                 />
-  
-                {/* Icônes Wishlist, Panier, Vue */}
+
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => handleToggleWishlist(product)}
@@ -576,16 +563,14 @@ const HomeProducts = () => {
                     <FaEye size={20} />
                   </button>
                 </div>
-  
-                {/* Infos produit */}
-                <h3 className="text-lg font-bold">{product.title}</h3>
-                <p className="text-gray-500 mb-2">{product.category}</p>
-  
-                {/* Prix */}
+
+                <h3 className="text-sm md:text-base font-bold">{product.title}</h3>
+                <p className="text-gray-500 text-xs md:text-sm mb-1">{product.category}</p>
+
                 <div className="flex items-center justify-between">
-                  <span className="text-blue-800 font-bold">{product.price} CFA</span>
+                  <span className="text-blue-800 font-bold text-sm">{product.price} CFA</span>
                   {product.discount && (
-                    <span className="text-gray-500 line-through text-sm ml-2">
+                    <span className="text-gray-500 line-through text-xs ml-1">
                       {product.price} CFA
                     </span>
                   )}
@@ -595,8 +580,7 @@ const HomeProducts = () => {
           </div>
         </div>
       )}
-    </div>
-  </section>
+    </section>
   
     );
 };

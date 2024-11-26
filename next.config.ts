@@ -47,7 +47,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'www.alikuyedirect.com',
+        hostname: 'i.pinimg.com',
         pathname: '/**',
       },
       {
