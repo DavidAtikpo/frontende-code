@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { FaStar } from "react-icons/fa";
+import Link from "next/link";
 const BASE_URL = "https//:dubon-server.vercel.app"
 
 // Interface pour les produits
@@ -72,13 +73,13 @@ const ShopPage = () => {
     <div className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
            {/* Breadcrumb */}
            <nav className="text-gray-600 text-sm mb-6">
-        <a href="/" className="hover:underline">
+        <Link href="/" className="hover:underline">
           Accueil
-        </a>{" "}
+        </Link>{" "}
         &gt;{" "}
-        <a href="/products" className="hover:underline">
+        <Link href="/products" className="hover:underline">
           Boutique
-        </a>{" "}
+        </Link>{" "}
       </nav>
      
       {/* Barre latérale (filtres) */}
