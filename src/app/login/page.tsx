@@ -52,7 +52,7 @@ export default function LoginPage() {
 
       // Stockez le token ou effectuez une redirection
       localStorage.setItem("token", data.token);
-      window.location.href = "/"; // Redirection après connexion réussie
+      window.location.href = "/user/dashboard"; // Redirection après connexion réussie
     } catch (err: unknown) {
       console.log(err);
       
