@@ -90,14 +90,14 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-// const BASE_URL = "http://localhost:5000/api";
-const BASE_URL = "https://dubon-server.vercel.app/api";
+const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "https://dubon-server.vercel.app/api";
 
 interface Product {
   _id: string;
   title: string;
   category: string;
-  images: string | null; // Chemin de l'image ou null
+  images: string  // Chemin de l'image ou null
 }
 
 const ProductsShowcase = () => {
@@ -110,7 +110,7 @@ const ProductsShowcase = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/product/get-all`);
+        const response = await fetch(`${BASE_URL}/api/product/get-all`);
         if (!response.ok) {
           throw new Error("Erreur lors de la récupération des produits");
         }
@@ -168,8 +168,8 @@ const ProductsShowcase = () => {
             <Image
               src={product.images || "/placeholder.png"}
               alt={product.title}
-              width={128}
-              height={128}
+              width={64}
+              height={64}
               className="w-full h-32 object-cover mb-4 rounded"
             />
             {/* <h3 className="text-center font-semibold mb-2">{product.title}</h3> */}

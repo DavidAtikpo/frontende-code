@@ -6,8 +6,10 @@
 // import Image from "next/image";
 // import { useCartContext } from "../context/CartContext";
 
+// const BASE_URL = "http://localhost:5000";
+
 // interface Product {
-//   _id: number;
+//   _id: string;
 //   title: string;
 //   images: string | string[];
 //   category: string;
@@ -15,44 +17,35 @@
 //   finalPrice: number;
 //   rating: number;
 //   discount?: number;
-//   isHot?: boolean;
-//   isBestSeller?: boolean;
-//   quantity?: number;
 // }
 
 // const PromotionsSection = () => {
 //   const [products, setProducts] = useState<Product[]>([]);
-//   const [countdown, setCountdown] = useState<string>(""); // Compte à rebours
+//   const [countdown, setCountdown] = useState<string>("");
 //   const router = useRouter();
-
 //   const { state, dispatch } = useCartContext();
 
-//   // Récupérer les produits en promotion
+//   // Fetch products
 //   useEffect(() => {
 //     const fetchProducts = async () => {
 //       try {
-//         const response = await fetch("http://localhost:5000/api/product/promotions");
-//         if (!response.ok) {
-//           throw new Error(`Erreur HTTP : ${response.status}`);
-//         }
+//         const response = await fetch(`${BASE_URL}/api/product/promotion`);
 //         const data = await response.json();
 //         if (Array.isArray(data)) {
 //           setProducts(data);
 //         } else {
-//           console.error("Données inattendues : ce n'est pas un tableau.");
-//           setProducts([]);
+//           console.error("Unexpected data format.");
 //         }
 //       } catch (error) {
-//         console.error("Erreur lors de la récupération des promotions :", error);
+//         console.error("Error fetching promotions:", error);
 //       }
 //     };
-
 //     fetchProducts();
 //   }, []);
 
-//   // Gestion du compte à rebours
+//   // Countdown logic
 //   useEffect(() => {
-//     const targetDate = new Date().getTime() + 16 * 24 * 60 * 60 * 1000; // 16 jours à partir de maintenant
+//     const targetDate = new Date().getTime() + 16 * 24 * 60 * 60 * 1000;
 //     const interval = setInterval(() => {
 //       const now = new Date().getTime();
 //       const distance = targetDate - now;
@@ -74,7 +67,6 @@
 //     return () => clearInterval(interval);
 //   }, []);
 
-//   // Ajouter un produit au panier
 //   const handleAddToCart = (product: Product) => {
 //     dispatch({
 //       type: "ADD_TO_CART",
@@ -82,9 +74,8 @@
 //     });
 //   };
 
-//   // Gérer la wishlist
 //   const handleToggleWishlist = (product: Product) => {
-//     const isInWishlist = state.wishlist.some((item) => item._id === product._id);
+//     const isInWishlist = state.wishlist.find((item) => item._id === product._id);
 //     if (isInWishlist) {
 //       dispatch({ type: "REMOVE_FROM_WISHLIST", payload: product._id });
 //     } else {
@@ -92,50 +83,45 @@
 //     }
 //   };
 
-//   // Voir les détails d'un produit
-//   const handleViewProduct = (productId: number) => {
+//   const handleViewProduct = (productId: string) => {
 //     router.push(`/product/${productId}`);
 //   };
 
 //   return (
-//     <section className="max-w-7xl mx-auto px-6 py-10">
-//       {/* En-tête */}
-//       <div className="flex justify-between items-center mb-6">
-//         <h2 className="text-2xl font-bold">Promotions</h2>
+//     <section className="max-w-7xl mx-auto px-4 py-8">
+//       {/* Header */}
+//       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+//         <h2 className="text-2xl font-bold mb-2 sm:mb-0">Promotions</h2>
 //         <p className="text-sm text-gray-500">
 //           Se termine dans :{" "}
 //           <span className="text-yellow-500 font-semibold">{countdown}</span>
 //         </p>
-//         <a href="/products" className="text-blue-800 hover:underline font-medium">
+//         <a href="/products" className="text-blue-800 hover:underline font-medium mt-2 sm:mt-0">
 //           Voir tous les produits →
 //         </a>
 //       </div>
 
-//       {/* Grille des produits */}
+//       {/* Products grid */}
 //       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 //         {products.slice(0, 8).map((product) => (
 //           <div
 //             key={product._id}
 //             className="border rounded-lg p-4 shadow hover:shadow-lg transition relative group"
 //           >
-//             {/* Image du produit */}
+//             {/* Image */}
 //             <div className="relative">
 //               <Image
-//                 src={
-//                   Array.isArray(product.images) && product.images.length > 0
-//                     ? product.images[0]
-//                     : "/placeholder.png"
-//                 }
+//                 src={Array.isArray(product.images) ? product.images[0] : "/placeholder.png"}
 //                 alt={product.title || "Produit"}
 //                 className="w-full h-40 object-cover rounded-md mb-4"
-//                 width={150}
-//                 height={150}
+//                 width={300}
+//                 height={200}
 //               />
 //               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
 //                 <button
 //                   onClick={() => handleToggleWishlist(product)}
 //                   className={`text-white p-2 rounded-full transition ${
-//                     state.wishlist.some((item) => item._id === product._id)
+//                     state.wishlist.find((item) => item._id === product._id)
 //                       ? "bg-red-600 hover:bg-red-800"
 //                       : "bg-blue-600 hover:bg-blue-800"
 //                   }`}
@@ -157,11 +143,9 @@
 //               </div>
 //             </div>
 
-//             {/* Informations du produit */}
+//             {/* Details */}
 //             <h3 className="text-lg font-bold">{product.title}</h3>
 //             <p className="text-gray-500 text-sm mb-2">{product.category}</p>
-
-//             {/* Prix */}
 //             <div className="flex items-center justify-between">
 //               <span className="text-blue-800 font-bold">{product.finalPrice} cfa</span>
 //               {product.discount && (
@@ -179,6 +163,7 @@
 
 // export default PromotionsSection;
 
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -187,8 +172,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useCartContext } from "../context/CartContext";
 
-// const BASE_URL = "http//:localhost:5000"
-const BASE_URL = "https//:dubon-server.vercel.app"
+const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "https://dubon-server.vercel.app";
 
 interface Product {
   _id: string;
@@ -215,23 +200,34 @@ const PromotionsSection = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/api/product/promotions`);
+        const response = await fetch(`${BASE_URL}/api/product/promotion`);
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP : ${response.status}`);
+        }
+  
+        const contentType = response.headers.get("Content-Type");
+        if (contentType && !contentType.includes("application/json")) {
+          throw new Error("Réponse non-JSON reçue.");
+        }
+  
         const data = await response.json();
-
         if (Array.isArray(data)) {
           setProducts(data);
+        } else if (data && Array.isArray(data.data)) {
+          setProducts(data.data); // Si les produits sont dans `data.data`
         } else {
-          console.error("Données inattendues : ce n'est pas un tableau.");
+          console.error("Structure inattendue :", data);
           setProducts([]);
         }
       } catch (error) {
         console.error("Erreur lors de la récupération des promotions :", error);
+        setProducts([]);
       }
     };
-
+  
     fetchProducts();
   }, []);
-
+  
   // Gérer le compte à rebours pour la promotion
   useEffect(() => {
     const targetDate = new Date().getTime() + 16 * 24 * 60 * 60 * 1000; // 16 jours à partir de maintenant
@@ -305,22 +301,26 @@ const PromotionsSection = () => {
           Voir tous les produits →
         </a>
       </div>
-
+  
       {/* Grille des produits */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="lg:grid lg:grid-cols-4 lg:gap-6 flex overflow-x-auto scrollbar-hide space-x-4">
         {products.slice(0, 8).map((product) => (
           <div
             key={product._id}
-            className="border rounded-lg p-4 shadow hover:shadow-lg transition relative group"
+            className="rounded-lg p-4 shadow hover:shadow-lg transition relative group min-w-[180px] sm:min-w-[200px] lg:min-w-0"
           >
             {/* Image du produit */}
             <div className="relative">
               <Image
-                src={Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : "/placeholder.png"}
+                src={
+                  Array.isArray(product.images) && product.images.length > 0
+                    ? product.images[0]
+                    : "/placeholder.png"
+                }
                 alt={product.title || "Produit"}
-                className="w-full h-40 object-cover rounded-md mb-4"
-                width={300}
-                height={200}
+                className="w-full h-32 object-cover rounded-md mb-4"
+                width={200}
+                height={150}
               />
               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
@@ -347,16 +347,18 @@ const PromotionsSection = () => {
                 </button>
               </div>
             </div>
-
+  
             {/* Informations du produit */}
-            <h3 className="text-lg font-bold">{product.title}</h3>
-            <p className="text-gray-500 text-sm mb-2">{product.category}</p>
-
+            <h3 className="text-sm font-bold">{product.title}</h3>
+            <p className="text-gray-500 text-xs mb-2">{product.category}</p>
+  
             {/* Prix */}
             <div className="flex items-center justify-between">
-              <span className="text-blue-800 font-bold">{product.finalPrice} cfa</span>
+              <span className="text-blue-800 font-bold text-sm">
+                {product.finalPrice} cfa
+              </span>
               {product.discount && (
-                <span className="text-gray-500 line-through text-sm ml-2">
+                <span className="text-gray-500 line-through text-xs ml-2">
                   {product.price} cfa
                 </span>
               )}
@@ -366,6 +368,7 @@ const PromotionsSection = () => {
       </div>
     </section>
   );
+  
 };
 
 export default PromotionsSection;

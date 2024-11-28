@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 // const BASE_URL = "http://localhost:5000/api";
-const BASE_URL = "https//:dubon-server.vercel.app"
+const BASE_URL = "https://dubon-server.vercel.app"
 // Define the type for the product
 interface Product {
   id: number;

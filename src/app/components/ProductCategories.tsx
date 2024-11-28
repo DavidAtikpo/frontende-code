@@ -7,7 +7,7 @@ import Image from "next/image";
 interface Product {
   _id: number;
   title: string;
-  image: string;
+  images: string;
   price: number;
 }
 
@@ -37,7 +37,10 @@ const CategoriesGrid = () => {
           <div className="space-y-4">
             {quickSales.map((product) => (
               <div key={product._id} className="border rounded-lg p-4 hover:shadow-lg transition">
-                <Image src={product.image} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
+                <Image src={product.images} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" 
+                                width={64}
+                                height={64}
+                />
                 <h4 className="text-sm font-semibold">{product.title}</h4>
                 <p className="text-blue-800 font-bold">${product.price}</p>
               </div>
@@ -51,7 +54,10 @@ const CategoriesGrid = () => {
           <div className="space-y-4">
             {bestSellers.map((product) => (
               <div key={product._id} className="border rounded-lg p-4 hover:shadow-lg transition">
-                <Image src={product.image} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
+                <Image src={product.images} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" 
+                width={64}
+                height={64}
+                />
                 <h4 className="text-sm font-semibold">{product.title}</h4>
                 <p className="text-blue-800 font-bold">${product.price}</p>
               </div>
@@ -65,7 +71,7 @@ const CategoriesGrid = () => {
           <div className="space-y-4">
             {topRated.map((product) => (
               <div key={product._id} className="border rounded-lg p-4 hover:shadow-lg transition">
-                <Image src={product.image} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
+                <Image src={product.images} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
                 <h4 className="text-sm font-semibold">{product.title}</h4>
                 <p className="text-blue-800 font-bold">{product.price}cfa</p>
               </div>
@@ -79,7 +85,12 @@ const CategoriesGrid = () => {
           <div className="space-y-4">
             {newArrivals.map((product) => (
               <div key={product._id} className="border rounded-lg p-4 hover:shadow-lg transition">
-                <Image src={product.image} alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" />
+                <Image src={product.images }
+                
+                alt={product.title} className="w-full h-20 object-cover mb-2 rounded-md" 
+                                width={64}
+                                height={64}
+                />
                 <h4 className="text-sm font-semibold">{product.title}</h4>
                 <p className="text-blue-800 font-bold">{product.price}cfa</p>
               </div>

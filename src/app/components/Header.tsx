@@ -567,7 +567,7 @@ const Header = () => {
   // const isMobile = window.innerWidth <= 768;
 
   return (
-    <header className="bg-customBlue text-white py-2 px-4 sticky top-0 z-50">
+    <header className="bg-customBlue text-white pb-2 px-4 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo et texte "DUBON" */}
         <div className="flex items-center space-x-2">

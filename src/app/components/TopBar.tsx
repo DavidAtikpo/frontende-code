@@ -70,7 +70,7 @@ import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube } from "react-icons/fa";
 
 const TopBar = () => {
   return (
-    <div className="bg-customBlue text-white py-2 px-6">
+    <div className="bg-customBlue text-white px-6">
       <div className="max-w-7xl mx-auto flex justify-between items-center text-sm">
         {/* Texte de gauche */}
         <span className="text-lg font-bold">DUBON</span>

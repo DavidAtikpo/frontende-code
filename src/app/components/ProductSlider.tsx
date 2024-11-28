@@ -146,7 +146,7 @@ const ProductSlider = () => {
   return (
     <section className="w-7xl px-6 py-5 grid grid-cols-1 lg:grid-cols-3 gap-10">
       {/* Section principale avec Slider */}
-      <div className="col-span-2 bg-[url('/1.png')] bg-cover bg-center p-6 rounded-lg relative flex items-center">
+      <div className="col-span-2 gb-gray-500 p-6 rounded-lg relative flex items-center">
         <div className="flex-1">
           <h3 className="text-blue-700 font-semibold uppercase mb-2 text-sm md:text-base lg:text-lg">
             L&apos;endroit pour tout avoir
