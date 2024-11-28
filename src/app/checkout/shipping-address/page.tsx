@@ -505,9 +505,9 @@ const CheckoutPage = () => {
       } else {
         throw new Error("Erreur lors de l'initiation du paiement.");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Erreur :", error);
-      setErrorMessage(error.message || "Une erreur s'est produite lors du paiement.");
+      setErrorMessage("Une erreur s'est produite lors du paiement.");
     } finally {
       setIsLoading(false);
     }
