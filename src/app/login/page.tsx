@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthTabs from "../components/auth/AuthTabs";
 import Image from "next/image";
-import { CiFacebook } from "react-icons/ci";
 import { FcGoogle } from "react-icons/fc";
 
 // const BASE_URL = "http://localhost:5000";

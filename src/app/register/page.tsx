@@ -203,7 +203,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import AuthTabs from "../components/auth/AuthTabs";
-import Popup from "../components/Popup";
+// import Popup from "../components/Popup";
 
 const BASE_URL = "https://dubon-server.vercel.app";
 
@@ -261,6 +261,8 @@ export default function RegisterPage() {
       setShowPopup(true); // Afficher le popup
     } catch (err) {
       setError("Une erreur est survenue. Veuillez réessayer.");
+      console.log(err);
+      
     } finally {
       setIsLoading(false);
     }

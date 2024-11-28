@@ -67,6 +67,7 @@
 
 
 import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube } from "react-icons/fa";
+import Image from "next/image";
 
 const TopBar = () => {
   return (
@@ -116,10 +117,12 @@ const TopBar = () => {
             rel="noopener noreferrer"
             className="hover:text-yellow-400"
           >
-            <img
+            <Image
               src="/tiktok-svgrepo-com.png" // Chemin relatif dans le dossier public
               alt="TikTok"
               className="w-5 h-5"
+              width={64}
+              height={64}
             />
           </a>
         </div>
