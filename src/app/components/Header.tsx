@@ -498,7 +498,8 @@ import { FaShoppingCart, FaHeart, FaUser } from "react-icons/fa";
 import Link from "next/link";
 import { useCartContext } from "../context/CartContext";
 import Image from "next/image";
-const BASE_URL = "http://localhost:5000/api";
+// const BASE_URL = "http://localhost:5000/api";
+const BASE_URL = "https://dubon-server.vercel.app";
 
 const Header = () => {
   // const [isMobile, setIsMobile] = useState(false);
@@ -538,7 +539,7 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       // Appeler l'API de déconnexion
-      const response = await fetch(`${BASE_URL}/user/logout`, {
+      const response = await fetch(`${BASE_URL}/api/user/logout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
