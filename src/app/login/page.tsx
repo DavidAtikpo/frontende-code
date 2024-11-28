@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthTabs from "../components/auth/AuthTabs";
 import Image from "next/image";
+import { CiFacebook } from "react-icons/ci";
+import { FcGoogle } from "react-icons/fc";
 
 // const BASE_URL = "http://localhost:5000";
 const BASE_URL = "https://dubon-server.vercel.app";
@@ -146,21 +148,34 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-3">
-            <Button variant="outline" className="w-full" type="button">
-              <Image src="/google-icon.png" alt="Google" className="w-5 h-5 mr-2" 
-              width={64}
-              height={64}
-              />
-              Connexion avec Google
-            </Button>
-            <Button variant="outline" className="w-full" type="button">
-              <Image src="/apple-icon.png" alt="Apple" className="w-5 h-5 mr-2"
-              width={64}
-              height={64}
-              />
-              Connexion avec Apple
-            </Button>
-          </div>
+  <Button
+    variant="outline"
+    className="w-full"
+    type="button"
+    onClick={() => (window.location.href = `${BASE_URL}/auth/google`)}
+  >
+   <FcGoogle />
+    Connexion avec Google
+  </Button>
+  <Button
+    variant="outline"
+    className="w-full"
+    type="button"
+    onClick={() => (window.location.href = `${BASE_URL}/auth/facebook`)}
+  >
+    <Image
+      src="/facebook.png"
+      alt="Facebook"
+      className="w-5 h-5 mr-2"
+      width={64}
+      height={64}
+    />
+    Connexion avec Facebook
+  </Button>
+</div>
+
+{error && <div className="text-sm text-red-600">{error}</div>}
+
 
           <div className="text-center text-sm text-gray-500">
             Pas encore de compte ?{" "}

@@ -225,7 +225,8 @@ import React, { useState } from "react";
 import { useCartContext } from "../../context/CartContext";
 import Image from "next/image";
 
-const BASE_URL = "http://localhost:5000/api";
+// const BASE_URL = "http://localhost:5000/api";
+const BASE_URL = "https://dubon-server.vercel.app";
 
 const CheckoutPage = () => {
   const { state } = useCartContext(); // Utilisation du contexte pour le panier
