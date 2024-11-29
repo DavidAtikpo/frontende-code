@@ -33,10 +33,10 @@ export default function UserDashboard() {
     completed: 149
   });
 
-  // const handleLogout = () => {
-  //   localStorage.removeItem("authToken");
-  //   window.location.href = "/login";
-  // };
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    window.location.href = "/login";
+  };
 
   return (
     <div className="container mx-auto p-6">

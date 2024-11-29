@@ -102,7 +102,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile menu button */}
-      <Header/>
+
       <div className="lg:hidden fixed top-4 right-4 z-50">
         <Button
           variant="ghost"
@@ -119,7 +119,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
 
       {/* Sidebar */}
       <aside className={`
-        fixed top-[4rem] inset-y-0 left-0 z-40 w-64 bg-white border-r transform 
+        fixed  inset-y-0 left-0 z-40 w-64 bg-white border-r transform 
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 transition-transform duration-200 ease-in-out
       `}>
