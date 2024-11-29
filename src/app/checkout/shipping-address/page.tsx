@@ -1128,7 +1128,9 @@ const CheckoutPage = () => {
                 onChange={() => setPaymentMethod("fedapay")}
                 className="hidden"
               />
-              <img src="/image.png" alt="FedaPay" className="w-8 h-8" />
+              <Image src="/image.png" alt="FedaPay" className="w-8 h-8"
+              width={64}
+              height={64} />
               <span className="font-medium text-gray-700">FedaPay</span>
             </label>
             <label
@@ -1145,7 +1147,10 @@ const CheckoutPage = () => {
                 onChange={() => setPaymentMethod("paypal")}
                 className="hidden"
               />
-              <img src="/icons/paypal-icon.png" alt="PayPal" className="w-8 h-8" />
+              <Image src="/icons/paypal-icon.png" alt="PayPal" className="w-8 h-8"
+              width={64}
+              height={64}
+              />
               <span className="font-medium text-gray-700">PayPal</span>
             </label>
           </div>

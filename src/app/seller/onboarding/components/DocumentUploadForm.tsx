@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload, X } from "lucide-react";
 import { SellerFormData } from "../page";
+import Image from "next/image";
 
 interface DocumentUploadFormProps {
   data: SellerFormData;
@@ -143,10 +144,12 @@ export function DocumentUploadForm({ data, onUpdate, onNext, onBack }: DocumentU
                 <div className="flex gap-2 mt-2">
                   {data.documents.photos?.map((photo, index) => (
                     <div key={index} className="relative">
-                      <img
+                      <Image
                         src={URL.createObjectURL(photo)}
                         alt={`Photo ${index + 1}`}
                         className="w-20 h-20 object-cover rounded"
+                        width={64}
+                        height={64}
                       />
                       <Button
                         type="button"

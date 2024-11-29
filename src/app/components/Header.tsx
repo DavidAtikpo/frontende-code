@@ -601,9 +601,9 @@ const profileRef = useRef<HTMLDivElement | null>(null);
     setIsProfileOpen(false);
   };
 
-  const handleToggleCart = () => {
-    setIsCartOpen((prevState) => !prevState);
-  };
+  // const handleToggleCart = () => {
+  //   setIsCartOpen((prevState) => !prevState);
+  // };
   
   
   // Utilisez `closeAllMenus` lors des actions spécifiques comme "Voir le panier" ou "Acheter maintenant"
