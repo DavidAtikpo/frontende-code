@@ -493,7 +493,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef } from "react";
 import { FaShoppingCart, FaHeart, FaUser } from "react-icons/fa";
 import Link from "next/link";
 import { useCartContext } from "../context/CartContext";
@@ -504,10 +504,8 @@ const BASE_URL = "https://dubon-server.vercel.app";
 const Header = () => {
   // const [isMobile, setIsMobile] = useState(false);
   const { state, dispatch } = useCartContext();
-  // const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCartOpen, setIsCartOpen] = useState(false);
-  // const [searchQuery, setSearchQuery] = useState("");
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -518,6 +516,11 @@ const Header = () => {
   //   window.addEventListener("resize", handleResize);
   //   return () => window.removeEventListener("resize", handleResize);
   // }, []);
+
+const cartRef = useRef<HTMLDivElement | null>(null);
+const wishlistRef = useRef<HTMLDivElement | null>(null);
+const profileRef = useRef<HTMLDivElement | null>(null);
+
 
     const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -564,7 +567,47 @@ const Header = () => {
       alert("Impossible de se déconnecter. Veuillez réessayer.");
     }
   };
+  
+  useEffect(() => {
+  const handleOutsideClick = (event: MouseEvent) => {
+    const target = event.target as Node | null;
 
+    if (
+      cartRef.current &&
+      !cartRef.current.contains(target) &&
+      wishlistRef.current &&
+      !wishlistRef.current.contains(target) &&
+      profileRef.current &&
+      !profileRef.current.contains(target)
+    ) {
+      setIsCartOpen(false);
+      setIsWishlistOpen(false);
+      setIsProfileOpen(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleOutsideClick);
+  return () => {
+    document.removeEventListener("mousedown", handleOutsideClick);
+  };
+}, []);
+
+  
+  
+  // Fonction pour fermer tous les menus explicitement
+  const closeAllMenus = () => {
+    setIsCartOpen(false);
+    setIsWishlistOpen(false);
+    setIsProfileOpen(false);
+  };
+
+  const handleToggleCart = () => {
+    setIsCartOpen((prevState) => !prevState);
+  };
+  
+  
+  // Utilisez `closeAllMenus` lors des actions spécifiques comme "Voir le panier" ou "Acheter maintenant"
+  
   // const isMobile = window.innerWidth <= 768;
 
   return (
@@ -591,7 +634,7 @@ const Header = () => {
               placeholder="Rechercher"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full md:w-[300px] px-3 py-2 border border-gray-500 rounded"
+              className="w-full px-3 py-2 border border-gray-500 rounded"
             />
           </form>
         </div>
@@ -609,7 +652,8 @@ const Header = () => {
               )}
             </button>
             {isCartOpen && (
-              <div className="absolute right-0  mt-2 w-64 bg-white text-black rounded shadow-lg">
+              
+              <div ref={cartRef} className="absolute right-0  mt-2 w-64 bg-white text-black rounded shadow-lg">
                 <p className="p-4">Votre panier ({state.cart.length})</p>
                 <ul className="divide-y m-2 divide-gray-200">
                   {state.cart.map((item) => (
@@ -642,12 +686,16 @@ const Header = () => {
                     <span>{calculateSubtotal()} CFA</span>
                   </div>
                   <div className="mt-3">
-                    <button className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+                    <button className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                     onClick={closeAllMenus}
+                    >
                       PAYER MAINTENANT →
                     </button>
                   </div>
                   <div className="mt-2 text-center">
-                    <Link href="/cart" className="text-blue-600 hover:underline text-sm">
+                    <Link href="/cart" className="text-blue-600 hover:underline text-sm"
+                     onClick={closeAllMenus}
+                    >
                       VOIR LE PANIER
                     </Link>
                   </div>
@@ -667,7 +715,7 @@ const Header = () => {
               )}
             </button>
             {isWishlistOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-white text-black rounded shadow-lg">
+              <div ref={wishlistRef} className="absolute right-0 mt-2 w-64 bg-white text-black rounded shadow-lg">
                 <p className="p-4"> Wishlist ({state.wishlist.length})</p>
                 <ul className="divide-y divide-gray-200">
                   {state.wishlist.map((item) => (
@@ -692,7 +740,9 @@ const Header = () => {
                   ))}
                 </ul>
                 <div className="mt-2 mb-2 text-center">
-                  <Link href="/wishlist" className="text-blue-600 hover:underline text-sm">
+                  <Link href="/wishlist" className="text-blue-600 hover:underline text-sm"
+                   onClick={closeAllMenus}
+                  >
                     VOIR LA WISHLIST
                   </Link>
                 </div>
@@ -706,7 +756,7 @@ const Header = () => {
               <FaUser size={20} />
             </button>
             {isProfileOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-white text-black rounded shadow-lg">
+              <div ref={profileRef} className="absolute right-0 mt-2 w-64 bg-white text-black rounded shadow-lg">
                                 {isAuthenticated ? (
                   <>
                     <ul className="space-y-2">
@@ -721,15 +771,11 @@ const Header = () => {
                         </Link>
                       </li>
                       <li>
-                        <Link href="/seller/onboarding" className="block hover:underline">
-                          Devenir Vendeur
+                        <Link href="/user/dashboard" className="block hover:underline">
+                          Dashboard
                         </Link>
                       </li>
-                      <li>
-                        <Link href="/help" className="block hover:underline">
-                          Centre d&apos;Aide
-                        </Link>
-                      </li>
+                      
                       <li>
                    <button
                       onClick={ handleLogout}
@@ -743,46 +789,12 @@ const Header = () => {
                 ) : (
                   <>
                  <form className="space-y-4">
-                   <div>
-                     <input 
-                       type="email" 
-                       placeholder="Adresse mail" 
-                       className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-                     />
-                   </div>
-                  
-                   <div className="relative">
-                     <input 
-                       type="password" 
-                       placeholder="Mot de passe" 
-                       className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-                     />
-                     <button 
-                       type="button"
-                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                     >
-                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                         <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                         <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                      </svg>
-                     </button>
-                   </div>
-
-                  <div className="flex justify-end">
-                     <Link
-                       href="/forgot-password" 
-                       className="text-sm text-blue-600 hover:underline"
-                     >
-                       Mot de passe oublié
-                     </Link>
-                   </div>
-
-                   <button 
-                     type="submit" 
-                     className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors"
+                 <Link 
+                     href="/login" 
+                     className="block w-full mt-2 py-2 text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors"
                    >
-                     CONNEXION →
-                   </button>
+                     CONNEXION
+                   </Link>
                  </form>
                  <div className="mt-4 text-center">
                    <p className="text-sm text-gray-600">Pas de compte déjà ?</p>
