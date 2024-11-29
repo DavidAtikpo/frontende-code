@@ -161,7 +161,7 @@ export default function SellerOnboardingPage() {
         <Card>
           <CardContent>
             <p className="text-red-600 font-bold">
-              Une erreur s'est produite. L'étape sélectionnée est invalide.
+              Une erreur s&apos;est produite. L&apos;étape sélectionnée est invalide.
             </p>
           </CardContent>
         </Card>

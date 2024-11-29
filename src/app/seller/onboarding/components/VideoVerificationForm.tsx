@@ -31,6 +31,8 @@ export function VideoVerificationForm({ data, onUpdate, onNext, onBack }: VideoV
         videoRef.current.srcObject = mediaStream;
       }
     } catch (err) {
+        console.log(err);
+        
       setError("Impossible d'accéder à la caméra. Veuillez vérifier vos permissions.");
     }
   };
