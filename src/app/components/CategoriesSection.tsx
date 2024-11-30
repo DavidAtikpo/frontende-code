@@ -96,8 +96,8 @@ const CategoriesSection = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {categories.map((category, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {categories.slice(0, 3).map((category, index) => (
             <motion.div
               key={category._id}
               initial={{ opacity: 0, y: 20 }}
@@ -167,6 +167,24 @@ const CategoriesSection = () => {
             </motion.div>
           ))}
         </div>
+
+        {categories.length > 3 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-12 text-center"
+          >
+            <button
+              onClick={() => router.push('/products')}
+              className="group inline-flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 
+                text-white px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105"
+            >
+              <span className="font-medium">Voir toutes les catégories</span>
+              <FaArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
+            </button>
+          </motion.div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
