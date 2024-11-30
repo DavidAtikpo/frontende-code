@@ -95,7 +95,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-2 sticky top-0 z-50">
+    <header className="bg-gradient-to-r bg-customBlue text-white py-2 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
           {/* Logo */}
