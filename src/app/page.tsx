@@ -22,7 +22,7 @@ export default function Home() {
       <PromotionsSection/>
       <CategoriesSection/>
       <HomeProducts />
-      <CategoriesGrid/>
+     {/* <CategoriesGrid/> */}
       <LatestNews/>
     </div>
   );
