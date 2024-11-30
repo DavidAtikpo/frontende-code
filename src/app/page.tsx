@@ -10,6 +10,7 @@ import ProductSlider from "./components/ProductSlider";
 import NavigationBar from "./components/NavBar";
 import NewProductBar from "./components/NewProductBar";
 import AdvertisingBannerWithImage from "./components/publicite/page";
+import GuaranteesSection from "./components/GuaranteesSection";
 
 
 export default function Home() {
@@ -17,7 +18,7 @@ export default function Home() {
     <div>
       <NavigationBar/>
       <ProductSlider/>
-      <BenefitsSection/>
+      <GuaranteesSection/>
       <AdvertisingBannerWithImage/>
       <PromotionsSection/>
       <CategoriesSection/>
