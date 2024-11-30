@@ -23,7 +23,6 @@ export default function Home() {
       <CategoriesSection/>
       <HomeProducts />
       <CategoriesGrid/>
-      <Banner/>
       <LatestNews/>
     </div>
   );

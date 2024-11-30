@@ -2,13 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { FaHeart, FaShareAlt, FaStar } from "react-icons/fa";
+import { FaHeart, FaShareAlt, FaStar, FaShoppingCart, FaCreditCard } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
+import LoadingSpinner from "@/app/components/LoadingSpinner";
 
-// const BASE_URL = "http://localhost:5000/api";
-const BASE_URL = "https://dubon-server.vercel.app"
-// Define the type for the product
+const BASE_URL = "https://dubon-server.vercel.app";
+
 interface Product {
   id: number;
   title: string;
@@ -28,11 +28,12 @@ interface Product {
 const ProductDetailPage = () => {
   const params = useParams();
   const productId = params?.productId;
-
+  const [activeTab, setActiveTab] = useState("description");
+  const [selectedImage, setSelectedImage] = useState(0);
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch product data
   useEffect(() => {
     if (!productId) return;
 
@@ -44,6 +45,8 @@ const ProductDetailPage = () => {
         setProduct(data);
       } catch (error) {
         console.error("Error fetching product:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -54,146 +57,197 @@ const ProductDetailPage = () => {
     setQuantity((prev) => Math.max(1, prev + delta));
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+  
   if (!product) {
-    return <p className="text-center py-10">Chargement du produit...</p>;
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <p className="text-lg text-gray-600">Produit non trouvé</p>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Breadcrumb */}
-      <nav className="text-gray-600 text-sm mb-6">
-  <Link href="/" className="hover:underline">
-    Accueil
-  </Link>{" "}
-  /{" "}
-  <Link href="/products" className="hover:underline">
-    Boutique
-  </Link>{" "}
-  / {product.title}
-</nav>
+      <nav className="text-sm mb-8 flex items-center space-x-2 text-gray-500">
+        <Link href="/" className="hover:text-blue-600 transition-colors">
+          Accueil
+        </Link>
+        <span>/</span>
+        <Link href="/products" className="hover:text-blue-600 transition-colors">
+          Boutique
+        </Link>
+        <span>/</span>
+        <span className="text-gray-900 font-medium">{product.title}</span>
+      </nav>
 
-      {/* Upper Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Images */}
-        <div className="flex flex-col">
-          <div className="border rounded-lg overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        {/* Images Section */}
+        <div className="space-y-4">
+          <div className="relative h-[300px] sm:h-[400px] rounded-xl overflow-hidden border">
             <Image
-              src={product.images?.[0] || "/placeholder.jpg"} // Fallback image
+              src={product.images?.[selectedImage] || "/placeholder.jpg"}
               alt={product.title}
-              className="w-full h-96 object-cover"
-              width={300}
-              height={200}
+              fill
+              className="object-contain"
+              priority
             />
           </div>
-          <div className="flex mt-4 space-x-2 overflow-x-auto">
+          <div className="grid grid-cols-5 gap-2">
             {product.images?.map((img, index) => (
-              <Image
+              <button
                 key={index}
-                src={img}
-                alt={`Thumbnail ${index + 1}`}
-                className="w-20 h-20 object-cover border rounded cursor-pointer"
-                width={300}
-                height={200}
-              />
-            )) || <p>No images available</p>}
+                onClick={() => setSelectedImage(index)}
+                className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all
+                  ${selectedImage === index ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-200 hover:border-gray-300'}`}
+              >
+                <Image
+                  src={img}
+                  alt={`${product.title} ${index + 1}`}
+                  fill
+                  className="object-contain p-1"
+                />
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Product Information */}
-        <div>
-          <h1 className="text-2xl font-bold mb-2">{product.title}</h1>
-          <div className="flex items-center mb-4">
-            <FaStar className="text-yellow-500 mr-1" />
-            <FaStar className="text-yellow-500 mr-1" />
-            <FaStar className="text-yellow-500 mr-1" />
-            <FaStar className="text-yellow-500 mr-1" />
-            <FaStar className="text-gray-300" />
-            <span className="text-sm text-gray-500 ml-2">(26 avis)</span>
+        {/* Product Info Section */}
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.title}</h1>
+            <div className="flex items-center space-x-4 mb-4">
+              <div className="flex text-yellow-400">
+                {[...Array(5)].map((_, i) => (
+                  <FaStar key={i} className={i < 4 ? 'text-yellow-400' : 'text-gray-300'} />
+                ))}
+              </div>
+              <span className="text-sm text-gray-500">(26 avis)</span>
+            </div>
+            <div className="space-y-2 text-sm text-gray-600">
+              <p>SKU: <span className="font-medium">{product.sku}</span></p>
+              <p>Vendeur: <span className="font-medium">{product.vendor}</span></p>
+              <p>Catégorie: <span className="text-blue-600 hover:underline cursor-pointer">{product.category}</span></p>
+            </div>
           </div>
-          <p className="text-sm text-gray-600 mb-2">SKU: {product.sku}</p>
-          <p className="text-sm text-gray-600 mb-2">Vendeur: {product.vendor}</p>
-          <p className="text-sm text-gray-600 mb-2">
-            Catégorie: <span className="text-blue-600">{product.category}</span>
-          </p>
-          <p className="text-2xl font-bold text-blue-600 mb-2">{product.price} FCFA</p>
-          <p className="text-sm text-gray-500 line-through mb-2">{product.oldPrice} FCFA</p>
-          <p className="text-sm text-green-600 mb-4">{product.discount}% de réduction</p>
-          <p className={`mb-4 ${product.availability === "Disponible" ? "text-green-600" : "text-red-600"}`}>
-            {product.availability}
-          </p>
-          <div className="flex items-center mt-4 space-x-4">
-            <div className="flex items-center">
-              <button
-                onClick={() => handleQuantityChange(-1)}
-                className="px-2 py-1 border rounded hover:bg-gray-200"
-              >
-                -
+
+          <div className="space-y-2">
+            <div className="flex items-baseline space-x-3">
+              <span className="text-3xl font-bold text-blue-600">{product.price} FCFA</span>
+              {product.oldPrice && (
+                <span className="text-lg text-gray-500 line-through">{product.oldPrice} FCFA</span>
+              )}
+            </div>
+            {product.discount > 0 && (
+              <span className="inline-block bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">
+                -{product.discount}% de réduction
+              </span>
+            )}
+            <p className={`font-medium ${
+              product.availability === "Disponible" ? "text-green-600" : "text-red-600"
+            }`}>
+              {product.availability}
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center border rounded-lg">
+                <button
+                  onClick={() => handleQuantityChange(-1)}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  -
+                </button>
+                <span className="px-4 py-2 border-x">{quantity}</span>
+                <button
+                  onClick={() => handleQuantityChange(1)}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <button className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                <FaShoppingCart />
+                <span>Ajouter au panier</span>
               </button>
-              <span className="px-4">{quantity}</span>
-              <button
-                onClick={() => handleQuantityChange(1)}
-                className="px-2 py-1 border rounded hover:bg-gray-200"
-              >
-                +
+              <button className="flex items-center justify-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
+                <FaCreditCard />
+                <span>Acheter maintenant</span>
               </button>
             </div>
-            <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
-              Ajouter au panier
-            </button>
-            <button className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
-              Acheter
-            </button>
-          </div>
-          <div className="flex items-center mt-4 space-x-4">
-            <button className="flex items-center text-gray-600">
-              <FaHeart className="mr-2" />
-              Ajouter à la liste de souhaits
-            </button>
-            <button className="flex items-center text-gray-600">
-              <FaShareAlt className="mr-2" />
-              Partager
-            </button>
+
+            <div className="flex items-center space-x-6 pt-4">
+              <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
+                <FaHeart />
+                <span>Ajouter aux favoris</span>
+              </button>
+              <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors">
+                <FaShareAlt />
+                <span>Partager</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="mt-8">
-        <div className="flex space-x-6 border-b pb-2">
-          <button className="font-bold text-blue-600">DESCRIPTION</button>
-          <button className="text-gray-600">INFORMATIONS SUPPL.</button>
-          <button className="text-gray-600">SPÉCIFICATION</button>
-          <button className="text-gray-600">AVIS</button>
+      {/* Tabs Section */}
+      <div className="mt-16">
+        <div className="border-b">
+          <div className="flex space-x-8">
+            {['description', 'informations', 'specification', 'avis'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`pb-4 font-medium transition-colors ${
+                  activeTab === tab
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {tab.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="mt-4">
-          <p>{product.description}</p>
-          <ul className="mt-4 list-disc pl-6">
-            {product.features?.map((feature, index) => (
-              <li key={index}>{feature}</li>
-            )) || <li>Pas de caractéristiques disponibles</li>}
-          </ul>
-        </div>
-      </div>
 
-      {/* Shipping Info */}
-      <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
-          <h3 className="font-bold mb-2">Caractéristiques</h3>
-          <ul className="list-disc pl-6">
-            {product.features?.map((feature, index) => (
-              <li key={index}>{feature}</li>
-            )) || <li>Pas de caractéristiques disponibles</li>}
-          </ul>
-        </div>
-        <div>
-          <h3 className="font-bold mb-2">Informations sur la livraison</h3>
-          <ul className="list-disc pl-6">
-            {product.shippingInfo?.map((info, index) => (
-              <li key={index}>
-                <strong>{info.type}:</strong> {info.details}
-              </li>
-            )) || <li>Pas d&apos;informations disponibles</li>}
-          </ul>
+        <div className="py-6">
+          {activeTab === 'description' && (
+            <div className="prose max-w-none">
+              <p className="text-gray-600 leading-relaxed">{product.description}</p>
+              {product.features && (
+                <ul className="mt-4 space-y-2">
+                  {product.features.map((feature, index) => (
+                    <li key={index} className="flex items-center space-x-2">
+                      <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+          
+          {activeTab === 'informations' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {product.shippingInfo?.map((info, index) => (
+                <div key={index} className="border rounded-lg p-4">
+                  <h3 className="font-medium text-gray-900 mb-2">{info.type}</h3>
+                  <p className="text-gray-600">{info.details}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,12 +1,54 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import Link from 'next/link';
 import { FaArrowRight, FaClock, FaFire } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
+
+const BASE_URL = "https://dubon-server.vercel.app";
+
+interface Product {
+  _id: string;
+  title: string;
+  images: string | string[];
+  price: number;
+  discount?: number;
+  isHot?: boolean;
+  isBestDeal?: boolean;
+}
 
 const PromotionSection = () => {
+  const [promotionalProducts, setPromotionalProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchPromotionalProducts = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/product/get-all`);
+        const data = await response.json();
+        // Filtrer les produits avec des réductions
+        const productsWithDiscount = data.filter((product: Product) => product.discount && product.discount > 0);
+        setPromotionalProducts(productsWithDiscount.slice(0, 5)); // Prendre les 5 premiers produits en promotion
+        setLoading(false);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des promotions :", error);
+        setLoading(false);
+      }
+    };
+
+    fetchPromotionalProducts();
+  }, []);
+
+  const handleViewProduct = (productId: string) => {
+    router.push(`/product/${productId}`);
+  };
+
+  if (loading) {
+    return <div className="text-center py-16">Chargement des promotions...</div>;
+  }
+
   return (
     <section className="py-16 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -25,54 +67,61 @@ const PromotionSection = () => {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Grande Promotion */}
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="relative group"
-          >
-            <div className="relative h-[400px] rounded-2xl overflow-hidden">
-              <Image
-                src="/promo1.jpg"
-                alt="Promotion principale"
-                fill
-                className="object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-8">
-                <div className="flex items-center gap-2 text-yellow-400 mb-3">
-                  <FaFire className="text-xl" />
-                  <span className="text-sm font-semibold uppercase tracking-wider">Offre Limitée</span>
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2">
-                  Promotion Exceptionnelle
-                </h3>
-                <p className="text-white/90 mb-4">
-                  Profitez de -50% sur une sélection de produits
-                </p>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-white/80">
-                    <FaClock />
-                    <span>Fin dans 2 jours</span>
+          {/* Grande Promotion - Premier produit avec la plus grande réduction */}
+          {promotionalProducts.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="relative group"
+            >
+              <div className="relative h-[400px] rounded-2xl overflow-hidden">
+                <Image
+                  src={Array.isArray(promotionalProducts[0].images) 
+                    ? promotionalProducts[0].images[0] 
+                    : promotionalProducts[0].images}
+                  alt={promotionalProducts[0].title}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-8">
+                  <div className="flex items-center gap-2 text-yellow-400 mb-3">
+                    <FaFire className="text-xl" />
+                    <span className="text-sm font-semibold uppercase tracking-wider">
+                      -{promotionalProducts[0].discount}% de réduction
+                    </span>
                   </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-white text-blue-600 px-6 py-2 rounded-full font-medium hover:bg-blue-50 transition-colors flex items-center gap-2"
-                  >
-                    En profiter <FaArrowRight />
-                  </motion.button>
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    {promotionalProducts[0].title}
+                  </h3>
+                  <p className="text-white/90 mb-4">
+                    Prix: {promotionalProducts[0].price} CFA
+                  </p>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 text-white/80">
+                      <FaClock />
+                      <span>Offre limitée</span>
+                    </div>
+                    <motion.button
+                      onClick={() => handleViewProduct(promotionalProducts[0]._id)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="bg-white text-blue-600 px-6 py-2 rounded-full font-medium hover:bg-blue-50 transition-colors flex items-center gap-2"
+                    >
+                      En profiter <FaArrowRight />
+                    </motion.button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
 
           {/* Grid de petites promotions */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[1, 2, 3, 4].map((index) => (
+            {promotionalProducts.slice(1, 5).map((product, index) => (
               <motion.div
-                key={index}
+                key={product._id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -81,25 +130,25 @@ const PromotionSection = () => {
               >
                 <div className="relative h-[180px]">
                   <Image
-                    src={`/promo-small-${index}.jpg`}
-                    alt={`Promotion ${index}`}
+                    src={Array.isArray(product.images) ? product.images[0] : product.images}
+                    alt={product.title}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <h4 className="text-lg font-semibold text-white mb-1">
-                      Offre Flash #{index}
+                      {product.title}
                     </h4>
                     <p className="text-white/90 text-sm mb-2">
-                      Jusqu'à -30% de réduction
+                      -{product.discount}% de réduction
                     </p>
-                    <Link 
-                      href="#" 
+                    <button 
+                      onClick={() => handleViewProduct(product._id)}
                       className="text-white/90 text-sm hover:text-white flex items-center gap-1 transition-colors"
                     >
                       Voir l'offre <FaArrowRight className="text-xs" />
-                    </Link>
+                    </button>
                   </div>
                 </div>
               </motion.div>
