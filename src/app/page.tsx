@@ -3,7 +3,7 @@ import CategoriesSection from "./components/CategoriesSection";
 import PromotionsSection from "./components/PromotionSection";
 // import Banner from "./components/Banner";
 // import DualBanner from "./components/DualBanner";
-import CategoriesGrid from "./components/ProductCategories";
+// import CategoriesGrid from "./components/ProductCategories";
 import LatestNews from "./components/Articles";
 // import BenefitsSection from "./components/BenefitsSection";
 import ProductSlider from "./components/ProductSlider";
