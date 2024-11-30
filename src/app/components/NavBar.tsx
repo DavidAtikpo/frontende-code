@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-// import Image from "next/image";
-import { FaPhoneAlt } from "react-icons/fa";
+import { FaPhoneAlt, FaSearch } from "react-icons/fa";
 import {
   AiOutlineMenu,
   AiOutlineClose,
@@ -85,9 +84,27 @@ const NavigationBar = () => {
   return (
     <nav className="bg-white shadow-lg py-3 sticky top-0 z-10 transition-all duration-300">
       <div className="max-w-7xl mx-auto flex justify-between items-center px-6">
+        {/* Logo et barre de recherche */}
+        <div className="flex items-center space-x-4">
+          <button
+            className="md:hidden text-3xl text-gray-800 hover:text-blue-600 transition-colors duration-200"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <AiOutlineClose /> : <AiOutlineMenu />}
+          </button>
+          <div className="hidden md:flex items-center space-x-2">
+            <FaSearch className="text-gray-500" />
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              className="border-b border-gray-300 focus:border-blue-500 outline-none transition-colors duration-200"
+            />
+          </div>
+        </div>
+
         {/* Dropdown pour Catégories */}
         <div
-          className="relative"
+          className="relative hidden md:block"
           onMouseEnter={() => setIsDropdownOpen(true)}
           onMouseLeave={() => {
             setIsDropdownOpen(false);
@@ -142,21 +159,6 @@ const NavigationBar = () => {
           )}
         </div>
 
-        {/* Menu Hamburger */}
-        <div className="md:hidden">
-          {isMobileMenuOpen ? (
-            <AiOutlineClose
-              className="text-3xl cursor-pointer text-gray-800 hover:text-blue-600 transition-colors duration-200"
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-          ) : (
-            <AiOutlineMenu
-              className="text-3xl cursor-pointer text-gray-800 hover:text-blue-600 transition-colors duration-200"
-              onClick={() => setIsMobileMenuOpen(true)}
-            />
-          )}
-        </div>
-
         {/* Liens Desktop */}
         <ul className="hidden md:flex items-center space-x-8">
           {[
@@ -191,6 +193,14 @@ const NavigationBar = () => {
       {/* Menu Mobile */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white shadow-lg py-6 px-6 space-y-6 animate-fadeIn">
+          <div className="flex items-center space-x-2 mb-4">
+            <FaSearch className="text-gray-500" />
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              className="flex-1 border-b border-gray-300 focus:border-blue-500 outline-none transition-colors duration-200"
+            />
+          </div>
           {[
             { href: '/service', label: 'Services' },
             { href: '/evenement', label: 'Événementiels' },
