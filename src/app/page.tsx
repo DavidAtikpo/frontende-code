@@ -19,12 +19,9 @@ export default function Home() {
       <NavigationBar/>
       <ProductSlider/>
       <GuaranteesSection/>
-      <AdvertisingBannerWithImage/>
       <PromotionsSection/>
       <CategoriesSection/>
-      <NewProductBar/>
       <HomeProducts />
-      <DualBanner/>
       <CategoriesGrid/>
       <Banner/>
       <LatestNews/>
