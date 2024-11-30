@@ -1,131 +1,191 @@
 import React from "react";
-import {FaAppStore} from "react-icons/fa";
+import { 
+  FaAppStore, 
+  FaGooglePlay, 
+  FaFacebookF, 
+  FaTwitter, 
+  FaInstagram, 
+  FaLinkedinIn,
+  FaMapMarkerAlt,
+  FaPhone,
+  FaEnvelope,
+  FaClock
+} from "react-icons/fa";
 import Image from "next/image";
+import Link from "next/link";
+import { motion } from "framer-motion";
 
 const Footer = () => {
+  const containerVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: 0.5,
+        staggerChildren: 0.1 
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
   return (
-    <footer className="bg-gray-900 text-gray-400 py-10 px-6">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
-        {/* Section 1: Logo et contact */}
-        <div>
-          <Image
-            src="/logod.png"
-            alt="Logo"
-            width={81}
-            height={68}
-            className="w-16 h-auto mb-4"
-          />
-        </div>
+    <footer className="bg-gradient-to-b from-gray-900 to-gray-950 text-gray-400">
 
-        {/* Section 2: Meilleures Ventes */}
-        <div>
-          <h4 className="font-semibold text-gray-100 mb-4">Meilleures Ventes</h4>
-          <ul className="space-y-2">
-            {[
-              { name: "Poulets Congelés", link: "/products/poulets-congeles" },
-              { name: "Poissons Congelés", link: "/products/poissons-congeles" },
-              { name: "Viande de Bœuf", link: "/products/viande-boeuf" },
-              { name: "Crevettes", link: "/products/crevettes" },
-              { name: "Fruits de Mer", link: "/products/fruits-de-mer" },
-            ].map((item, index) => (
-              <li key={index}>
-                <a
-                  href={item.link}
-                  className="hover:text-yellow-500 transition duration-300"
-                >
-                  {item.name}
-                </a>
-              </li>
-            ))}
-            <li>
-              <a
-                href="/products"
-                className="text-yellow-500 hover:underline"
-              >
-                Voir tout les produits →
-              </a>
-            </li>
-          </ul>
-        </div>
 
-        {/* Section 3: Liens Rapides */}
-        <div>
-          <h4 className="font-semibold text-gray-100 mb-4">Liens Rapides</h4>
-          <ul className="space-y-2">
-            {[
-              { name: "Formations", link: "/formations" },
-              { name: "Shopping Cart", link: "/cart" },
-              { name: "Wishlist", link: "/wishlist" },
-              { name: "Compare", link: "/compare" },
-              { name: "Track Order", link: "/track-order" },
-              { name: "Customer Help", link: "/help" },
-              { name: "About Us", link: "/about" },
-            ].map((item, index) => (
-              <li key={index}>
-                <a
-                  href={item.link}
-                  className="hover:text-yellow-500 transition duration-300"
-                >
-                  {item.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Section 4: Téléchargement et Tags Populaires */}
-        <div>
-          <h4 className="font-semibold text-gray-100 mb-4">
-            Télécharger l&apos;App
-          </h4>
-          <div className="flex space-x-4 mb-6">
-          <a href="https://play.google.com" target="_blank" rel="noopener noreferrer">
+      {/* Section principale du footer */}
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={containerVariants}
+          className="grid grid-cols-1 md:grid-cols-4 gap-12"
+        >
+          {/* Section À propos */}
+          <motion.div variants={itemVariants} className="space-y-6">
             <Image
-              src="https://cdn-icons-png.flaticon.com/512/300/300218.png" // Exemple d'URL d'une icône
-              alt="Google Play"
-              className="w-10"
-              width={10}
-              height={10}
+              src="/logod.png"
+              alt="DUBON Logo"
+              width={120}
+              height={100}
+              className="mb-6"
             />
-          </a>
-            <a href="https://www.apple.com/app-store/" target="_blank" rel="noopener noreferrer">
-               <FaAppStore className="text-gray-400 hover:text-blue-500 text-3xl" />
-           </a>
+            <p className="text-gray-400">
+              DUBON, votre partenaire de confiance pour des produits alimentaires de qualité.
+            </p>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <FaMapMarkerAlt className="text-blue-500" />
+                <span>123 Rue du Commerce, Dakar</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <FaPhone className="text-blue-500" />
+                <span>+221 77 123 45 67</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <FaEnvelope className="text-blue-500" />
+                <span>contact@dubon.com</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <FaClock className="text-blue-500" />
+                <span>Lun-Sam: 8h-20h</span>
+              </div>
+            </div>
+          </motion.div>
 
-          </div>
+          {/* Section Meilleures Ventes */}
+          <motion.div variants={itemVariants}>
+            <h4 className="text-xl font-bold text-white mb-6">Meilleures Ventes</h4>
+            <ul className="space-y-4">
+              {[
+                "Poulets Congelés",
+                "Poissons Congelés",
+                "Viande de Bœuf",
+                "Crevettes",
+                "Fruits de Mer",
+              ].map((item, index) => (
+                <li key={index}>
+                  <Link 
+                    href={`/products/${item.toLowerCase().replace(/ /g, "-")}`}
+                    className="hover:text-blue-500 transition-colors flex items-center gap-2"
+                  >
+                    <span className="text-blue-500">›</span>
+                    {item}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
 
-          <h4 className="font-semibold text-gray-100 mb-4">Tags Populaires</h4>
-          <div className="flex flex-wrap gap-2">
-            {[
-              "Poulet",
-              "Poisson",
-              "Crevettes",
-              "Calamars",
-              "Fruits de Mer",
-              "Viande",
-              "Légumes Congelés",
-              "Pizza Surgelée",
-              "Glaces",
-              "Brochettes",
-              "Saumon",
-            ].map((tag, index) => (
-              <a
-                href={`/tags/${tag.toLowerCase().replace(/ /g, "-")}`}
-                key={index}
-                className="bg-gray-800 text-gray-200 px-3 py-1 rounded-md text-sm hover:bg-yellow-500 hover:text-gray-900 transition duration-300"
+          {/* Section Liens Rapides */}
+          <motion.div variants={itemVariants}>
+            <h4 className="text-xl font-bold text-white mb-6">Liens Rapides</h4>
+            <ul className="space-y-4">
+              {[
+                { name: "Formations", link: "/formations" },
+                { name: "Mon Panier", link: "/cart" },
+                { name: "Ma Liste d'envies", link: "/wishlist" },
+                { name: "Suivi de commande", link: "/track-order" },
+                { name: "Aide & Support", link: "/help" },
+                { name: "À propos", link: "/about" },
+              ].map((item, index) => (
+                <li key={index}>
+                  <Link 
+                    href={item.link}
+                    className="hover:text-blue-500 transition-colors flex items-center gap-2"
+                  >
+                    <span className="text-blue-500">›</span>
+                    {item.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+
+          {/* Section Application & Tags */}
+          <motion.div variants={itemVariants}>
+            <h4 className="text-xl font-bold text-white mb-6">Notre Application</h4>
+            <div className="flex gap-4 mb-8">
+              <Link 
+                href="https://play.google.com"
+                className="bg-gray-800 p-3 rounded-lg hover:bg-gray-700 transition-colors"
+                target="_blank"
               >
-                {tag}
-              </a>
-            ))}
-          </div>
+                <FaGooglePlay className="text-2xl text-white" />
+              </Link>
+              <Link 
+                href="https://www.apple.com/app-store"
+                className="bg-gray-800 p-3 rounded-lg hover:bg-gray-700 transition-colors"
+                target="_blank"
+              >
+                <FaAppStore className="text-2xl text-white" />
+              </Link>
+            </div>
+
+            <h4 className="text-xl font-bold text-white mb-4">Suivez-nous</h4>
+            <div className="flex gap-4">
+              {[FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn].map((Icon, index) => (
+                <Link 
+                  key={index}
+                  href="#"
+                  className="bg-gray-800 p-3 rounded-lg hover:bg-blue-600 hover:text-white transition-all transform hover:scale-110"
+                >
+                  <Icon className="text-xl" />
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        </motion.div>
+      </div>
+
+      {/* Copyright */}
+      <div className="border-t border-gray-800">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="flex flex-col md:flex-row justify-between items-center gap-4"
+          >
+            <p className="text-sm text-gray-500">
+              © {new Date().getFullYear()} DUBON eCommerce. Tous droits réservés.
+            </p>
+            <div className="flex items-center gap-6">
+              <Link href="/privacy" className="text-sm text-gray-500 hover:text-blue-500 transition-colors">
+                Politique de confidentialité
+              </Link>
+              <Link href="/terms" className="text-sm text-gray-500 hover:text-blue-500 transition-colors">
+                Conditions d'utilisation
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </div>
-
-      {/* Bottom Footer */}
-      <div className="mt-10 border-t border-gray-700 pt-6 text-center text-sm text-gray-500">
-        © {new Date().getFullYear()} DUBON eCommerce. Tous droits réservés.
-      </div>
-
     </footer>
   );
 };

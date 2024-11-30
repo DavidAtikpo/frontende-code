@@ -21,14 +21,6 @@ const GuaranteeCard: React.FC<GuaranteeCardProps> = ({ icon, title, description 
       </div>
       <h3 className="text-xl font-semibold text-gray-800 mb-2">{title}</h3>
       <p className="text-gray-600">{description}</p>
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="mt-4 text-blue-600 font-medium hover:text-blue-700 flex items-center gap-2 group"
-      >
-        En savoir plus
-        <span className="transform transition-transform group-hover:translate-x-1">→</span>
-      </motion.button>
     </motion.div>
   );
 };
