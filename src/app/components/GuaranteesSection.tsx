@@ -68,7 +68,7 @@ const GuaranteesSection = () => {
             transition={{ delay: 0.2 }}
             className="text-gray-600 max-w-2xl mx-auto"
           >
-            Nous mettons un point d'honneur à protéger vos informations personnelles, 
+            Nous mettons un point d&apos;honneur à protéger vos informations personnelles, 
             à garantir vos paiements et à assurer votre satisfaction à travers nos services.
           </motion.p>
         </div>

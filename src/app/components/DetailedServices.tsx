@@ -4,8 +4,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   FaTruck, FaWarehouse, FaIndustry, FaChartBar, 
-  FaHandshake, FaUserTie, FaCogs, FaTools,
-  FaClipboardCheck, FaShieldAlt
+   FaUserTie, FaCogs,
+  FaClipboardCheck, 
 } from 'react-icons/fa';
 
 const DetailedServiceCard = ({ 
@@ -139,7 +139,7 @@ const DetailedServices = () => {
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Découvrez notre gamme complète de services professionnels conçus pour répondre 
-            à tous vos besoins d'entreprise.
+            à tous vos besoins d&apos;entreprise.
           </p>
         </motion.div>
 

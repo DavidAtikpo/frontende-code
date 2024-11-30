@@ -6,24 +6,24 @@ import { FaTruck, FaTools, FaHandshake, FaChartLine, FaShieldAlt, FaHeadset } fr
 import Image from 'next/image';
 import DetailedServices from '../components/DetailedServices';
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 }
-};
+// const fadeInUp = {
+//   initial: { opacity: 0, y: 20 },
+//   animate: { opacity: 1, y: 0 },
+//   transition: { duration: 0.5 }
+// };
 
-const ServiceCard = ({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) => (
-  <motion.div
-    whileHover={{ y: -5, scale: 1.02 }}
-    className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-  >
-    <div className="text-4xl text-blue-600 mb-4 bg-blue-50 p-4 rounded-full w-16 h-16 flex items-center justify-center">
-      {icon}
-    </div>
-    <h3 className="text-xl font-semibold mb-3 text-gray-800">{title}</h3>
-    <p className="text-gray-600">{description}</p>
-  </motion.div>
-);
+// const ServiceCard = ({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) => (
+//   <motion.div
+//     whileHover={{ y: -5, scale: 1.02 }}
+//     className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+//   >
+//     <div className="text-4xl text-blue-600 mb-4 bg-blue-50 p-4 rounded-full w-16 h-16 flex items-center justify-center">
+//       {icon}
+//     </div>
+//     <h3 className="text-xl font-semibold mb-3 text-gray-800">{title}</h3>
+//     <p className="text-gray-600">{description}</p>
+//   </motion.div>
+// );
 
 const ServicesPage = () => {
   const mainServices = [
@@ -174,7 +174,7 @@ const ServicesPage = () => {
             transition={{ delay: 0.2 }}
             className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto"
           >
-            Contactez-nous dès aujourd'hui pour discuter de vos besoins et découvrir comment nous pouvons vous aider.
+            Contactez-nous dès aujourd&apos;hui pour discuter de vos besoins et découvrir comment nous pouvons vous aider.
           </motion.p>
           <motion.button
             whileHover={{ scale: 1.05 }}

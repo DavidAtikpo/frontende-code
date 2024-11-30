@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { FaStar, FaHeart, FaShoppingCart, FaEye, FaFilter, FaSearch, FaSort, FaHome, FaChevronRight } from "react-icons/fa";
+import { FaStar, FaHeart, FaShoppingCart, FaEye, FaFilter, FaSearch, FaHome, FaChevronRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useCartContext } from "../context/CartContext";
 import Image from "next/image";

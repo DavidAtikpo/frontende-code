@@ -147,7 +147,7 @@ const PromotionSection = () => {
                       onClick={() => handleViewProduct(product._id)}
                       className="text-white/90 text-sm hover:text-white flex items-center gap-1 transition-colors"
                     >
-                      Voir l'offre <FaArrowRight className="text-xs" />
+                      Voir l&apos;offre <FaArrowRight className="text-xs" />
                     </button>
                   </div>
                 </div>
@@ -167,7 +167,7 @@ const PromotionSection = () => {
             🎉 Profitez de -10% supplémentaires avec le code DUBON10
           </h3>
           <p className="text-white/90">
-            Offre valable sur tout le site jusqu'à la fin du mois
+            Offre valable sur tout le site jusqu&apos;à la fin du mois
           </p>
         </motion.div>
       </div>
