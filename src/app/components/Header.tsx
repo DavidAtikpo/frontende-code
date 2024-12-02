@@ -35,6 +35,7 @@ const Header = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Refs pour les menus déroulants
   const cartRef = useClickOutside(() => setIsCartOpen(false));
@@ -48,12 +49,21 @@ const Header = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Fonction pour gérer l'ouverture/fermeture de la recherche sur mobile
+  const toggleSearch = () => {
+    setIsSearchOpen(!isSearchOpen);
+  };
+
+  // Fonction pour gérer la recherche
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      // Ajouter ici la logique de recherche ou rediriger l'utilisateur
       console.log("Recherche :", searchQuery);
+      if (isMobile) {
+        setIsSearchOpen(false); // Ferme la recherche après soumission sur mobile
+      }
     }
   };
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     setIsAuthenticated(!!token); // Si un token existe, l'utilisateur est connecté
@@ -97,7 +107,8 @@ const Header = () => {
   return (
     <header className="bg-gradient-to-r bg-customBlue text-white py-2 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-4">
+        {/* Première ligne : Logo et Actions */}
+        <div className="flex items-center justify-between gap-4 mb-2">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
             <Image
@@ -109,8 +120,8 @@ const Header = () => {
             />
           </Link>
 
-          {/* Barre de recherche */}
-          {!isMobile ? (
+          {/* Barre de recherche desktop */}
+          {!isMobile && (
             <div className="flex-1 max-w-2xl">
               <div className="relative">
                 <input
@@ -128,10 +139,6 @@ const Header = () => {
                 </button>
               </div>
             </div>
-          ) : (
-            <button onClick={handleSearch} className="p-1.5 hover:bg-white/10 rounded-full transition-colors duration-200">
-              <FaSearch size={16} />
-            </button>
           )}
 
           {/* Actions utilisateur */}
@@ -366,6 +373,27 @@ const Header = () => {
             </div>
           </div>
         </div>
+
+        {/* Deuxième ligne : Barre de recherche mobile */}
+        {isMobile && (
+          <div className="w-full mt-2">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Rechercher..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-3 py-1.5 pr-10 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm text-white placeholder-white/70 focus:outline-none focus:border-white/40 transition-all duration-200 text-sm"
+              />
+              <button 
+                onClick={handleSearch}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white transition-colors duration-200"
+              >
+                <FaSearch size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

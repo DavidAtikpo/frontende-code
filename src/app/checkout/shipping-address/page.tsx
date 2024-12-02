@@ -2,12 +2,12 @@
 
 import React, { useState } from "react";
 import { useCartContext } from "../../context/CartContext";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-// const BASE_URL = "http://localhost:5000";
-const BASE_URL = "https://dubon-server.vercel.app";
-const CheckoutPage = () => {
-  const { state } = useCartContext(); // Utilisation du contexte pour le panier
+const ShippingAddressPage = () => {
+  const router = useRouter();
+  const { state } = useCartContext();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -19,78 +19,59 @@ const CheckoutPage = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState('fedapay'); // Ajout du state pour la méthode de paiement
 
   const calculateSubtotal = () =>
     state.cart.reduce((acc, item) => acc + item.finalPrice * item.quantity, 0);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
 
-    // Mise à jour de la validation pour inclure la ville
-    if (!formData.firstName || !formData.lastName || !formData.email || 
-        !formData.phone || !formData.address || !formData.city) {
-      setErrorMessage("Veuillez remplir tous les champs obligatoires");
+    // Validation des champs
+    const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'address', 'city'];
+    const emptyFields = requiredFields.filter(field => !formData[field as keyof typeof formData].trim());
+
+    if (emptyFields.length > 0) {
+      setErrorMessage(`Veuillez remplir les champs suivants : ${emptyFields.join(', ')}`);
       return;
     }
 
-    setIsLoading(true);
+    // Validation de l'email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setErrorMessage("Veuillez entrer une adresse email valide");
+      return;
+    }
+
+    // Validation du numéro de téléphone (exemple pour format international)
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
+      setErrorMessage("Veuillez entrer un numéro de téléphone valide");
+      return;
+    }
 
     try {
-      // Modification de l'endpoint en fonction de la méthode de paiement
-      const endpoint = `${BASE_URL}/api/payments/${paymentMethod}/create`;
+      setIsLoading(true);
       
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          customer: {
-            firstname: formData.firstName,
-            lastname: formData.lastName,
-            email: formData.email,
-            phone: formData.phone,
-          },
-          amount: calculateSubtotal(),
-          description: "Paiement commande Dubon Services",
-          items: state.cart.map(item => ({
-            productId: item._id,
-            name: item.title,
-            quantity: item.quantity,
-            price: item.finalPrice,
-          })),
-          shipping_address: {
-            address: formData.address,
-            city: formData.city,
-          },
-          paymentMethod: paymentMethod
-        }),
-      });
+      // Sauvegarder l'adresse dans le localStorage
+      localStorage.setItem("shippingAddress", JSON.stringify(formData));
+      localStorage.setItem("hasShippingAddress", "true");
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Erreur lors de l'initialisation du paiement");
-      }
-
-      // Redirection selon la méthode de paiement
-      if (data.paymentUrl) {
-        window.location.href = data.paymentUrl;
-      } else if (data.paypalUrl) {
-        window.location.href = data.paypalUrl;
-      } else {
-        throw new Error("URL de paiement non reçue");
-      }
+      // Rediriger vers la page de paiement
+      router.push("/checkout/payment-method");
     } catch (error) {
-      console.error("Erreur de paiement:", error);
-      setErrorMessage("Une erreur est survenue lors de l'initialisation du paiement");
+      console.error("Erreur lors de la sauvegarde de l'adresse:", error);
+      setErrorMessage("Une erreur est survenue. Veuillez réessayer.");
     } finally {
       setIsLoading(false);
     }
@@ -98,137 +79,136 @@ const CheckoutPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Section Informations Client */}
-      <form className="col-span-2 bg-white p-6 rounded-lg shadow-md" onSubmit={handleSubmit}>
-        <h2 className="text-2xl font-bold mb-6">Informations</h2>
+      {/* Formulaire d'adresse */}
+      <div className="lg:col-span-2">
+        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold mb-6">Adresse de livraison</h2>
 
-        {errorMessage && <p className="text-red-500 mb-4">{errorMessage}</p>}
+          {errorMessage && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              {errorMessage}
+            </div>
+          )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <input
-            type="text"
-            name="firstName"
-            placeholder="Prénom"
-            value={formData.firstName}
-            onChange={handleInputChange}
-            className="border p-2 rounded-md w-full"
-            required
-          />
-          <input
-            type="text"
-            name="lastName"
-            placeholder="Nom"
-            value={formData.lastName}
-            onChange={handleInputChange}
-            className="border p-2 rounded-md w-full"
-            required
-          />
-        </div>
-        <input
-          type="email"
-          name="email"
-          placeholder="Adresse email"
-          value={formData.email}
-          onChange={handleInputChange}
-          className="border p-2 rounded-md w-full"
-          required
-        />
-        <input
-          type="text"
-          name="phone"
-          placeholder="Numéro de téléphone"
-          value={formData.phone}
-          onChange={handleInputChange}
-          className="border p-2 rounded-md w-full"
-          required
-        />
-        <input
-          type="text"
-          name="address"
-          placeholder="Adresse"
-          value={formData.address}
-          onChange={handleInputChange}
-          className="border p-2 rounded-md w-full mb-4"
-          required
-        />
-        <input
-          type="text"
-          name="city"
-          placeholder="Ville"
-          value={formData.city}
-          onChange={handleInputChange}
-          className="border p-2 rounded-md w-full mb-4"
-          required
-        />
-        <textarea
-          name="notes"
-          placeholder="Notes sur votre commande (optionnel)"
-          value={formData.notes}
-          onChange={handleInputChange}
-          className="border p-2 rounded-md w-full mb-6"
-          rows={4}
-        ></textarea>
-
-        {/* Ajout des options de paiement */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4">Méthode de paiement</h3>
-          <div className="space-y-2">
-            <label className="flex items-center space-x-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Prénom *
+              </label>
               <input
-                type="radio"
-                name="paymentMethod"
-                value="fedapay"
-                checked={paymentMethod === 'fedapay'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="form-radio"
+                type="text"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
               />
-              <span>FedaPay</span>
-            </label>
-            <label className="flex items-center space-x-2">
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nom *
+              </label>
               <input
-                type="radio"
-                name="paymentMethod"
-                value="paypal"
-                checked={paymentMethod === 'paypal'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="form-radio"
+                type="text"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
               />
-              <span>PayPal</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="card"
-                checked={paymentMethod === 'card'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="form-radio"
-              />
-              <span>Carte de crédit</span>
-            </label>
+            </div>
           </div>
-        </div>
 
-        <button
-          type="submit"
-          className={`w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 ${
-            isLoading ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-          disabled={isLoading}
-        >
-          {isLoading ? "Traitement..." : "Passer la commande"}
-        </button>
-      </form>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email *
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
 
-      {/* Récapitulatif du Panier */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Téléphone *
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Adresse *
+            </label>
+            <input
+              type="text"
+              name="address"
+              value={formData.address}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Ville *
+            </label>
+            <input
+              type="text"
+              name="city"
+              value={formData.city}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Notes (optionnel)
+            </label>
+            <textarea
+              name="notes"
+              value={formData.notes}
+              onChange={handleInputChange}
+              rows={4}
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            ></textarea>
+          </div>
+
+          <button
+            type="submit"
+            className={`w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors ${
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={isLoading}
+          >
+            {isLoading ? "Traitement..." : "Continuer vers le paiement"}
+          </button>
+        </form>
+      </div>
+
+      {/* Récapitulatif de la commande */}
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-6">Panier à acheter</h2>
+        <h2 className="text-2xl font-bold mb-6">Récapitulatif</h2>
         <ul className="divide-y divide-gray-200">
           {state.cart.map((item) => (
             <li key={item._id} className="py-4 flex items-center">
               <Image
                 src={Array.isArray(item.images) ? item.images[0] : item.images}
-                alt={item.title || "Produit"}
+                alt={item.title}
                 width={64}
                 height={64}
                 className="w-16 h-16 rounded-md object-cover mr-4"
@@ -261,4 +241,4 @@ const CheckoutPage = () => {
   );
 };
 
-export default CheckoutPage;
+export default ShippingAddressPage;
