@@ -3,13 +3,13 @@
 import React, { useState } from "react";
 import { useCartContext } from "../../context/CartContext";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 
 // const BASE_URL = "https://dubon-server.vercel.app";
 const BASE_URL = "http://localhost:5000";
 const PaymentMethodPage = () => {
   const { state } = useCartContext();
-  const router = useRouter();
+//   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState('fedapay');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");

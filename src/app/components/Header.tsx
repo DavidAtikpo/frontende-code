@@ -35,7 +35,7 @@ const Header = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobile, setIsMobile] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [, setIsSearchOpen] = useState(false);
 
   // Refs pour les menus déroulants
   const cartRef = useClickOutside(() => setIsCartOpen(false));
@@ -50,9 +50,9 @@ const Header = () => {
   }, []);
 
   // Fonction pour gérer l'ouverture/fermeture de la recherche sur mobile
-  const toggleSearch = () => {
-    setIsSearchOpen(!isSearchOpen);
-  };
+  // const toggleSearch = () => {
+  //   setIsSearchOpen(!isSearchOpen);
+  // };
 
   // Fonction pour gérer la recherche
   const handleSearch = () => {
