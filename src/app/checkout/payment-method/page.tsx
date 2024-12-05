@@ -5,8 +5,8 @@ import { useCartContext } from "../../context/CartContext";
 import Image from "next/image";
 // import { useRouter } from "next/navigation";
 
-// const BASE_URL = "https://dubon-server.vercel.app";
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://dubon-server.onrender.com";
+// const BASE_URL = "http://localhost:5000";
 const PaymentMethodPage = () => {
   const { state } = useCartContext();
 //   const router = useRouter();

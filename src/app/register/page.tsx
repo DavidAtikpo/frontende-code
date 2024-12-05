@@ -205,7 +205,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import AuthTabs from "../components/auth/AuthTabs";
 // import Popup from "../components/Popup";
 
-const BASE_URL = "https://dubon-server.vercel.app";
+const BASE_URL = "https://dubon-server.onrender.com";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({

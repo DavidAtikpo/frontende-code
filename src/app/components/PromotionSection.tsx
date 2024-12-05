@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { FaArrowRight, FaClock, FaFire } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 
-const BASE_URL = "https://dubon-server.vercel.app";
+const BASE_URL = "https://dubon-server.onrender.com";
 
 interface Product {
   _id: string;

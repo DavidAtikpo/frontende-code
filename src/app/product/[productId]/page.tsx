@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 
-const BASE_URL = "https://dubon-server.vercel.app";
+const BASE_URL = "https://dubon-server.onrender.com";
 
 interface Product {
   id: number;

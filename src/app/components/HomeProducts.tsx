@@ -8,7 +8,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import LoadingSpinner from "./LoadingSpinner";
 
-const BASE_URL = "https://dubon-server.vercel.app";
+const BASE_URL = "https://dubon-server.onrender.com";
 
 interface Product {
   _id: string;

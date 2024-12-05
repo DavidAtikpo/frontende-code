@@ -246,7 +246,7 @@ import { motion } from "framer-motion";
 import { FaArrowRight, FaBox, FaTag } from "react-icons/fa";
 import LoadingSpinner from "./LoadingSpinner";
 
-const BASE_URL = "https://dubon-server.vercel.app";
+const BASE_URL = "https://dubon-server.onrender.com";
 
 // Définir les types pour les données
 interface Product {

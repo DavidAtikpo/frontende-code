@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { FaPhoneAlt } from "react-icons/fa";
 import { AiOutlineMenu, AiOutlineClose, AiOutlineCaretDown, AiOutlineCaretRight } from "react-icons/ai";
 
-const BASE_URL = "https://dubon-server.vercel.app";
+const BASE_URL = "https://dubon-server.onrender.com";
 
 // Types mis à jour selon la structure du backend
 interface Product {
