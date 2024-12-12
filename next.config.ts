@@ -124,7 +124,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'https://dubon-server.vercel.app/api/:path*', // Proxy vers votre API
+        destination: 'https://dubon-server.onrender.com*', // Proxy vers votre API
       },
     ];
   },

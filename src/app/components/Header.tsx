@@ -36,11 +36,42 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [, setIsSearchOpen] = useState(false);
+  const [userInfo, setUserInfo] = useState<{
+    name: string;
+    email: string;
+    profilePhotoURL: string | null;
+  }>({ name: '', email: '', profilePhotoURL: null });
 
   // Refs pour les menus déroulants
   const cartRef = useClickOutside(() => setIsCartOpen(false));
   const wishlistRef = useClickOutside(() => setIsWishlistOpen(false));
   const profileRef = useClickOutside(() => setIsProfileOpen(false));
+
+  const fetchUserInfo = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await fetch(`${BASE_URL}/user/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserInfo(data);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération du profil:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUserInfo();
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -49,52 +80,40 @@ const Header = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Fonction pour gérer l'ouverture/fermeture de la recherche sur mobile
-  // const toggleSearch = () => {
-  //   setIsSearchOpen(!isSearchOpen);
-  // };
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsAuthenticated(!!token);
+  }, []);
 
-  // Fonction pour gérer la recherche
   const handleSearch = () => {
     if (searchQuery.trim()) {
       console.log("Recherche :", searchQuery);
       if (isMobile) {
-        setIsSearchOpen(false); // Ferme la recherche après soumission sur mobile
+        setIsSearchOpen(false);
       }
     }
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsAuthenticated(!!token); // Si un token existe, l'utilisateur est connecté
-  }, []);
-
-
-  // Calcul du sous-total du panier
   const calculateSubtotal = () => {
     return state.cart.reduce((acc, item) => acc + item.quantity * item.finalPrice, 0);
   };
 
   const handleLogout = async () => {
     try {
-      // Appeler l'API de déconnexion
       const response = await fetch(`${BASE_URL}/user/logout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // Inclure le token
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
       if (response.ok) {
-        // Si la déconnexion est réussie, supprimer le token
         localStorage.removeItem("token");
-        localStorage.setItem("isAuthenticated", "false");
         setIsAuthenticated(false);
-        alert("Déconnexion réussie !");
+        setUserInfo({ name: '', email: '', profilePhotoURL: null });
         window.location.href = "/";
       } else {
-        // Si la déconnexion échoue, afficher un message d'erreur
         const errorData = await response.json();
         alert(`Erreur de déconnexion : ${errorData.message}`);
       }
@@ -276,12 +295,44 @@ const Header = () => {
                 className="p-1.5 hover:bg-white/10 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
                 aria-label="Profil"
               >
-                <FaUser size={16} />
+                {userInfo.profilePhotoURL ? (
+                  <Image
+                    src={userInfo.profilePhotoURL}
+                    alt="Photo de profil"
+                    width={24}
+                    height={24}
+                    className="w-6 h-6 rounded-full object-cover"
+                  />
+                ) : (
+                  <FaUser size={16} />
+                )}
               </button>
               {isProfileOpen && (
                 <div className="absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-lg shadow-xl p-4 z-50 border border-gray-100">
                   {isAuthenticated ? (
                     <>
+                      {/* En-tête du profil */}
+                      <div className="flex items-center space-x-3 mb-4 pb-4 border-b">
+                        {userInfo.profilePhotoURL ? (
+                          <Image
+                            src={userInfo.profilePhotoURL}
+                            alt="Photo de profil"
+                            width={40}
+                            height={40}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                            <FaUser className="text-gray-500" size={20} />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-medium">{userInfo.name}</p>
+                          <p className="text-sm text-gray-500">{userInfo.email}</p>
+                        </div>
+                      </div>
+
+                      {/* Menu du profil */}
                       <ul className="space-y-2">
                         <li>
                           <Link href="/profile" className="block hover:underline">
@@ -289,8 +340,8 @@ const Header = () => {
                           </Link>
                         </li>
                         <li>
-                          <Link href="/account" className="block hover:underline">
-                            Mon Compte
+                          <Link href="/user/dashboard" className="block hover:underline">
+                            Tableau de bord
                           </Link>
                         </li>
                         <li>
@@ -304,68 +355,32 @@ const Header = () => {
                           </Link>
                         </li>
                         <li>
-                   <button
-                          onClick={ handleLogout}
-                          className="w-full text-left hover:underline text-red-600"
-                        >
-                          Déconnexion
-                   </button>
+                          <button
+                            onClick={handleLogout}
+                            className="w-full text-left hover:underline text-red-600"
+                          >
+                            Déconnexion
+                          </button>
                         </li>
                       </ul>
                     </>
                   ) : (
                     <>
-                   <form className="space-y-4">
-                     <div>
-                       <input 
-                         type="email" 
-                         placeholder="Adresse mail" 
-                         className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-                       />
-                     </div>
-                    
-                     <div className="relative">
-                       <input 
-                         type="password" 
-                         placeholder="Mot de passe" 
-                         className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-                       />
-                       <button 
-                         type="button"
-                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                       >
-                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                           <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                           <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                        </svg>
-                       </button>
-                     </div>
-
-                    <div className="flex justify-end">
-                       <Link
-                         href="/forgot-password" 
-                         className="text-sm text-blue-600 hover:underline"
-                       >
-                         Mot de passe oublié
-                       </Link>
-                     </div>
-
-                     <button 
-                       type="submit" 
-                       className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors"
-                     >
-                       CONNEXION →
-                     </button>
-                   </form>
-                   <div className="mt-4 text-center">
-                     <p className="text-sm text-gray-600">Pas de compte déjà ?</p>
-                     <Link 
-                       href="/register" 
-                       className="block w-full mt-2 py-2 text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors"
-                     >
-                       CRÉER VOTRE COMPTE
-                     </Link>
-                   </div>
+                      <Link 
+                        href="/login"
+                        className="block w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors text-center"
+                      >
+                        CONNEXION →
+                      </Link>
+                      <div className="mt-4 text-center">
+                        <p className="text-sm text-gray-600">Pas de compte ?</p>
+                        <Link 
+                          href="/register" 
+                          className="block w-full mt-2 py-2 text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors"
+                        >
+                          CRÉER VOTRE COMPTE
+                        </Link>
+                      </div>
                     </>
                   )}
                 </div>
@@ -374,7 +389,7 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Deuxième ligne : Barre de recherche mobile */}
+        {/* Barre de recherche mobile */}
         {isMobile && (
           <div className="w-full mt-2">
             <div className="relative">

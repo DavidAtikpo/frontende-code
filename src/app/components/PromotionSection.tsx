@@ -6,8 +6,8 @@ import Image from 'next/image';
 import { FaArrowRight, FaClock, FaFire } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 
-const BASE_URL = "https://dubon-server.onrender.com";
-
+// const BASE_URL = "https://dubon-server.onrender.com";
+const BASE_URL = "http://localhost:5000";
 interface Product {
   _id: string;
   title: string;

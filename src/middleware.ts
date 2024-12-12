@@ -2,16 +2,26 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // Vérifie si la route commence par /admin
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    // Ne pas appliquer le Header général
-    return NextResponse.next()
+  const token = request.cookies.get('token')?.value
+  const isAdminLoginPage = request.nextUrl.pathname === '/adminLogin'
+  const isAdminDashboard = request.nextUrl.pathname.startsWith('/admin/dashboard')
+
+  // If on the login page and already authenticated, redirect to the dashboard
+  if (isAdminLoginPage && token) {
+    return NextResponse.redirect(new URL('/admin/dashboard', request.url))
   }
 
-  // Pour toutes les autres routes, continuer normalement
+  // If trying to access the dashboard without being authenticated, redirect to login
+  if (isAdminDashboard && !token) {
+    return NextResponse.redirect(new URL('/adminLogin', request.url))
+  }
+
+  // Optionally, you can add a check to validate the token here
+  // For example, you could call an API to verify the token
+
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  matcher: ['/adminLogin', '/admin/dashboard/:path*']
 } 

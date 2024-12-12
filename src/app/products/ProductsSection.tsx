@@ -9,8 +9,8 @@ import { motion } from "framer-motion";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Link from "next/link";
 
-const BASE_URL = "https://dubon-server.onrender.com";
-// const BASE_URL = "http://localhost:5000";
+// const BASE_URL = "https://dubon-server.onrender.com";
+const BASE_URL = "http://localhost:5000";
 // Interface pour les produits
 interface Product {
   _id: string;

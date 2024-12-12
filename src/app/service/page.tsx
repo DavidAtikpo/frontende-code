@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FaTruck, FaTools, FaHandshake, FaChartLine, FaShieldAlt, FaHeadset } from 'react-icons/fa';
+import { FaTruck, FaTools, FaHandshake, FaChartLine, FaShieldAlt, FaHeadset, FaHome, FaChevronRight } from 'react-icons/fa';
 import Image from 'next/image';
 import DetailedServices from '../components/DetailedServices';
+import Link from 'next/link';
 
 // const fadeInUp = {
 //   initial: { opacity: 0, y: 20 },
@@ -46,7 +47,23 @@ const ServicesPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+            <motion.nav 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center space-x-2 text-sm text-gray-600 mb-8 bg-white px-4 py-3 rounded-lg shadow-sm"
+      >
+        <Link 
+          href="/" 
+          className="flex items-center hover:text-blue-600 transition-colors"
+        >
+          <FaHome className="mr-1" />
+          Accueil
+        </Link>
+        <FaChevronRight className="text-gray-400 text-xs" />
+        <span className="text-blue-600 font-medium">Services</span>
+      </motion.nav>
       {/* Hero Section */}
+      
       <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image

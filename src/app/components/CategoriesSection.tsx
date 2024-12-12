@@ -246,8 +246,8 @@ import { motion } from "framer-motion";
 import { FaArrowRight, FaBox, FaTag } from "react-icons/fa";
 import LoadingSpinner from "./LoadingSpinner";
 
-const BASE_URL = "https://dubon-server.onrender.com";
-
+// const BASE_URL = "https://dubon-server.onrender.com";
+const BASE_URL = "http://localhost:5000";
 // Définir les types pour les données
 interface Product {
   _id: string;

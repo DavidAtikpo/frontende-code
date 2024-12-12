@@ -2,13 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { FaHeart, FaShareAlt, FaStar, FaShoppingCart, FaCreditCard } from "react-icons/fa";
+import { FaHeart, FaShareAlt, FaStar, FaShoppingCart, FaCreditCard, FaHome, FaChevronRight } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 
-const BASE_URL = "https://dubon-server.onrender.com";
-
+// const BASE_URL = "https://dubon-server.onrender.com";
+const BASE_URL = "http://localhost:5000";
 interface Product {
   id: number;
   title: string;
@@ -76,17 +77,23 @@ const ProductDetailPage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Breadcrumb */}
-      <nav className="text-sm mb-8 flex items-center space-x-2 text-gray-500">
-        <Link href="/" className="hover:text-blue-600 transition-colors">
+      <motion.nav 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center space-x-2 text-sm text-gray-600 mb-8 bg-white px-4 py-3 rounded-lg shadow-sm"
+      >
+        <Link 
+          href="/" 
+          className="flex items-center hover:text-blue-600 transition-colors"
+        >
+          <FaHome className="mr-1" />
           Accueil
         </Link>
-        <span>/</span>
-        <Link href="/products" className="hover:text-blue-600 transition-colors">
-          Boutique
-        </Link>
-        <span>/</span>
-        <span className="text-gray-900 font-medium">{product.title}</span>
-      </nav>
+        <FaChevronRight className="text-gray-400 text-xs" />
+        <span className="text-blue-600 font-medium">{product.title}</span>
+      </motion.nav>
+
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Images Section */}

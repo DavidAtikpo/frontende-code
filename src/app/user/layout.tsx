@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-// import Header from "../components/Header";
+import Header from "../components/Header";
+// import NavigationBar from "../components/NavBar";
 import { usePathname } from "next/navigation";
 import { 
   LayoutDashboard, 
@@ -50,7 +51,7 @@ const navigation = [
   },
   {
     name: "Boutique",
-    href: "/shop",
+    href: "/products",
     icon: Store
   },
   {
@@ -100,6 +101,9 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
+    <div>
+      <Header />
+      {/* <NavigationBar /> */}
     <div className="min-h-screen bg-gray-50">
       {/* Mobile menu button */}
 
@@ -172,6 +176,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       `}>
         {children}
       </main>
+    </div>
     </div>
   );
 } 

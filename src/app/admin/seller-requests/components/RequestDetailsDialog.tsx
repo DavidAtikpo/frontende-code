@@ -1,99 +1,157 @@
-// "use client";
+"use client";
 
-// import { Button } from "@/components/ui/button";
-// import { Label } from "@/components/ui/label";
-// import { FileText, Download, Check, X } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import Image from 'next/image';
 
-// interface RequestDetailsDialogProps {
-//   request: SellerRequest | null;
-//   onClose: () => void;
-//   onUpdateStatus: (requestId: string, status: "APPROVED" | "REJECTED") => Promise<void>;
-//   isLoading: boolean;
-// }
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-// export default function RequestDetailsDialog({
-//   request,
-//   // onClose,
-//   onUpdateStatus,
-//   isLoading
-// }: RequestDetailsDialogProps) {
-//   if (!request) return null;
+interface RequestDetailsDialogProps {
+  requestId: string;
+  onClose: () => void;
+  onValidate: (id: string, status: 'approved' | 'rejected', message?: string) => void;
+}
 
-//   const handleDownload = (documentUrl: string,
-//     //  documentName: string
-//     ) => {
-//     window.open(documentUrl, '_blank');
-//   };
+// Définir l'interface pour les détails du vendeur
+interface SellerDetails {
+  personalInfo: {
+    fullName: string;
+    email: string;
+    phone: string;
+  };
+  documents: {
+    idCard: string;
+    proofOfAddress: string;
+    photos: string[];
+  };
+}
 
-//   return (
-//     <div className="space-y-6">
-//       <div className="grid grid-cols-2 gap-4">
-//         <div>
-//           <Label className="text-sm font-medium">Nom de l&apos;entreprise</Label>
-//           <p className="mt-1 text-sm">{request.businessName}</p>
-//         </div>
-//         <div>
-//           <Label className="text-sm font-medium">Numéro d&apos;enregistrement</Label>
-//           <p className="mt-1 text-sm">{request.registrationNumber}</p>
-//         </div>
-//         <div>
-//           <Label className="text-sm font-medium">Email</Label>
-//           <p className="mt-1 text-sm">{request.email}</p>
-//         </div>
-//         <div>
-//           <Label className="text-sm font-medium">Date de soumission</Label>
-//           <p className="mt-1 text-sm">
-//             {new Date(request.submittedAt).toLocaleString()}
-//           </p>
-//         </div>
-//       </div>
+export default function RequestDetailsDialog({
+  requestId,
+  onClose,
+  onValidate,
+}: RequestDetailsDialogProps) {
+  const [details, setDetails] = useState<SellerDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
-//       <div className="space-y-4">
-//         <h3 className="text-lg font-semibold">Documents soumis</h3>
-//         <div className="grid grid-cols-2 gap-4">
-//           {Object.entries(request.documents).map(([key, url]) => (
-//             <div key={key} className="p-4 border rounded-lg">
-//               <div className="flex items-center justify-between">
-//                 <div className="flex items-center space-x-2">
-//                   <FileText className="h-5 w-5 text-blue-600" />
-//                   <span className="text-sm font-medium">
-//                     {key.replace(/([A-Z])/g, ' $1').trim()}
-//                   </span>
-//                 </div>
-//                 <Button
-//                   variant="ghost"
-//                   size="sm"
-//                   onClick={() => handleDownload(url, key)}
-//                 >
-//                   <Download className="h-4 w-4" />
-//                 </Button>
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-//       </div>
+  const fetchDetails = useCallback(async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/seller/${requestId}`);
+      const data = await response.json();
+      setDetails(data);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des détails:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [requestId]);
 
-//       {request.status === 'PENDING' && (
-//         <div className="flex justify-end space-x-4 mt-6 pt-4 border-t">
-//           <Button
-//             variant="outline"
-//             onClick={() => onUpdateStatus(request.id, "REJECTED")}
-//             disabled={isLoading}
-//             className="text-red-600 hover:text-red-700"
-//           >
-//             <X className="h-4 w-4 mr-2" />
-//             Refuser
-//           </Button>
-//           <Button
-//             onClick={() => onUpdateStatus(request.id, "APPROVED")}
-//             disabled={isLoading}
-//             className="bg-green-600 hover:bg-green-700"
-//           >
-//             <Check className="h-4 w-4 mr-2" />
-//             Approuver
-//           </Button>
-//         </div>
-//       )}
-//     </div>
-//   );
-// } 
+  useEffect(() => {
+    fetchDetails();
+  }, [fetchDetails]);
+
+  const handleValidate = (status: 'approved' | 'rejected') => {
+    onValidate(requestId, status, message);
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Détails de la demande</DialogTitle>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Informations personnelles */}
+            <section className="space-y-4">
+              <h3 className="font-semibold">Informations personnelles</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Nom complet</p>
+                  <p>{details?.personalInfo.fullName}</p>
+                </div>
+                {/* Autres informations personnelles */}
+              </div>
+            </section>
+
+            {/* Documents */}
+            <section className="space-y-4">
+              <h3 className="font-semibold">Documents</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {/* Carte d'identité */}
+                <div>
+                  <p className="text-sm text-gray-500">Carte d&apos;identité</p>
+                  <a
+                    href={`${BASE_URL}${details?.documents.idCard}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Voir le document
+                  </a>
+                </div>
+                {/* Autres documents */}
+              </div>
+            </section>
+
+            {/* Photos */}
+            <section className="space-y-4">
+              <h3 className="font-semibold">Photos</h3>
+              <div className="grid grid-cols-3 gap-4">
+                {details?.documents.photos.map((photo: string, index: number) => (
+                  <a
+                    key={index}
+                    href={`${BASE_URL}${photo}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block aspect-square bg-gray-100 rounded-lg overflow-hidden"
+                  >
+                    <Image
+                      src={`${BASE_URL}${photo}`}
+                      alt={`Photo ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      width={500}
+                      height={300}
+                    />
+                  </a>
+                ))}
+              </div>
+            </section>
+
+            {/* Message de validation/rejet */}
+            <Textarea
+              placeholder="Message pour le vendeur (optionnel)"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+
+            {/* Actions */}
+            <div className="flex justify-end space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => handleValidate('rejected')}
+              >
+                Rejeter
+              </Button>
+              <Button
+                onClick={() => handleValidate('approved')}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Approuver
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+} 

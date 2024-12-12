@@ -3,11 +3,13 @@
 import './globals.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import NavigationBar from './components/NavBar';
 import Newsletter from './components/Newsletter';
 import TopBanner from './components/TopBanner';
 import TopBar from './components/TopBar';
 import { usePathname } from 'next/navigation';
 import { CartProvider } from './context/CartContext'; // Importation du contexte
+import { CookieConsent } from '../components/CookieConsent';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname(); // Utilisation de `usePathname` pour Next.js (app directory)
@@ -34,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <TopBanner />
               <TopBar />
               <Header /> {/* Le header accèdera au contexte via `useCartContext` */}
+              <NavigationBar/>
               {children}
               <Newsletter />
               <Footer />
@@ -43,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             children
           )}
         </CartProvider>
+        <CookieConsent />
       </body>
     </html>
   );

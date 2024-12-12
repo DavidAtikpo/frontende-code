@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { FaStar } from "react-icons/fa";
+import { FaHome, FaChevronRight, FaStar } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "framer-motion";
+
 
 interface Restaurant {
   id: number;
@@ -70,16 +72,22 @@ const ERestaurantPage = () => {
   return (
     <div>
 
-        <nav className="text-gray-600 text-sm mb-6">
-        <Link href="/" className="hover:underline">
+      <motion.nav 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center space-x-2 text-sm text-gray-600 mb-8 bg-white px-4 py-3 rounded-lg shadow-sm"
+      >
+        <Link 
+          href="/" 
+          className="flex items-center hover:text-blue-600 transition-colors"
+        >
+          <FaHome className="mr-1" />
           Accueil
-        </Link>{" "}
-        &gt;{" "}
-        <Link href="/restaurant" className="hover:underline">
-          Restaurant
-        </Link>{" "}
-        {/* / {product.title} */}
-      </nav>
+        </Link>
+        <FaChevronRight className="text-gray-400 text-xs" />
+        <span className="text-blue-600 font-medium">Boutique</span>
+      </motion.nav>
+      
     <div className="flex flex-col lg:flex-row max-w-7xl mx-auto px-6 py-10 gap-6">
       {/* Barre latérale */}
       <aside className="w-full lg:w-1/4 bg-gray-100 p-6 rounded-lg shadow-md">

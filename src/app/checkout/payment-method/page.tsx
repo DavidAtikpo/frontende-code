@@ -1,9 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useCartContext } from "../../context/CartContext";
 import Image from "next/image";
 // import { useRouter } from "next/navigation";
+
+interface ShippingAddress {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+}
+
+interface PaymentError {
+  message: string;
+  code?: string;
+  details?: unknown;
+}
 
 const BASE_URL = "https://dubon-server.onrender.com";
 // const BASE_URL = "http://localhost:5000";
@@ -13,23 +28,37 @@ const PaymentMethodPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('fedapay');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [token, setToken] = useState('');
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+  });
+
+  useEffect(() => {
+    // Accéder à localStorage uniquement côté client
+    setToken(localStorage.getItem('token') || '');
+    setShippingAddress(JSON.parse(localStorage.getItem("shippingAddress") || "{}"));
+  }, []);
 
   const calculateSubtotal = () =>
     state.cart.reduce((acc, item) => acc + item.finalPrice * item.quantity, 0);
 
-  const handlePayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setErrorMessage("");
-
+  const handlePayment = async () => {
     try {
-      const shippingAddress = JSON.parse(localStorage.getItem("shippingAddress") || "{}");
+      setIsLoading(true);
+      setErrorMessage("");
+
       const endpoint = `${BASE_URL}/api/payments/${paymentMethod}/create`;
       
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
           customer: {
@@ -54,20 +83,26 @@ const PaymentMethodPage = () => {
         }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erreur de paiement");
+      }
+
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || "Erreur lors de l'initialisation du paiement");
+      if (!data || !data.paymentUrl) {
+        throw new Error("Réponse invalide du serveur");
       }
 
-      if (data.paymentUrl) {
-        window.location.href = data.paymentUrl;
-      } else {
-        throw new Error("URL de paiement non reçue");
+      if (data.transactionId) {
+        localStorage.setItem("currentTransaction", data.transactionId);
       }
-    } catch (error) {
-      console.error("Erreur de paiement:", error);
-      setErrorMessage("Une erreur est survenue lors de l'initialisation du paiement");
+
+      window.location.href = data.paymentUrl;
+    } catch (err) {
+      const error = err as PaymentError;
+      console.error("Erreur de paiement:", error.message);
+      setErrorMessage(error.message || "Une erreur est survenue");
     } finally {
       setIsLoading(false);
     }

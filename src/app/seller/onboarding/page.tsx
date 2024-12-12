@@ -9,15 +9,19 @@ import { ContractSigningForm } from "./components/ContractSigningForm";
 import { VideoVerificationForm } from "./components/VideoVerificationForm";
 import { BusinessInfoForm } from "./components/BusinessInfoForm";
 import { ComplianceForm } from "./components/ComplianceForm";
+import { ValidationStatusForm } from "./components/ValidationStatusForm";
+import { SubscriptionPlanForm } from "./components/SubscriptionPlanForm";
+import { PaymentForm } from "./components/PaymentForm";
 
 export interface SellerFormData {
-  type: "individual" | "company";
+  _id?: string;
+  type: 'individual' | 'company';
   personalInfo: {
-    fullName?: string;
-    companyName?: string;
-    address: string;
-    phone: string;
+    fullName: string;
     email: string;
+    phone: string;
+    address: string;
+    companyName?: string;
     idNumber?: string;
     taxNumber: string;
     legalRepName?: string;
@@ -26,8 +30,8 @@ export interface SellerFormData {
   documents: {
     idCard: File | null;
     proofOfAddress: File | null;
-    photos: File[];
     taxCertificate: File | null;
+    photos: File[];
     rccm?: File | null;
     companyStatutes?: File | null;
   };
@@ -59,6 +63,22 @@ export interface SellerFormData {
     termsAccepted: boolean;
     qualityStandardsAccepted: boolean;
     antiCounterfeitingAccepted: boolean;
+  };
+  validation?: {
+    status?: string;
+    message?: string;
+  };
+  subscription?: {
+    plan: 'monthly' | 'yearly' | 'premium';
+    price: number;
+    startDate?: string;
+    endDate?: string;
+  };
+  payment?: {
+    method: 'mobile_money' | 'card' | 'bank_transfer';
+    status: 'pending' | 'completed' | 'failed';
+    transactionId?: string;
+    amount: number;
   };
 }
 
@@ -101,6 +121,18 @@ const steps: Step[] = [
     title: "Conformité",
     component: ComplianceForm,
   },
+  {
+    title: "Validation administrative",
+    component: ValidationStatusForm,
+  },
+  {
+    title: "Choix de l'abonnement",
+    component: SubscriptionPlanForm,
+  },
+  {
+    title: "Paiement",
+    component: PaymentForm,
+  }
 ];
 
 export default function SellerOnboardingPage() {
@@ -149,6 +181,9 @@ export default function SellerOnboardingPage() {
       termsAccepted: false,
       qualityStandardsAccepted: false,
       antiCounterfeitingAccepted: false,
+    },
+    validation: {
+      status: 'pending',
     },
   });
 

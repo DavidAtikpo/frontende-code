@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useCartContext } from "../../context/CartContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -76,6 +76,13 @@ const ShippingAddressPage = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const savedAddress = localStorage.getItem("shippingAddress");
+    if (savedAddress) {
+      setFormData(JSON.parse(savedAddress));
+    }
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">

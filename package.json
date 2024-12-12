@@ -26,6 +26,7 @@
     "date-fns": "^4.1.0",
     "dubonfrontend": "file:",
     "framer-motion": "^11.12.0",
+    "js-cookie": "^3.0.5",
     "lucide-react": "^0.460.0",
     "next": "^15.0.3",
     "react": "^18.2.0",
@@ -37,6 +38,8 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

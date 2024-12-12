@@ -1,158 +1,3 @@
-// "use client";
-
-// import { useState } from "react";
-// import { Button } from "@/components/ui/button";
-// import { Checkbox } from "@/components/ui/checkbox";
-// import { Label } from "@/components/ui/label";
-// import { SellerFormData } from "../page";
-// // import { error } from "console";
-
-// interface ComplianceFormProps {
-//   data: SellerFormData;
-//   onUpdate: (data: SellerFormData) => void;
-//   onNext: () => void;
-//   onBack: () => void;
-//   isLastStep: boolean;
-// }
-
-// export function ComplianceForm({ 
-//   data, 
-//   onUpdate, 
-//   onNext, 
-//   onBack, 
-//   isLastStep 
-// }: ComplianceFormProps) {
-//   const [errors, setErrors] = useState<Record<string, string>>({});
-
-//   const handleCheckboxChange = (field: keyof SellerFormData["compliance"]) => {
-//     onUpdate({
-//       ...data,
-//       compliance: {
-//         ...data.compliance,
-//         [field]: !data.compliance[field]
-//       }
-//     });
-//   };
-
-//   const validateForm = () => {
-//     const newErrors: Record<string, string> = {};
-//     const { compliance } = data;
-
-//     if (!compliance.termsAccepted) {
-//       newErrors.terms = "Vous devez accepter les conditions d'utilisation";
-//     }
-//     if (!compliance.qualityStandardsAccepted) {
-//       newErrors.quality = "Vous devez accepter les normes de qualité";
-//     }
-//     if (!compliance.antiCounterfeitingAccepted) {
-//       newErrors.counterfeit = "Vous devez accepter la politique anti-contrefaçon";
-//     }
-
-//     setErrors(newErrors);
-//     return Object.keys(newErrors).length === 0;
-//   };
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     if (validateForm()) {
-//       if (isLastStep) {
-//         // Soumettre le formulaire complet
-//         try {
-//           const response = await fetch("/api/seller/register", {
-//             method: "POST",
-//             headers: {
-//               "Content-Type": "application/json",
-//             },
-//             body: JSON.stringify(data),
-//           });
-
-//           if (!response.ok) {
-//             throw new Error("Erreur lors de l'inscription");
-//           }
-
-//           // Redirection vers la page de succès
-//           window.location.href = "/seller/registration-success";
-//         } catch (error) {
-//           setErrors({ submit: "Une erreur est survenue lors de l'inscription" });
-//         }
-//         console.log(error);
-        
-//       } else {
-//         onNext();
-//       }
-//     }
-//   };
-
-//   return (
-//     <form onSubmit={handleSubmit} className="space-y-6">
-//       <div className="space-y-4">
-//         <div className="p-4 bg-gray-50 rounded-lg">
-//           <h3 className="font-medium mb-4">Engagements légaux et conformité</h3>
-          
-//           <div className="space-y-4">
-//             <div className="flex items-center space-x-2">
-//               <Checkbox
-//                 id="terms"
-//                 checked={data.compliance.termsAccepted}
-//                 onCheckedChange={() => handleCheckboxChange("termsAccepted")}
-//               />
-//               <Label htmlFor="terms" className="text-sm leading-none">
-//                 J&apos;accepte les conditions générales de vente et d&apos;utilisation de la plateforme
-//               </Label>
-//             </div>
-//             {errors.terms && <p className="text-sm text-red-500">{errors.terms}</p>}
-
-//             <div className="flex items-center space-x-2">
-//               <Checkbox
-//                 id="quality"
-//                 checked={data.compliance.qualityStandardsAccepted}
-//                 onCheckedChange={() => handleCheckboxChange("qualityStandardsAccepted")}
-//               />
-//               <Label htmlFor="quality" className="text-sm leading-none">
-//                 Je m&apos;engage à respecter les normes de qualité imposées par la plateforme
-//               </Label>
-//             </div>
-//             {errors.quality && <p className="text-sm text-red-500">{errors.quality}</p>}
-
-//             <div className="flex items-center space-x-2">
-//               <Checkbox
-//                 id="counterfeit"
-//                 checked={data.compliance.antiCounterfeitingAccepted}
-//                 onCheckedChange={() => handleCheckboxChange("antiCounterfeitingAccepted")}
-//               />
-//               <Label htmlFor="counterfeit" className="text-sm leading-none">
-//                 Je m&apos;engage à respecter la politique anti-contrefaçon et anti-fraude
-//               </Label>
-//             </div>
-//             {errors.counterfeit && <p className="text-sm text-red-500">{errors.counterfeit}</p>}
-//           </div>
-//         </div>
-
-//         {errors.submit && (
-//           <p className="text-sm text-red-500 text-center">{errors.submit}</p>
-//         )}
-//       </div>
-
-//       <div className="flex justify-between">
-//         <Button
-//           type="button"
-//           variant="outline"
-//           onClick={onBack}
-//         >
-//           Retour
-//         </Button>
-//         <Button
-//           type="submit"
-//           className="bg-[#1D4ED8] hover:bg-[#1e40af]"
-//         >
-//           {isLastStep ? "Terminer l'inscription" : "Suivant"}
-//         </Button>
-//       </div>
-//     </form>
-//   );
-// } 
-
-
 "use client";
 
 import { useState } from "react";
@@ -161,7 +6,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { SellerFormData } from "../page";
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+interface ComplianceError {
+  message: string;
+  field?: string;
+  code?: string;
+}
 
 interface ComplianceFormProps {
   data: SellerFormData;
@@ -226,36 +77,90 @@ export function ComplianceForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-  
-    if (isLastStep) {
-      setIsSubmitting(true);
+    setIsSubmitting(true);
+
+    const formData = new FormData();
+
+    // Log des données avant envoi
+    console.log("=== DÉBUT SOUMISSION ===");
+    console.log("Type:", data.type);
+    console.log("Personal Info:", data.personalInfo);
+    console.log("Documents:", data.documents);
+    console.log("Contract:", data.contract);
+    console.log("Video:", data.videoVerification);
+    console.log("Business Info:", data.businessInfo);
+    console.log("Compliance:", data.compliance);
+
+    // Convertir les données de base en JSON
+    const baseData = {
+      type: data.type,
+      personalInfo: data.personalInfo,
+      businessInfo: data.businessInfo,
+      compliance: data.compliance,
+      validation: data.validation
+    };
+    formData.append('data', JSON.stringify(baseData));
+
+    // Ajouter les fichiers
+    if (data.documents.idCard) 
+      formData.append('idCard', data.documents.idCard);
+    if (data.documents.proofOfAddress) 
+      formData.append('proofOfAddress', data.documents.proofOfAddress);
+    if (data.documents.taxCertificate) 
+      formData.append('taxCertificate', data.documents.taxCertificate);
+    
+    data.documents.photos.forEach((photo) => {
+      formData.append('photos', photo);
+    });
+
+    if (data.contract.signedDocument) {
+      formData.append('signedDocument', data.contract.signedDocument);
+    }
+
+    // Convertir et ajouter la vidéo
+    if (data.videoVerification.recordingUrl) {
       try {
-        const response = await fetch(`${BASE_URL}/api/seller/register`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        });
-  
-        if (!response.ok) {
-          throw new Error("Erreur lors de l'inscription");
-        }
-  
-        // Affiche un message de succès et redirige
-        setTimeout(() => {
-          window.location.href = "/seller/registration-success";
-        }, 1000);
-      } catch {
-        setErrors({ submit: "Une erreur est survenue lors de l'inscription" });
-      } finally {
-        setIsSubmitting(false);
+        const videoBlob = await fetch(data.videoVerification.recordingUrl).then(r => r.blob());
+        formData.append('verificationVideo', videoBlob, 'verification.webm');
+      } catch (error) {
+        console.error('Erreur lors de la conversion de la vidéo:', error);
       }
-    } else {
+    }
+
+    // Log du FormData
+    console.log("=== CONTENU FORMDATA ===");
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(key, ":", value.name, "(", value.size, "bytes )");
+      } else {
+        console.log(key, ":", value);
+      }
+    }
+
+    try {
+      const response = await fetch(`${BASE_URL}/api/seller/register`, {
+        method: "POST",
+        headers: {
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(responseData.message || "Erreur lors de l'inscription");
+      }
+
       onNext();
+    } catch (err) {
+      const error = err as ComplianceError;
+      console.error("Erreur de conformité:", error.message);
+      setErrors((prev) => ({ ...prev, submit: error.message }));
+    } finally {
+      setIsSubmitting(false);
     }
   };
-  
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -290,16 +195,12 @@ export function ComplianceForm({
       </div>
 
       <div className="flex justify-between">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onBack}
-        >
+        <Button type="button" variant="outline" onClick={onBack}>
           Retour
         </Button>
         <Button
           type="submit"
-          className="bg-[#1D4ED8] hover:bg-[#1e40af]"
+          className="bg-[#1D4ED8] hover:bg-[#1e40af] disabled:opacity-50"
           disabled={isSubmitting}
         >
           {isLastStep

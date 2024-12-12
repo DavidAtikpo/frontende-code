@@ -15,7 +15,7 @@ export const fetchProducts = async () => {
 // Connexion utilisateur
 export const userLogin = async () =>{
   try {
-    const response = await fetch(`${BASE_URL}/user/register`)
+    const response = await fetch(`${BASE_URL}/user/login`)
     if (!response.ok) throw new Error("Erreur lors de la récupération des ventes rapides");
     return response.json();
   } catch (error) {
