@@ -3,25 +3,29 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value
+  const userRole = request.cookies.get('userRole')?.value
   const isAdminLoginPage = request.nextUrl.pathname === '/adminLogin'
-  const isAdminDashboard = request.nextUrl.pathname.startsWith('/admin/dashboard')
+  const isAdminPath = request.nextUrl.pathname.startsWith('/admin')
 
-  // If on the login page and already authenticated, redirect to the dashboard
-  if (isAdminLoginPage && token) {
-    return NextResponse.redirect(new URL('/admin/dashboard', request.url))
-  }
-
-  // If trying to access the dashboard without being authenticated, redirect to login
-  if (isAdminDashboard && !token) {
+  // Si l'utilisateur n'est pas authentifié
+  if (!token && isAdminPath && !isAdminLoginPage) {
     return NextResponse.redirect(new URL('/adminLogin', request.url))
   }
 
-  // Optionally, you can add a check to validate the token here
-  // For example, you could call an API to verify the token
+  // Si l'utilisateur est authentifié mais n'est pas admin
+  if (token && isAdminPath && userRole !== 'admin' && !isAdminLoginPage) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  // Si l'utilisateur est déjà authentifié en tant qu'admin et essaie d'accéder à la page de login
+  if (token && userRole === 'admin' && isAdminLoginPage) {
+    return NextResponse.redirect(new URL('/admin/dashboard', request.url))
+  }
 
   return NextResponse.next()
 }
 
+// Mettre à jour le matcher pour inclure tous les chemins admin
 export const config = {
-  matcher: ['/adminLogin', '/admin/dashboard/:path*']
+  matcher: ['/adminLogin', '/admin/:path*']
 } 

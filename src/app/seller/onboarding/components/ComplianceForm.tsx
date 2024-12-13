@@ -80,6 +80,13 @@ export function ComplianceForm({
     setIsSubmitting(true);
 
     const formData = new FormData();
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      setErrors((prev) => ({ ...prev, submit: "Veuillez vous connecter" }));
+      setIsSubmitting(false);
+      return;
+    }
 
     // Log des données avant envoi
     console.log("=== DÉBUT SOUMISSION ===");
@@ -142,6 +149,7 @@ export function ComplianceForm({
         method: "POST",
         headers: {
           'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: formData,
       });

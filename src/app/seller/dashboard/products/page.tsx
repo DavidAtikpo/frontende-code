@@ -14,7 +14,7 @@ import { ProductDialog } from "@/components/dashboard/ProductDialog";
 import { ProductCard } from "@/components/dashboard/ProductCard";
 import { useToast } from "@/components/ui/use-toast";
 
-const BASE_URL = "http://localhost:5000/api";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 interface Product {
   id: string;
@@ -38,7 +38,7 @@ export default function ProductsPage() {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${BASE_URL}/seller/products`, {
+      const response = await fetch(`${BASE_URL}/api/seller/products`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -46,7 +46,7 @@ export default function ProductsPage() {
       
       if (!response.ok) throw new Error("Erreur lors du chargement des produits");
       const data = await response.json();
-      setProducts(data);
+      setProducts(data.data || []);
     } catch (error) {
       toast({
         title: "Erreur",
@@ -54,6 +54,7 @@ export default function ProductsPage() {
         variant: "destructive",
       });
       console.error(error);
+      setProducts([]);
     } finally {
       setIsLoading(false);
     }
@@ -63,9 +64,9 @@ export default function ProductsPage() {
     fetchProducts();
   }, [fetchProducts]);
 
-  const filteredProducts = products.filter((product) =>
+  const filteredProducts = products?.filter((product) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ) || [];
 
   if (isLoading) {
     return <div>Chargement...</div>;

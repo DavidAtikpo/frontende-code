@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -18,9 +20,29 @@ import {
 } from "lucide-react";
 import LogoutButton from "@/components/auth/LogoutButton";
 
+// Fonction utilitaire pour obtenir un cookie
+const getCookie = (name: string) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(';').shift();
+  }
+  return null;
+};
+
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const adminToken = getCookie('adminToken');
+    const userRole = getCookie('userRole');
+
+    if (!adminToken || userRole !== 'admin') {
+      router.replace('/adminLogin');
+    }
+  }, [router]);
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },

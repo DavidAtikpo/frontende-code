@@ -1,48 +1,115 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import { Users, ShoppingBag, Store, Clock } from 'lucide-react';
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+interface DashboardStats {
+  users: {
+    total: number;
+    regular: number;
+    sellers: number;
+  };
+  pendingRequests: number;
+  totalOrders: number;
+  revenue: {
+    total: number;
+    weekly: number;
+    monthly: number;
+  };
+}
 
 export default function AdminDashboard() {
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Bienvenue, Admin !</h1>
-          <p className="text-gray-500">Bienvenue dans votre tableau de bord</p>
-        </div>
-        <button className="text-blue-600 hover:text-blue-800">
-          Ajouter Carte →
-        </button>
-      </div>
+  const router = useRouter();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
 
-      <div className="grid grid-cols-3 gap-6">
-        <Card className="p-6 bg-blue-50">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-lg font-semibold"> </p>
-              <p className="text-sm text-gray-500">Paiements totaux</p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (!user || JSON.parse(user).role !== 'admin') {
+      router.replace('/adminLogin');
+      return;
+    }
+
+    fetchDashboardStats();
+  }, [router]);
+
+  const fetchDashboardStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${BASE_URL}/api/admin/dashboard/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des statistiques:', error);
+    }
+  };
+
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Tableau de bord administrateur</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">
+              Utilisateurs
+            </CardTitle>
+            <Users className="h-4 w-4 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.users.total || 0}</div>
+            <p className="text-sm text-gray-500">Réguliers: {stats?.users.regular || 0}</p>
+          </CardContent>
         </Card>
 
-        {/* Ajoutez les autres cartes statistiques ici */}
-      </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">
+              Vendeurs
+            </CardTitle>
+            <Store className="h-4 w-4 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.users.sellers || 0}</div>
+          </CardContent>
+        </Card>
 
-      {/* Section Informations du compte */}
-      <div className="grid grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">INFO DU COMPTE</h2>
-          {/* Contenu des informations du compte */}
-        </div>
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">ADRESSE DE LIVRAISON</h2>
-          {/* Contenu de l'adresse de livraison */}
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">
+              Demandes en attente
+            </CardTitle>
+            <Clock className="h-4 w-4 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.pendingRequests || 0}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">
+              Commandes totales
+            </CardTitle>
+            <ShoppingBag className="h-4 w-4 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.totalOrders || 0}</div>
+            <p className="text-sm text-gray-500">
+              Revenu total: {stats?.revenue.total.toLocaleString()} FCFA
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

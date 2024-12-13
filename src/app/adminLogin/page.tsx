@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
+// Fonction utilitaire pour définir un cookie sécurisé
+const setCookie = (name: string, value: string, days: number = 7) => {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; secure; samesite=strict`;
+};
+
 export default function AdminLoginPage() {
   const router = useRouter();
   const [credentials, setCredentials] = useState({
@@ -28,10 +34,18 @@ export default function AdminLoginPage() {
       });
 
       const data = await response.json();
-
+      
       if (response.ok) {
-        localStorage.setItem("token", data.token);
-        router.push("/admin/dashboard");
+        // Stocker uniquement dans les cookies avec des options de sécurité
+        setCookie('adminToken', data.token);
+        setCookie('userRole', data.user.role);
+        setCookie('userData', JSON.stringify({
+          id: data.user.id,
+          email: data.user.email,
+          role: data.user.role
+        }));
+        
+        router.replace("/admin/dashboard");
       } else {
         console.error("Erreur de connexion:", data.message);
       }

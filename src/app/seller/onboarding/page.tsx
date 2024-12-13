@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, FC } from "react";
+import React, { useState, FC, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Stepper } from "@/components/ui/stepper";
 import { PersonalInfoForm } from "./components/PersonalInfoForm";
@@ -12,6 +12,9 @@ import { ComplianceForm } from "./components/ComplianceForm";
 import { ValidationStatusForm } from "./components/ValidationStatusForm";
 import { SubscriptionPlanForm } from "./components/SubscriptionPlanForm";
 import { PaymentForm } from "./components/PaymentForm";
+import { useRouter } from "next/navigation";
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export interface SellerFormData {
   _id?: string;
@@ -136,56 +139,107 @@ const steps: Step[] = [
 ];
 
 export default function SellerOnboardingPage() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<SellerFormData>({
-    type: "individual",
-    personalInfo: {
-      fullName: "",
-      companyName: "",
-      address: "",
-      phone: "",
-      email: "",
-      idNumber: "",
-      taxNumber: "",
-      legalRepName: "",
-      rccmNumber: "",
-    },
-    documents: {
-      idCard: null,
-      proofOfAddress: null,
-      photos: [],
-      taxCertificate: null,
-      rccm: null,
-      companyStatutes: null,
-    },
-    contract: {
-      signed: false,
-      signedDocument: null,
-    },
-    videoVerification: {
-      completed: false,
-      recordingUrl: "",
-    },
-    businessInfo: {
-      category: "",
-      description: "",
-      products: [],
-      bankDetails: {
-        type: "bank",
-        accountNumber: "",
-        bankName: "",
-      },
-      returnPolicy: "",
-    },
-    compliance: {
-      termsAccepted: false,
-      qualityStandardsAccepted: false,
-      antiCounterfeitingAccepted: false,
-    },
-    validation: {
-      status: 'pending',
-    },
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(() => {
+    // Récupérer l'étape sauvegardée du localStorage
+    if (typeof window !== 'undefined') {
+      return parseInt(localStorage.getItem('sellerCurrentStep') || '0');
+    }
+    return 0;
   });
+  const [formData, setFormData] = useState<SellerFormData>(() => {
+    if (typeof window !== 'undefined') {
+      const savedData = localStorage.getItem('sellerFormData');
+      if (savedData) {
+        return JSON.parse(savedData);
+      }
+    }
+    return {
+      type: "individual",
+      personalInfo: {},
+      documents: { photos: [] },
+      videoVerification: { completed: false },
+      contract: { signed: false },
+      businessInfo: {
+        products: [],
+        bankDetails: {},
+      },
+      compliance: {},
+      validation: { status: "pending" }
+    };
+  });
+
+  useEffect(() => {
+    const loadSavedData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          router.replace('/login');
+          return;
+        }
+
+        // Vérifier le statut de validation
+        const response = await fetch(`${BASE_URL}/api/seller/validation-status`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          if (data.status === 'not_found') {
+            setCurrentStep(0);
+            localStorage.setItem('sellerCurrentStep', '0');
+          } else if (data.status === 'pending') {
+            setCurrentStep(6);
+            localStorage.setItem('sellerCurrentStep', '6');
+          } else if (data.status === 'approved') {
+            router.replace('/seller/dashboard');
+          }
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des données:", error);
+      }
+    };
+
+    loadSavedData();
+  }, [router, formData.payment, formData.subscription]);
+
+  // Sauvegarder les données à chaque modification
+  useEffect(() => {
+    localStorage.setItem('sellerFormData', JSON.stringify(formData));
+    localStorage.setItem('sellerCurrentStep', currentStep.toString());
+  }, [formData, currentStep]);
+
+  // Modifier la fonction handleStepChange
+  const handleStepChange = (newStep: number) => {
+    if (newStep >= 0 && newStep < steps.length) {
+      // Empêcher de revenir en arrière si en attente de validation
+      if (formData.validation?.status === 'pending' && newStep !== 6) {
+        alert("Votre demande est en cours de validation. Vous ne pouvez pas modifier les informations pour le moment.");
+        setCurrentStep(6);
+        return;
+      }
+
+      // Empêcher de sauter les étapes d'abonnement et de paiement si approuvé
+      if (formData.validation?.status === 'approved') {
+        if (!formData.subscription && newStep > 7) {
+          alert("Veuillez d'abord choisir un abonnement.");
+          setCurrentStep(7);
+          return;
+        }
+        if ((!formData.payment || formData.payment.status !== 'completed' as const) && newStep > 8) {
+          alert("Veuillez d'abord compléter le paiement.");
+          setCurrentStep(8);
+          return;
+        }
+      }
+      
+      setCurrentStep(newStep);
+      localStorage.setItem('sellerCurrentStep', newStep.toString());
+    }
+  };
 
   // Valider que l'étape actuelle existe
   const currentStepComponent = steps[currentStep]?.component;
@@ -208,24 +262,18 @@ export default function SellerOnboardingPage() {
     <div className="container max-w-4xl mx-auto p-2">
       <Card>
         <CardContent className="pt-6">
-          {/* Stepper */}
           <Stepper 
             steps={steps.map((s) => s.title)}
             currentStep={currentStep}
-            onStepClick={(stepIndex) => {
-              if (stepIndex >= 0 && stepIndex < steps.length) {
-                setCurrentStep(stepIndex);
-              }
-            }}
+            onStepClick={handleStepChange}
           />
 
-          {/* Composant de l'étape actuelle */}
           <div className="mt-8">
             {React.createElement(currentStepComponent, {
               data: formData,
               onUpdate: setFormData,
-              onNext: () => setCurrentStep((prev) => prev + 1),
-              onBack: () => setCurrentStep((prev) => prev - 1),
+              onNext: () => handleStepChange(currentStep + 1),
+              onBack: () => handleStepChange(currentStep - 1),
               isFirstStep: currentStep === 0,
               isLastStep: currentStep === steps.length - 1,
             })}

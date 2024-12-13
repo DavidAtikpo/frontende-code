@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import { SellerFormData } from "../page";
+import { useRouter } from "next/navigation";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -13,64 +14,67 @@ export const ValidationStatusForm: React.FC<{
   onNext: () => void;
   onBack: () => void;
 }> = ({ data, onUpdate, onNext, onBack }) => {
-  const [status, setStatus] = useState<'pending' | 'approved' | 'rejected'>('pending');
-  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState(data.validation?.status || 'pending');
+  const [message, setMessage] = useState(data.validation?.message || '');
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const checkInitialStatus = async () => {
-      try {
-        const response = await fetch(`${BASE_URL}/api/seller/validation-status/${data._id}`);
-        if (!response.ok) {
-          throw new Error('Erreur lors du chargement du statut');
-        }
-        const result = await response.json();
-        setStatus(result.status);
-        setMessage(result.message || "");
-      } catch (error) {
-        console.error('Erreur:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkInitialStatus();
-  }, [data._id]);
+  const router = useRouter();
 
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/api/seller/validation-status/${data._id}`);
-        const result = await response.json();
+        setIsLoading(true);
+        const token = localStorage.getItem('token');
         
-        if (result.success) {
-          setStatus(result.status);
-          setMessage(result.message || "");
+        console.log('Token:', token);
+        
+        if (!token) {
+          console.error("Token manquant");
+          router.replace('/login');
+          return;
+        }
+
+        const response = await fetch(`${BASE_URL}/api/seller/validation-status`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+        console.log('Réponse du serveur:', data);
+        
+        if (data.success) {
+          setStatus(data.status);
+          setMessage(data.message || '');
           
-          if (result.status === 'approved') {
-            onUpdate({
-              ...data,
-              validation: {
-                status: 'approved',
-                message: result.message
+          if (data.status === 'approved') {
+            // Activer l'essai gratuit automatiquement
+            const trialResponse = await fetch(`${BASE_URL}/api/seller/start-trial`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`
               }
             });
-            onNext();
+
+            if (trialResponse.ok) {
+              router.replace('/seller/dashboard');
+            }
           }
         }
       } catch (error) {
         console.error("Erreur lors de la vérification du statut:", error);
-        setMessage("Erreur lors de la vérification du statut");
       } finally {
         setIsLoading(false);
       }
     };
 
-    const interval = setInterval(checkStatus, 5000);
+    checkStatus();
+    const interval = setInterval(checkStatus, 30000);
     return () => clearInterval(interval);
-  }, [data, data._id, onNext, onUpdate]);
+  }, [router]);
 
   const getStatusDisplay = () => {
+    console.log('Status actuel:', status);
+
     switch (status) {
       case 'pending':
         return {
@@ -90,6 +94,12 @@ export const ValidationStatusForm: React.FC<{
           title: "Dossier rejeté",
           description: message || "Votre dossier n'a pas été approuvé."
         };
+      case 'not_found':
+        return {
+          icon: <Clock className="h-16 w-16 text-blue-500" />,
+          title: "Aucune demande trouvée",
+          description: "Vous n'avez pas encore soumis de demande de vendeur."
+        };
       default:
         return {
           icon: <Clock className="h-16 w-16 text-gray-500" />,
@@ -100,6 +110,35 @@ export const ValidationStatusForm: React.FC<{
   };
 
   const statusInfo = getStatusDisplay();
+
+  // Fonction pour arrêter la caméra
+  const stopCamera = () => {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        stream.getTracks().forEach(track => {
+          track.stop();
+        });
+      })
+      .catch(err => console.log("Erreur lors de l'arrêt de la caméra:", err));
+  };
+
+  // Appeler stopCamera lors du démontage du composant
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
+
+  // Appeler stopCamera lors du retour ou de la continuation
+  const handleBack = () => {
+    stopCamera();
+    onBack();
+  };
+
+  const handleNext = () => {
+    stopCamera();
+    onNext();
+  };
 
   return (
     <div className="space-y-6">
@@ -127,14 +166,14 @@ export const ValidationStatusForm: React.FC<{
         <Button
           type="button"
           variant="outline"
-          onClick={onBack}
+          onClick={handleBack}
           disabled={isLoading}
         >
           Retour
         </Button>
         {status === 'approved' && (
           <Button
-            onClick={onNext}
+            onClick={handleNext}
             className="bg-[#1D4ED8] hover:bg-[#1e40af]"
           >
             Continuer
