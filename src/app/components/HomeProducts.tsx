@@ -8,8 +8,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import LoadingSpinner from "./LoadingSpinner";
 
-// const BASE_URL = "https://dubon-server.onrender.com";
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://dubon-server.onrender.com";
+// const BASE_URL = "http://localhost:5000";
 interface Product {
   _id: string;
   title: string;
