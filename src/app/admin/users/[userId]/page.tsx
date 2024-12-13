@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
+import { API_CONFIG } from '@/utils/config';
 
-const BASE_URL = "http://localhost:5000/api";
+const { BASE_URL } = API_CONFIG;
 
 interface User {
   avatar?: string;

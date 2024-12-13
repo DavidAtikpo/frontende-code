@@ -10,9 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import AuthTabs from "../components/auth/AuthTabs";
 // import Popup from "../components/Popup";
+import { API_CONFIG } from '@/utils/config';
 
-const BASE_URL = "https://dubon-server.onrender.com";
-// const BASE_URL = "http://localhost:5000";
+const { BASE_URL } = API_CONFIG;
+
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     name: "",

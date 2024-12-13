@@ -5,7 +5,7 @@ import { FaShoppingCart, FaHeart, FaUser, FaSearch } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
 import { useCartContext } from "../context/CartContext";
-const BASE_URL = "http://localhost:5000/api";
+import { API_CONFIG } from '@/utils/config';
 
 // Hook personnalisé pour gérer le clic extérieur
 const useClickOutside = (handler: () => void) => {
@@ -52,7 +52,7 @@ const Header = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const response = await fetch(`${BASE_URL}/user/profile`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/user/profile`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -100,7 +100,7 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/user/logout`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/user/logout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

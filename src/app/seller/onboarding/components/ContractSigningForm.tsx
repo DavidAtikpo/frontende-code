@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Download, Upload } from "lucide-react";
 import { SellerFormData } from "../page";
+import { API_CONFIG } from '@/utils/config';
 
 interface ContractSigningFormProps {
   data: SellerFormData;
@@ -16,6 +17,7 @@ interface ContractSigningFormProps {
 
 export function ContractSigningForm({ data, onUpdate, onNext, onBack }: ContractSigningFormProps) {
   const [error, setError] = useState<string>("");
+  const { BASE_URL } = API_CONFIG;
 
   const handleDownloadContract = () => {
     // Simulation du téléchargement du contrat

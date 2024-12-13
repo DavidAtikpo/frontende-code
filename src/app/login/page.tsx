@@ -10,9 +10,10 @@ import { Label } from "@/components/ui/label";
 import AuthTabs from "../components/auth/AuthTabs";
 import Image from "next/image";
 import { FcGoogle } from "react-icons/fc";
+import { API_CONFIG } from '@/utils/config';
 
 // const BASE_URL = "http://localhost:5000";
-const BASE_URL = "https://dubon-server.onrender.com";
+const { BASE_URL } = API_CONFIG;
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");

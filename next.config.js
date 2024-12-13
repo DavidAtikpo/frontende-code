@@ -3,15 +3,12 @@ const nextConfig = {
   images: {
     domains: [
       'localhost',
-      '127.0.0.1',
-      'api.dubonservice.com',
-      'dubonservice.com'
+      'dubon-server.onrender.com'
     ],
     remotePatterns: [
       {
-        protocol: process.env.NODE_ENV === 'production' ? 'https' : 'http',
-        hostname: process.env.NODE_ENV === 'production' ? 'api.dubonservice.com' : 'localhost',
-        port: process.env.NODE_ENV === 'production' ? '' : '5000',
+        protocol: 'https',
+        hostname: 'dubon-server.onrender.com',
         pathname: '/**',
       }
     ],

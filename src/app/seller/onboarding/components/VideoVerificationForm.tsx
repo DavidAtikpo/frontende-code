@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, Video, X } from "lucide-react";
 import { SellerFormData } from "../page";
+import { API_CONFIG } from '@/utils/config';
 
 interface VideoVerificationFormProps {
   data: SellerFormData;
@@ -19,6 +20,8 @@ export function VideoVerificationForm({ data, onUpdate, onNext, onBack }: VideoV
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  const { BASE_URL } = API_CONFIG;
 
   const startCamera = async () => {
     try {

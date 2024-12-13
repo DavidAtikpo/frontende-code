@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, X } from "lucide-react";
 import { SellerFormData } from "../page";
+import { API_CONFIG } from '@/utils/config';
 
 interface BusinessInfoFormProps {
   data: SellerFormData;

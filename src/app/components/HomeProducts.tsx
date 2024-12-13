@@ -7,8 +7,9 @@ import { useCartContext } from "../context/CartContext";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import LoadingSpinner from "./LoadingSpinner";
+import { API_CONFIG } from '@/utils/config';
 
-const BASE_URL = "https://dubon-server.onrender.com";
+const { BASE_URL } = API_CONFIG;
 // const BASE_URL = "http://localhost:5000";
 interface Product {
   _id: string;
