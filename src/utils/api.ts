@@ -2,15 +2,25 @@ const getApiUrl = () => {
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 };
 
-const getFedaPayConfig = () => {
-  return {
-    publicKey: process.env.NEXT_PUBLIC_FEDAPAY_PUBLIC_KEY,
-    sandbox: process.env.NEXT_PUBLIC_FEDAPAY_SANDBOX === 'true'
-  };
-};
+export const api = {
+  get: async (endpoint: string) => {
+    const response = await fetch(`${getApiUrl()}${endpoint}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    return response.json();
+  },
 
-const getSiteUrl = () => {
-  return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-};
-
-export { getApiUrl, getFedaPayConfig, getSiteUrl }; 
+  post: async (endpoint: string, data: any) => {
+    const response = await fetch(`${getApiUrl()}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(data)
+    });
+    return response.json();
+  }
+}; 
