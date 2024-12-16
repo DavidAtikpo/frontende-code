@@ -191,18 +191,24 @@ export default function UsersListPage() {
                       <Mail className="h-4 w-4 mr-2" />
                       {user.email}
                     </div>
-                    <div className="text-sm text-gray-500 flex items-center mt-1">
-                      <Phone className="h-4 w-4 mr-2" />
-                      {user.mobile || "Non renseigné"}
-                    </div>
+                    {user.mobile && (
+                      <div className="text-sm text-gray-500 flex items-center mt-1">
+                        <Phone className="h-4 w-4 mr-2" />
+                        {user.mobile}
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">
-                      {user.region || "Non renseigné"}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {user.zipCode || "Non renseigné"}
-                    </div>
+                    {(user.region || user.zipCode) && (
+                      <>
+                        <div className="text-sm text-gray-900">
+                          {user.region || "Non renseigné"}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {user.zipCode || "Non renseigné"}
+                        </div>
+                      </>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <span

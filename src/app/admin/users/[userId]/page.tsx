@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation"; // Correct pour Next.js 13+
-import { ArrowLeft, Mail, Phone } from "lucide-react";
+import { useParams } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
-import { API_CONFIG } from '@/utils/config';
+import { getApiUrl } from '@/utils/api';
 
-const { BASE_URL } = API_CONFIG;
+const BASE_URL = getApiUrl();
 
 interface User {
   avatar?: string;
@@ -19,10 +19,12 @@ interface User {
   mobile?: string;
   region?: string;
   zipCode?: string;
+  role?: string;
+  status?: string;
 }
 
 export default function UserDetailPage() {
-  const params = useParams(); // Récupère l'ID depuis l'URL
+  const params = useParams();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -97,7 +99,7 @@ export default function UserDetailPage() {
         <Card className="col-span-1 p-6">
           <div className="flex flex-col items-center">
             <Image
-              src={user.avatar || "/user-profile-svgrepo-com.svg"} // Image par défaut
+              src={user.avatar || "/user-profile-svgrepo-com.svg"}
               alt={user.name || "Utilisateur"}
               className="h-32 w-32 rounded-full object-cover"
             />
@@ -112,46 +114,26 @@ export default function UserDetailPage() {
               <h3 className="text-lg font-semibold mb-4">Informations personnelles</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-gray-500">Nom affiché</label>
-                  <p className="text-gray-900">{user.displayName || "Non renseigné"}</p>
+                  <label className="text-sm text-gray-500">Nom</label>
+                  <p className="text-gray-900">{user.name}</p>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-500">Nom complet</label>
-                  <p className="text-gray-900">{user.name || "Non renseigné"}</p>
+                  <label className="text-sm text-gray-500">Email</label>
+                  <p className="text-gray-900">{user.email}</p>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold mb-4">Contact</h3>
+              <h3 className="text-lg font-semibold mb-4">Statut</h3>
               <div className="space-y-4">
-                <div className="flex items-center">
-                  <Mail className="h-5 w-5 text-gray-400 mr-2" />
-                  <div>
-                    <label className="text-sm text-gray-500">Email</label>
-                    <p className="text-gray-900">{user.email || "Non renseigné"}</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <Phone className="h-5 w-5 text-gray-400 mr-2" />
-                  <div>
-                    <label className="text-sm text-gray-500">Téléphone</label>
-                    <p className="text-gray-900">{user.mobile || "Non renseigné"}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Localisation</h3>
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-gray-500">Région</label>
-                  <p className="text-gray-900">{user.region || "Non renseigné"}</p>
+                  <label className="text-sm text-gray-500">Rôle</label>
+                  <p className="text-gray-900">{user.role}</p>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-500">Code postal</label>
-                  <p className="text-gray-900">{user.zipCode || "Non renseigné"}</p>
+                  <label className="text-sm text-gray-500">État</label>
+                  <p className="text-gray-900">{user.status}</p>
                 </div>
               </div>
             </div>

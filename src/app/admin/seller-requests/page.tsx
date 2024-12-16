@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { RequestDetailsDialog } from "./components/RequestDetailsDialog";
 import { getApiUrl } from '@/utils/api';
+import { ApprovedSellers } from "./components/ApprovedSellers";
 
 const BASE_URL = getApiUrl();
 
@@ -168,44 +169,50 @@ export default function SellerRequestsPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Demandes de vendeurs</h1>
-      <div className="grid gap-4">
-        {requests.length === 0 ? (
-          <p>Aucune demande en attente</p>
-        ) : (
-          requests.map((request) => (
-            <div
-              key={request._id}
-              className="bg-white p-6 rounded-lg shadow"
-            >
-              <h2 className="font-semibold">
-                {request.type === 'company' ? request.personalInfo.companyName : request.personalInfo.fullName}
-              </h2>
-              <p className="text-gray-600">{request.userId.email}</p>
-              <p className="text-gray-600">{request.personalInfo.phone}</p>
-              <p className="text-sm text-gray-500 mt-2">
-                Type: {request.type === 'company' ? 'Entreprise' : 'Individuel'}
-              </p>
-              <p className="text-sm text-gray-500">
-                Status: {request.status === 'pending' ? 'En attente' : request.status === 'approved' ? 'Approuvé' : 'Rejeté'}
-              </p>
-              <p className="text-sm text-gray-500">
-                Date de demande: {new Date(request.createdAt).toLocaleDateString()}
-              </p>
-              {request.status === 'pending' && (
-                <div className="mt-4 space-x-2">
-                  <Button 
-                    onClick={() => setSelectedRequest(request)}
-                    className="bg-blue-500 hover:bg-blue-600 text-white"
-                  >
-                    Voir les détails
-                  </Button>
-                </div>
-              )}
-            </div>
-          ))
-        )}
+      <h1 className="text-2xl font-bold mb-6">Gestion des vendeurs</h1>
+      
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Demandes en attente</h2>
+        <div className="grid gap-4">
+          {requests.length === 0 ? (
+            <p>Aucune demande en attente</p>
+          ) : (
+            requests.map((request) => (
+              <div
+                key={request._id}
+                className="bg-white p-6 rounded-lg shadow"
+              >
+                <h2 className="font-semibold">
+                  {request.type === 'company' ? request.personalInfo.companyName : request.personalInfo.fullName}
+                </h2>
+                <p className="text-gray-600">{request.userId.email}</p>
+                <p className="text-gray-600">{request.personalInfo.phone}</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Type: {request.type === 'company' ? 'Entreprise' : 'Individuel'}
+                </p>
+                <p className="text-sm text-gray-500">
+                  Status: {request.status === 'pending' ? 'En attente' : request.status === 'approved' ? 'Approuvé' : 'Rejeté'}
+                </p>
+                <p className="text-sm text-gray-500">
+                  Date de demande: {new Date(request.createdAt).toLocaleDateString()}
+                </p>
+                {request.status === 'pending' && (
+                  <div className="mt-4 space-x-2">
+                    <Button 
+                      onClick={() => setSelectedRequest(request)}
+                      className="bg-blue-500 hover:bg-blue-600 text-white"
+                    >
+                      Voir les détails
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       </div>
+
+      <ApprovedSellers />
 
       {selectedRequest && (
         <RequestDetailsDialog
