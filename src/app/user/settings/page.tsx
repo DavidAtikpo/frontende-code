@@ -70,7 +70,6 @@ export default function SettingsPage() {
         title: "Succès",
         description: "Profil mis à jour avec succès",
       });
-      console.log(Error);
       
     } catch (error) {
       toast({
