@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCartContext } from "../context/CartContext";
 import { API_CONFIG } from '@/utils/config';
+import { useRouter } from 'next/navigation';
 
 // Hook personnalisé pour gérer le clic extérieur
 const useClickOutside = (handler: () => void) => {
@@ -31,7 +32,6 @@ const Header = () => {
   const { state, dispatch } = useCartContext();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobile, setIsMobile] = useState(false);
@@ -41,11 +41,13 @@ const Header = () => {
     email: string;
     profilePhotoURL: string | null;
   }>({ name: '', email: '', profilePhotoURL: null });
+  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
 
   // Refs pour les menus déroulants
   const cartRef = useClickOutside(() => setIsCartOpen(false));
   const wishlistRef = useClickOutside(() => setIsWishlistOpen(false));
-  const profileRef = useClickOutside(() => setIsProfileOpen(false));
+  const profileRef = useClickOutside(() => setIsOpen(false));
 
   const fetchUserInfo = async () => {
     try {
@@ -123,6 +125,11 @@ const Header = () => {
     }
   };
 
+  const handleNavigate = (path: string) => {
+    setIsOpen(false); // Ferme le dropdown
+    router.push(path);
+  };
+
   return (
     <header className="bg-gradient-to-r bg-customBlue text-white py-2 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -168,7 +175,7 @@ const Header = () => {
                 onClick={() => {
                   setIsCartOpen(!isCartOpen);
                   setIsWishlistOpen(false);
-                  setIsProfileOpen(false);
+                  setIsOpen(false);
                 }}
                 className="p-1.5 hover:bg-white/10 rounded-full transition-colors duration-200 relative focus:outline-none focus:ring-2 focus:ring-white/50"
                 aria-label="Panier"
@@ -236,7 +243,7 @@ const Header = () => {
                 onClick={() => {
                   setIsWishlistOpen(!isWishlistOpen);
                   setIsCartOpen(false);
-                  setIsProfileOpen(false);
+                  setIsOpen(false);
                 }}
                 className="p-1.5 hover:bg-white/10 rounded-full transition-colors duration-200 relative focus:outline-none focus:ring-2 focus:ring-white/50"
                 aria-label="Liste de souhaits"
@@ -288,7 +295,7 @@ const Header = () => {
             <div ref={profileRef} className="relative">
               <button 
                 onClick={() => {
-                  setIsProfileOpen(!isProfileOpen);
+                  setIsOpen(!isOpen);
                   setIsCartOpen(false);
                   setIsWishlistOpen(false);
                 }}
@@ -307,7 +314,7 @@ const Header = () => {
                   <FaUser size={16} />
                 )}
               </button>
-              {isProfileOpen && (
+              {isOpen && (
                 <div className="absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-lg shadow-xl p-4 z-50 border border-gray-100">
                   {isAuthenticated ? (
                     <>
@@ -369,6 +376,7 @@ const Header = () => {
                       <Link 
                         href="/login"
                         className="block w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors text-center"
+                        onClick={() => handleNavigate('/login')}
                       >
                         CONNEXION →
                       </Link>
@@ -377,6 +385,7 @@ const Header = () => {
                         <Link 
                           href="/register" 
                           className="block w-full mt-2 py-2 text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors"
+                          onClick={() => handleNavigate('/register')}
                         >
                           CRÉER VOTRE COMPTE
                         </Link>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { API_CONFIG } from '@/utils/config';
+import Image from "next/image";
 
 const { BASE_URL } = API_CONFIG;
 interface UserInfo {
@@ -12,6 +13,7 @@ interface UserInfo {
   email: string;
   address: string;
   phone: string;
+  avatar: string;
 }
 
 interface PaymentStats {
@@ -19,6 +21,8 @@ interface PaymentStats {
   pending: number;
   completed: number;
 }
+
+const DEFAULT_AVATAR = '/user-profile-svgrepo-com (1).svg';
 
 export default function UserDashboard() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -71,7 +75,15 @@ export default function UserDashboard() {
         <Card className="p-6">
           <h2 className="text-xl font-bold mb-4">INFO DU COMPTE</h2>
           <div className="flex items-start space-x-4">
-            <div className="w-16 h-16 rounded-full bg-gray-200" />
+            <div className="w-16 h-16 rounded-full bg-gray-200">
+              <Image 
+                src={userInfo.avatar || DEFAULT_AVATAR}
+                alt="Profile" 
+                className="w-full h-full rounded-full object-cover"
+                width={100}
+                height={100}
+              />
+            </div>
             <div className="flex-1">
               <h3 className="font-bold">{userInfo.name}</h3>
               <p className="text-sm text-gray-500">{userInfo.address}</p>
