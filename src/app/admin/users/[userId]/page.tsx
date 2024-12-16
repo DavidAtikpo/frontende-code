@@ -30,21 +30,40 @@ export default function UserDetailPage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/admin/info${params.id}`);
+        const adminToken = document.cookie
+          .split(';')
+          .find(c => c.trim().startsWith('adminToken='))
+          ?.split('=')[1];
+
+        const response = await fetch(`${BASE_URL}/api/admin/users/${params.userId}`, {
+          headers: {
+            Authorization: `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+
         if (!response.ok) {
-          throw new Error(`Erreur HTTP : ${response.status} - ${response.statusText}`);
+          throw new Error("Erreur lors du chargement des détails utilisateur");
         }
+
         const data = await response.json();
-        setUser(data);
-      } catch (err: unknown) {
+        if (data.success) {
+          setUser(data.data);
+        } else {
+          throw new Error(data.message || "Erreur lors du chargement des détails utilisateur");
+        }
+      } catch (err) {
         setError(err instanceof Error ? err.message : "Une erreur est survenue");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchUser();
-  }, [params.id]);
+    if (params.userId) {
+      fetchUser();
+    }
+  }, [params.userId]);
 
   if (isLoading) {
     return (

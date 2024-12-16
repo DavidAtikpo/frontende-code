@@ -35,6 +35,8 @@ export default function AdminDashboard() {
         .find(c => c.trim().startsWith('adminToken='))
         ?.split('=')[1];
 
+      console.log('Token utilisé:', adminToken);
+
       const response = await fetch(`${BASE_URL}/api/admin/dashboard/stats`, {
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -43,20 +45,21 @@ export default function AdminDashboard() {
         credentials: 'include'
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data.data);
-        console.log(data.data);
-      } else {
-        // Si la réponse n'est pas ok, vérifier si c'est un problème d'authentification
-        if (response.status === 401) {
-          router.replace('/adminLogin');
-        }
+      console.log('Réponse status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Erreur détaillée:', errorData);
+        throw new Error(errorData.message || "Erreur lors du chargement des statistiques");
       }
+
+      const data = await response.json();
+      console.log('Données reçues:', data);
+      setStats(data.data);
     } catch (error) {
-      console.error('Erreur lors du chargement des statistiques:', error);
+      console.error('Erreur complète:', error);
     }
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     // Vérifier l'authentification admin avec les cookies
