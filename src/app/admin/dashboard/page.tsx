@@ -29,8 +29,12 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
 
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    if (!user || JSON.parse(user).role !== 'admin') {
+    // Vérifier l'authentification admin avec les cookies
+    const adminToken = document.cookie.includes('adminToken=');
+    const userRole = document.cookie.split(';').find(c => c.trim().startsWith('userRole='));
+    const isAdmin = userRole?.includes('admin');
+
+    if (!adminToken || !isAdmin) {
       router.replace('/adminLogin');
       return;
     }
@@ -40,16 +44,27 @@ export default function AdminDashboard() {
 
   const fetchDashboardStats = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const adminToken = document.cookie
+        .split(';')
+        .find(c => c.trim().startsWith('adminToken='))
+        ?.split('=')[1];
+
       const response = await fetch(`${BASE_URL}/api/admin/dashboard/stats`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
       });
 
       if (response.ok) {
         const data = await response.json();
         setStats(data.data);
+      } else {
+        // Si la réponse n'est pas ok, vérifier si c'est un problème d'authentification
+        if (response.status === 401) {
+          router.replace('/adminLogin');
+        }
       }
     } catch (error) {
       console.error('Erreur lors du chargement des statistiques:', error);
