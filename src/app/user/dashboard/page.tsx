@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-// import { CreditCard, Clock, MapPin, Settings, LogOut } from "lucide-react";
 
 interface UserInfo {
   name: string;
@@ -20,23 +19,48 @@ interface PaymentStats {
 }
 
 export default function UserDashboard() {
-  const [userInfo] = useState<UserInfo>({
-    name: "Kevin Gilbert",
-    email: "kevin.gilbert@gmail.com",
-    address: "East Tejturi Bazar, Word No: 04, Road No: 50...",
-    phone: "+1-202-555-0118"
-  });
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [paymentStats, setPaymentStats] = useState<PaymentStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const [paymentStats] = useState<PaymentStats>({
-    total: 154,
-    pending: 5,
-    completed: 149
-  });
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        };
+        
+        const [userResponse, statsResponse] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/info`, { headers }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/payment-stats`, { headers })
+        ]);
 
-  // const handleLogout = () => {
-  //   localStorage.removeItem("authToken");
-  //   window.location.href = "/login";
-  // };
+        if (!userResponse.ok || !statsResponse.ok) {
+          throw new Error("Erreur lors de la récupération des données");
+        }
+
+        const userData = await userResponse.json();
+        const statsData = await statsResponse.json();
+
+        setUserInfo(userData.user);
+        setPaymentStats(statsData);
+      } catch (err) {
+        console.error("Erreur:", err);
+        setError("Erreur lors du chargement des données");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) return <div className="container mx-auto p-6">Chargement...</div>;
+  if (error) return <div className="container mx-auto p-6 text-red-500">{error}</div>;
+  if (!userInfo || !paymentStats) return <div className="container mx-auto p-6">Aucune donnée disponible</div>;
 
   return (
     <div className="container mx-auto p-6">
