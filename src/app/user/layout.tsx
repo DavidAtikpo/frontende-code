@@ -107,7 +107,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen bg-gray-50">
       {/* Mobile menu button */}
 
-      <div className="lg:hidden fixed top-10 right-4 z-50">
+      <div className="lg:hidden fixed top-30 right-4 z-50">
         <Button
           variant="ghost"
           size="icon"
