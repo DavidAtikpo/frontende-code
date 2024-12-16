@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { ImagePlus, Link, X, Video } from "lucide-react";
-import { getApiUrl } from '@/utils/api';
+// import { getApiUrl } from '@/utils/api';
 import {
   Select,
   SelectContent,
@@ -18,20 +18,10 @@ import {
 } from "@/components/ui/select";
 import Image from "next/image";
 
-const BASE_URL = getApiUrl();
-
 interface ProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-}
-
-interface ProductData {
-  name: string;
-  description: string;
-  price: number;
-  stock: number;
-  [key: string]: string | number;
 }
 
 export function ProductDialog({ open, onOpenChange, onSuccess }: ProductDialogProps) {
@@ -43,12 +33,6 @@ export function ProductDialog({ open, onOpenChange, onSuccess }: ProductDialogPr
   const { toast } = useToast();
   const [showDiscount, setShowDiscount] = useState(false);
   const [showMetadata, setShowMetadata] = useState(false);
-  const [productData, setProductData] = useState<ProductData>({
-    name: '',
-    description: '',
-    price: 0,
-    stock: 0
-  });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;

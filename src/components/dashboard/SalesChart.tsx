@@ -10,7 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
-  ChartData,
+  // ChartData,
   ChartOptions
 } from 'chart.js';
 

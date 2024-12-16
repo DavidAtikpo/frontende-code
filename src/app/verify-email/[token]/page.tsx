@@ -25,23 +25,19 @@ export default function VerifyEmail() {
         const data = await response.json();
 
         if (data.success) {
-          setStatus('Email vérifié avec succès !');
-          setTimeout(() => {
-            router.push('/login?verified=true');
-          }, 2000);
+          setStatus('Email vérifié avec succès! Redirection...');
+          setTimeout(() => router.push('/login'), 2000);
         } else {
-          setStatus(data.message || 'Erreur de vérification');
+          setStatus('Échec de la vérification. Lien invalide ou expiré.');
         }
-      } catch (error) {
-        setStatus('Une erreur est survenue lors de la vérification');
+      } catch {
+        setStatus('Une erreur est survenue lors de la vérification.');
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (params.token) {
-      verifyEmail();
-    }
+    verifyEmail();
   }, [params.token, router]);
 
   return (

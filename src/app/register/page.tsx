@@ -16,11 +16,6 @@ import { useRouter } from 'next/navigation';
 const { BASE_URL } = API_CONFIG;
 // const BASE_URL = 'http://localhost:5000';
 
-interface RegisterError {
-  message: string;
-  code?: string;
-}
-
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -70,7 +65,7 @@ export default function RegisterPage() {
         router.push('/login');
       }, 3000);
 
-    } catch (error: RegisterError | unknown) {
+    } catch (error: unknown) {
       console.error("Erreur d'inscription:", error);
       setError(error instanceof Error ? error.message : "Une erreur est survenue lors de l'inscription");
     } finally {

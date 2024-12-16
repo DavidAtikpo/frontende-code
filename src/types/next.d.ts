@@ -15,7 +15,7 @@ declare module 'next/server' {
   export class NextResponse extends Response {
     static redirect(url: string | URL): NextResponse;
     static next(): NextResponse;
-    static json(data: any): NextResponse;
+    static json<T = unknown>(data: T): NextResponse;
   }
 
   export interface NextRequest extends Request {

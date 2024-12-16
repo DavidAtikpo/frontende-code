@@ -8,7 +8,12 @@ interface FormData {
 const ExampleComponent = () => {
   const handleSubmit = async (formData: FormData) => {
     try {
-      const result = await api.post('/api/some-endpoint', formData);
+      const data: Record<string, unknown> = {
+        email: formData.email,
+        password: formData.password
+      };
+      
+      const result = await api.post('/api/some-endpoint', data);
       console.log('Succès:', result);
     } catch (error) {
       console.error('Erreur:', error);

@@ -1,22 +1,18 @@
 import { useState } from 'react';
 import { api } from '@/utils/api';
 
-interface ApiResponse<T> {
-  data?: T;
-  error?: string;
-  status: number;
-}
-
 export const useApi = <T>() => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const request = async <T>(method: 'get' | 'post', endpoint: string, data?: Record<string, unknown>) => {
+  const request = async <R>(method: 'get' | 'post', endpoint: string, data?: Record<string, unknown>): Promise<R> => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api[method](endpoint, data);
-      return response;
+      if (method === 'post' && data) {
+        return await api.post<R>(endpoint, data);
+      }
+      return await api.get(endpoint);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
       throw err;

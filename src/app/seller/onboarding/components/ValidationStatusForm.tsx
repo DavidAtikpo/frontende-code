@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -19,7 +19,7 @@ export const ValidationStatusForm = ({ onNext, onBack }: ValidationStatusFormPro
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  const checkValidationStatus = async () => {
+  const checkValidationStatus = useCallback(async () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
@@ -64,7 +64,7 @@ export const ValidationStatusForm = ({ onNext, onBack }: ValidationStatusFormPro
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     checkValidationStatus();

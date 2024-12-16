@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Eye, EyeOff, Bell, Shield, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-// import { error } from "console";
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -19,23 +18,21 @@ export default function SettingsPage() {
     fullName: "",
     email: "",
     phone: "",
-    address: "",
+    address: ""
   });
 
-  const [passwordData, setPasswordData] = useState({
+  const [securityData, setSecurityData] = useState({
     currentPassword: "",
     newPassword: "",
-    confirmPassword: "",
+    confirmPassword: ""
   });
 
   const [notificationSettings, setNotificationSettings] = useState({
     emailNotifications: true,
-    orderUpdates: true,
-    promotions: false,
-    security: true,
+    pushNotifications: false,
+    marketingEmails: true,
+    securityAlerts: true
   });
-
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -90,7 +87,7 @@ export default function SettingsPage() {
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
+    if (securityData.newPassword !== securityData.confirmPassword) {
       toast({
         title: "Erreur",
         description: "Les mots de passe ne correspondent pas",
@@ -104,7 +101,7 @@ export default function SettingsPage() {
       const response = await fetch("/api/user/password", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(passwordData),
+        body: JSON.stringify(securityData),
       });
       
       if (!response.ok) throw new Error("Erreur lors de la mise à jour");
@@ -115,7 +112,7 @@ export default function SettingsPage() {
       });
       // console.log(error);
       
-      setPasswordData({
+      setSecurityData({
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
@@ -154,12 +151,6 @@ export default function SettingsPage() {
     <div className="container max-w-4xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Paramètres du compte</h1>
       
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-md">
-          {error}
-        </div>
-      )}
-
       <Tabs defaultValue="profile">
         <TabsList className="mb-6">
           <TabsTrigger value="profile" className="flex items-center gap-2">
@@ -239,8 +230,8 @@ export default function SettingsPage() {
                     <Input
                       id="currentPassword"
                       type={showPassword ? "text" : "password"}
-                      value={passwordData.currentPassword}
-                      onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                      value={securityData.currentPassword}
+                      onChange={(e) => setSecurityData({...securityData, currentPassword: e.target.value})}
                     />
                     <Button
                       type="button"
@@ -258,8 +249,8 @@ export default function SettingsPage() {
                   <Input
                     id="newPassword"
                     type="password"
-                    value={passwordData.newPassword}
-                    onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                    value={securityData.newPassword}
+                    onChange={(e) => setSecurityData({...securityData, newPassword: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
@@ -267,8 +258,8 @@ export default function SettingsPage() {
                   <Input
                     id="confirmPassword"
                     type="password"
-                    value={passwordData.confirmPassword}
-                    onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                    value={securityData.confirmPassword}
+                    onChange={(e) => setSecurityData({...securityData, confirmPassword: e.target.value})}
                   />
                 </div>
                 <Button type="submit" disabled={isLoading}>
@@ -302,8 +293,8 @@ export default function SettingsPage() {
                     <p className="text-sm text-gray-500">Notifications sur le statut des commandes</p>
                   </div>
                   <Switch
-                    checked={notificationSettings.orderUpdates}
-                    onCheckedChange={(checked) => handleNotificationUpdate("orderUpdates", checked)}
+                    checked={notificationSettings.pushNotifications}
+                    onCheckedChange={(checked) => handleNotificationUpdate("pushNotifications", checked)}
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -312,8 +303,8 @@ export default function SettingsPage() {
                     <p className="text-sm text-gray-500">Recevoir des offres promotionnelles</p>
                   </div>
                   <Switch
-                    checked={notificationSettings.promotions}
-                    onCheckedChange={(checked) => handleNotificationUpdate("promotions", checked)}
+                    checked={notificationSettings.marketingEmails}
+                    onCheckedChange={(checked) => handleNotificationUpdate("marketingEmails", checked)}
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -322,8 +313,8 @@ export default function SettingsPage() {
                     <p className="text-sm text-gray-500">Notifications de connexion et de sécurité</p>
                   </div>
                   <Switch
-                    checked={notificationSettings.security}
-                    onCheckedChange={(checked) => handleNotificationUpdate("security", checked)}
+                    checked={notificationSettings.securityAlerts}
+                    onCheckedChange={(checked) => handleNotificationUpdate("securityAlerts", checked)}
                   />
                 </div>
               </div>
@@ -334,48 +325,5 @@ export default function SettingsPage() {
     </div>
   );
 }
-// } 
-
-// // "use client";
-
-// // import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// // import { Bell, Shield, User } from "lucide-react";
-
-// // export default function SettingsPage() {
-// //   return (
-// //     <div className="container max-w-4xl mx-auto p-6">
-// //       <h1 className="text-2xl font-bold mb-6">Paramètres du compte</h1>
-
-// //       <Tabs defaultValue="profile">
-// //         <TabsList className="mb-6">
-// //           <TabsTrigger value="profile" className="flex items-center gap-2">
-// //             <User className="h-4 w-4" />
-// //             Profil
-// //           </TabsTrigger>
-// //           <TabsTrigger value="security" className="flex items-center gap-2">
-// //             <Shield className="h-4 w-4" />
-// //             Sécurité
-// //           </TabsTrigger>
-// //           <TabsTrigger value="notifications" className="flex items-center gap-2">
-// //             <Bell className="h-4 w-4" />
-// //             Notifications
-// //           </TabsTrigger>
-// //         </TabsList>
-
-// //         <TabsContent value="profile">
-// //           <p>Formulaire pour mettre à jour les informations de profil.</p>
-// //         </TabsContent>
-
-// //         <TabsContent value="security">
-// //           <p>Formulaire pour changer le mot de passe.</p>
-// //         </TabsContent>
-
-// //         <TabsContent value="notifications">
-// //           <p>Réglages pour les notifications.</p>
-// //         </TabsContent>
-// //       </Tabs>
-// //     </div>
-// //   );
-// // }
 
 

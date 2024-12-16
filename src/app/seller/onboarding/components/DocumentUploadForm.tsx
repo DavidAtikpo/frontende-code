@@ -152,16 +152,6 @@ export function DocumentUploadForm({ data, onUpdate, onNext, onBack }: DocumentU
     }
   };
 
-  const getFileUrl = (file: File | null) => {
-    if (!file) return null;
-    try {
-      return URL.createObjectURL(file);
-    } catch (error) {
-      console.error("Erreur lors de la création de l'URL:", error);
-      return null;
-    }
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
