@@ -1,4 +1,10 @@
-export const handleApiError = (error: any) => {
+interface ApiError {
+  message: string;
+  code?: string;
+  status?: number;
+}
+
+export const handleError = (error: Error | ApiError): string => {
   if (!navigator.onLine) {
     return "Vérifiez votre connexion internet";
   }

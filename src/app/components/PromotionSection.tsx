@@ -81,7 +81,8 @@ const PromotionSection = () => {
                     ? promotionalProducts[0].images[0] 
                     : promotionalProducts[0].images}
                   alt={promotionalProducts[0].title}
-                  fill
+                  width={500}
+                  height={300}
                   className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
@@ -132,7 +133,8 @@ const PromotionSection = () => {
                   <Image
                     src={Array.isArray(product.images) ? product.images[0] : product.images}
                     alt={product.title}
-                    fill
+                    width={500}
+                    height={300}
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />

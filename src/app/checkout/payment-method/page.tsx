@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useCartContext } from "../../context/CartContext";
 import Image from "next/image";
 // import { useRouter } from "next/navigation";
+import { getApiUrl } from '@/utils/api';
 
 interface ShippingAddress {
   firstName: string;
@@ -20,7 +21,7 @@ interface PaymentError {
   details?: unknown;
 }
 
-const BASE_URL = "https://dubon-server.onrender.com";
+const BASE_URL = getApiUrl();
 // const BASE_URL = "http://localhost:5000";
 const PaymentMethodPage = () => {
   const { state } = useCartContext();

@@ -11,8 +11,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import AuthTabs from "../components/auth/AuthTabs";
 // import Popup from "../components/Popup";
 import { API_CONFIG } from '@/utils/config';
+import { useRouter } from 'next/navigation';
 
 const { BASE_URL } = API_CONFIG;
+// const BASE_URL = 'http://localhost:5000';
+
+interface RegisterError {
+  message: string;
+  code?: string;
+}
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -25,8 +32,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [showPopup, setShowPopup] = useState(false); // État pour le popup
-  const [userDetails, setUserDetails] = useState({ name: "", email: "" });
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -34,15 +40,9 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    // if (formData.password !== formData.confirmPassword) {
-    //   setError("Les mots de passe ne correspondent pas.");
-    //   return;
-    // }
-
     setIsLoading(true);
+    setError("");
+
     try {
       const response = await fetch(`${BASE_URL}/api/user/register`, {
         method: "POST",
@@ -51,42 +51,28 @@ export default function RegisterPage() {
         },
         body: JSON.stringify({
           name: formData.name,
-          email: formData.email,
+          email: formData.email.trim(),
           password: formData.password,
         }),
       });
 
       const data = await response.json();
+      console.log("Réponse inscription:", data);
 
       if (!response.ok) {
-        throw new Error(data.message || "Une erreur est survenue.");
+        throw new Error(data.message || "Erreur lors de l'inscription");
       }
 
-      // Stocker le token
-      localStorage.setItem("token", data.token);
-      
-      setSuccess("Compte créé avec succès !");
-      setUserDetails({ 
-        name: data.user.name, 
-        email: data.user.email 
-      });
-      setShowPopup(true);
+      // Afficher un message de succès
+      setSuccess(data.message);
+      // Rediriger vers la page de connexion après 3 secondes
+      setTimeout(() => {
+        router.push('/login');
+      }, 3000);
 
-      // Réinitialiser le formulaire
-      setFormData({
-        name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-      });
-
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Une erreur est survenue. Veuillez réessayer.");
-      }
-      console.error("Erreur d'inscription:", err);
+    } catch (error: RegisterError | unknown) {
+      console.error("Erreur d'inscription:", error);
+      setError(error instanceof Error ? error.message : "Une erreur est survenue lors de l'inscription");
     } finally {
       setIsLoading(false);
     }
@@ -194,7 +180,27 @@ export default function RegisterPage() {
               </label>
             </div>
 
-            {error && <div className="text-sm text-red-600">{error}</div>}
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+                {error.includes("n'est pas vérifié") && (
+                  <div className="mt-2 text-sm">
+                    <p>Veuillez vérifier votre boîte mail pour activer votre compte.</p>
+                    <p className="mt-1">Si vous n'avez pas reçu l'email, vérifiez vos spams ou réessayez de vous inscrire pour recevoir un nouveau lien.</p>
+                  </div>
+                )}
+                {error.includes("existe déjà") && !error.includes("n'est pas vérifié") && (
+                  <div className="mt-2">
+                    <Link 
+                      href="/login" 
+                      className="text-blue-600 hover:underline"
+                    >
+                      Se connecter
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
             {success && <div className="text-sm text-green-600">{success}</div>}
 
             <Button
@@ -209,7 +215,7 @@ export default function RegisterPage() {
       </Card>
 
       {/* Popup de confirmation */}
-      {showPopup && (
+      {/* {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg text-center space-y-4 max-w-sm">
             <h2 className="text-lg font-bold">Inscription réussie !</h2>
@@ -226,7 +232,7 @@ export default function RegisterPage() {
             </Button>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

@@ -102,7 +102,8 @@ const ProductDetailPage = () => {
             <Image
               src={product.images?.[selectedImage] || "/placeholder.jpg"}
               alt={product.title}
-              fill
+              width={500}
+              height={500}
               className="object-contain"
               priority
             />
@@ -118,7 +119,8 @@ const ProductDetailPage = () => {
                 <Image
                   src={img}
                   alt={`${product.title} ${index + 1}`}
-                  fill
+                  width={500}
+                  height={500}
                   className="object-contain p-1"
                 />
               </button>

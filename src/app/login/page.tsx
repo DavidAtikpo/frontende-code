@@ -11,8 +11,8 @@ import AuthTabs from "../components/auth/AuthTabs";
 import Image from "next/image";
 import { FcGoogle } from "react-icons/fc";
 import { API_CONFIG } from '@/utils/config';
+import { useRouter } from 'next/navigation';
 
-// const BASE_URL = "http://localhost:5000";
 const { BASE_URL } = API_CONFIG;
 
 export default function LoginPage() {
@@ -21,11 +21,24 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+
+    if (!email || !email.includes("@")) {
+      setError("Veuillez entrer une adresse email valide.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Le mot de passe doit contenir au moins 6 caractères.");
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch(`${BASE_URL}/api/user/login`, {
@@ -33,31 +46,42 @@ export default function LoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: 'include',
         body: JSON.stringify({
-          email,
+          email: email.trim(),
           password,
         }),
-        
       });
-      // console.log('body',response.json());
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.log('error',errorData);
-        
-        throw new Error(errorData.message || "Une erreur est survenue.");
-      }
 
       const data = await response.json();
-      console.log("Connexion réussie :", data);
 
-      // Stockez le token ou effectuez une redirection
-      localStorage.setItem("token", data.token);
-      window.location.href = "/user/dashboard"; // Redirection après connexion réussie
-    } catch (err: unknown) {
-      console.log(err);
-      
-      // setError(err.message);
+      if (!response.ok) {
+        switch (response.status) {
+          case 400:
+            throw new Error("Requête invalide. Vérifiez vos informations.");
+          case 401:
+            throw new Error("Identifiants incorrects. Réessayez.");
+          case 404:
+            throw new Error("Utilisateur introuvable. Créez un compte.");
+          case 500:
+            throw new Error("Erreur serveur. Veuillez réessayer plus tard.");
+          default:
+            throw new Error(data.message || "Erreur inconnue. Réessayez plus tard.");
+        }
+      }
+
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        // Redirection en fonction du rôle utilisateur
+        router.push('/user/dashboard');
+      } else {
+        throw new Error("Token manquant dans la réponse.");
+      }
+    } catch (err) {
+      console.error("Erreur de connexion:", err);
+      setError(err instanceof Error ? err.message : "Erreur lors de la connexion.");
     } finally {
       setIsLoading(false);
     }
@@ -71,13 +95,27 @@ export default function LoginPage() {
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold">Connexion</h1>
             <p className="text-sm text-gray-500 mt-2">
-              Connectez-vous à votre compte
+              Connectez-vous à votre compte ou{" "}
+              <Link href="/register" className="text-blue-600 hover:underline">
+                créez un compte
+              </Link>
             </p>
           </div>
 
           {error && (
-            <div className="mb-4 text-sm text-red-600">
-              {error}
+            <div className="mb-4 p-4 bg-red-50 rounded-lg">
+              <p className="text-sm text-red-600 font-semibold">{error}</p>
+              {error.includes("Utilisateur introuvable") && (
+                <div className="mt-2 text-sm">
+                  <p>Pas encore de compte ?</p>
+                  <Link 
+                    href="/register" 
+                    className="inline-block mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Créer un compte
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
@@ -148,34 +186,31 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-3">
-  <Button
-    variant="outline"
-    className="w-full"
-    type="button"
-    onClick={() => (window.location.href = `${BASE_URL}/auth/google`)}
-  >
-   <FcGoogle />
-    Connexion avec Google
-  </Button>
-  <Button
-    variant="outline"
-    className="w-full"
-    type="button"
-    onClick={() => (window.location.href = `${BASE_URL}/auth/facebook`)}
-  >
-    <Image
-      src="/facebook.png"
-      alt="Facebook"
-      className="w-5 h-5 mr-2"
-      width={64}
-      height={64}
-    />
-    Connexion avec Facebook
-  </Button>
-</div>
-
-{error && <div className="text-sm text-red-600">{error}</div>}
-
+            <Button
+              variant="outline"
+              className="w-full"
+              type="button"
+              onClick={() => (window.location.href = `${BASE_URL}/auth/google`)}
+            >
+              <FcGoogle />
+              Connexion avec Google
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              type="button"
+              onClick={() => (window.location.href = `${BASE_URL}/auth/facebook`)}
+            >
+              <Image
+                src="/facebook.png"
+                alt="Facebook"
+                className="w-5 h-5 mr-2"
+                width={64}
+                height={64}
+              />
+              Connexion avec Facebook
+            </Button>
+          </div>
 
           <div className="text-center text-sm text-gray-500">
             Pas encore de compte ?{" "}
@@ -188,3 +223,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { Users, ShoppingBag, Store, Clock } from 'lucide-react';
+import { getApiUrl } from '@/utils/api';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BASE_URL = getApiUrl();
+// const BASE_URL = 'http://localhost:3000';
 
 interface DashboardStats {
   users: {

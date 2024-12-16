@@ -16,9 +16,12 @@ export async function POST(request: Request) {
     return NextResponse.json(data);
 
   } catch (err) {
-    console.error("Erreur lors de la création de la transaction:", err);
-    return NextResponse.json(
-      { success: false, message: "Erreur lors de la création de la transaction" },
+    console.error('Erreur lors de la création de la transaction:', err);
+    return new NextResponse(
+      JSON.stringify({ 
+        success: false, 
+        message: err instanceof Error ? err.message : "Erreur lors de la création de la transaction" 
+      }), 
       { status: 500 }
     );
   }

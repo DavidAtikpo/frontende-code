@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { getApiUrl } from '@/utils/api';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BASE_URL = getApiUrl();
 
 // Fonction utilitaire pour définir un cookie sécurisé
 const setCookie = (name: string, value: string, days: number = 7) => {
@@ -19,6 +20,7 @@ export default function AdminLoginPage() {
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,13 +32,18 @@ export default function AdminLoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: 'include',
         body: JSON.stringify(credentials),
       });
 
       const data = await response.json();
       
-      if (response.ok) {
-        // Stocker uniquement dans les cookies avec des options de sécurité
+      if (!response.ok) {
+        throw new Error(data.message || "Erreur lors de la connexion");
+      }
+
+      if (data.token) {
+        // Stocker le token et les informations utilisateur
         setCookie('adminToken', data.token);
         setCookie('userRole', data.user.role);
         setCookie('userData', JSON.stringify({
@@ -47,10 +54,11 @@ export default function AdminLoginPage() {
         
         router.replace("/admin/dashboard");
       } else {
-        console.error("Erreur de connexion:", data.message);
+        throw new Error("Token manquant dans la réponse");
       }
     } catch (err) {
       console.error("Erreur de connexion:", err);
+      setError(err instanceof Error ? err.message : "Erreur lors de la connexion");
     } finally {
       setIsLoading(false);
     }
@@ -65,6 +73,11 @@ export default function AdminLoginPage() {
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-50 text-red-500 p-4 rounded-md text-sm">
+              {error}
+            </div>
+          )}
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="email" className="sr-only">

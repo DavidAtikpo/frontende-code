@@ -1,67 +1,65 @@
 "use client";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { formatDate } from "@/lib/utils";
 
 interface Sale {
   id: string;
-  product: string;
-  customer: string;
-  date: string;
+  customer: {
+    name: string;
+    email: string;
+  };
   amount: number;
-  status: "completed" | "pending" | "cancelled";
+  status: 'completed' | 'pending' | 'failed';
+  date: string;
 }
 
-export function RecentSalesTable() {
-  const recentSales: Sale[] = [
-    {
-      id: "1",
-      product: "iPhone 13 Pro",
-      customer: "Jean Dupont",
-      date: "2024-03-15",
-      amount: 1299,
-      status: "completed",
-    },
-    // Ajoutez d'autres ventes ici
-  ];
+interface RecentSalesTableProps {
+  sales: Sale[];
+}
 
-  const getStatusVariant = (status: Sale["status"]) => {
-    switch (status) {
-      case "completed":
-        return "success";
-      case "pending":
-        return "warning";
-      case "cancelled":
-        return "destructive";
-      default:
-        return "default";
-    }
+export function RecentSalesTable({ sales }: RecentSalesTableProps) {
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Produit</TableHead>
           <TableHead>Client</TableHead>
-          <TableHead>Date</TableHead>
           <TableHead>Montant</TableHead>
           <TableHead>Statut</TableHead>
+          <TableHead>Date</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {recentSales.map((sale) => (
+        {sales.map((sale) => (
           <TableRow key={sale.id}>
-            <TableCell>{sale.product}</TableCell>
-            <TableCell>{sale.customer}</TableCell>
-            <TableCell>{formatDate(sale.date)}</TableCell>
-            <TableCell>{sale.amount}€</TableCell>
             <TableCell>
-              <Badge variant={getStatusVariant(sale.status)}>
+              <div>
+                <div className="font-medium">{sale.customer.name}</div>
+                <div className="text-sm text-gray-500">{sale.customer.email}</div>
+              </div>
+            </TableCell>
+            <TableCell>{sale.amount.toLocaleString()} FCFA</TableCell>
+            <TableCell>
+              <Badge variant={sale.status === 'completed' ? 'success' : 'destructive'}>
                 {sale.status}
               </Badge>
             </TableCell>
+            <TableCell>{formatDate(sale.date)}</TableCell>
           </TableRow>
         ))}
       </TableBody>

@@ -8,16 +8,14 @@ import Newsletter from './components/Newsletter';
 import TopBanner from './components/TopBanner';
 import TopBar from './components/TopBar';
 import { usePathname } from 'next/navigation';
-import { CartProvider } from './context/CartContext'; // Importation du contexte
+import { CartProvider } from './context/CartContext';
 import { CookieConsent } from '../components/CookieConsent';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname(); // Utilisation de `usePathname` pour Next.js (app directory)
+  const pathname = usePathname();
 
-  // Liste des routes où le layout global ne doit pas être rendu
   const noLayoutRoutes = ['/admin', '/admin/login', '/user', '/seller/dashboard'];
 
-  // Vérifie si la route actuelle nécessite le layout
   const shouldRenderLayout = !noLayoutRoutes.some((route) => pathname.startsWith(route));
 
   return (
@@ -29,20 +27,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
       </head>
       <body>
-        {/* Envelopper toute l'application avec CartProvider */}
         <CartProvider>
           {shouldRenderLayout ? (
             <>
               <TopBanner />
               <TopBar />
-              <Header /> {/* Le header accèdera au contexte via `useCartContext` */}
+              <Header />
               <NavigationBar/>
               {children}
               <Newsletter />
               <Footer />
             </>
           ) : (
-            // Pour les pages sans layout global, afficher uniquement le contenu
             children
           )}
         </CartProvider>

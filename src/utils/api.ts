@@ -1,5 +1,12 @@
 import { API_CONFIG } from './config';
 
+export const getApiUrl = () => API_CONFIG.BASE_URL;
+
+interface ApiOptions extends RequestInit {
+  params?: Record<string, string>;
+  data?: Record<string, unknown>;
+}
+
 export const api = {
   get: async (endpoint: string) => {
     const response = await fetch(API_CONFIG.getFullUrl(endpoint), {

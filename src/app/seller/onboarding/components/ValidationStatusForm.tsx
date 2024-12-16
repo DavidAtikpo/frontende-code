@@ -3,74 +3,72 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
-import { SellerFormData } from "../page";
 import { useRouter } from "next/navigation";
+import { getApiUrl } from '@/utils/api';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BASE_URL = getApiUrl();
 
-export const ValidationStatusForm: React.FC<{
-  data: SellerFormData;
-  onUpdate: (data: SellerFormData) => void;
+interface ValidationStatusFormProps {
   onNext: () => void;
   onBack: () => void;
-}> = ({ data, onUpdate, onNext, onBack }) => {
-  const [status, setStatus] = useState(data.validation?.status || 'pending');
-  const [message, setMessage] = useState(data.validation?.message || '');
+}
+
+export const ValidationStatusForm = ({ onNext, onBack }: ValidationStatusFormProps) => {
+  const [status, setStatus] = useState<string>("pending");
+  const [message, setMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    const checkStatus = async () => {
-      try {
-        setIsLoading(true);
-        const token = localStorage.getItem('token');
-        
-        console.log('Token:', token);
-        
-        if (!token) {
-          console.error("Token manquant");
-          router.replace('/login');
-          return;
-        }
-
-        const response = await fetch(`${BASE_URL}/api/seller/validation-status`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        const data = await response.json();
-        console.log('Réponse du serveur:', data);
-        
-        if (data.success) {
-          setStatus(data.status);
-          setMessage(data.message || '');
-          
-          if (data.status === 'approved') {
-            // Activer l'essai gratuit automatiquement
-            const trialResponse = await fetch(`${BASE_URL}/api/seller/start-trial`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            });
-
-            if (trialResponse.ok) {
-              router.replace('/seller/dashboard');
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Erreur lors de la vérification du statut:", error);
-      } finally {
-        setIsLoading(false);
+  const checkValidationStatus = async () => {
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem('token');
+      
+      console.log('Token:', token);
+      
+      if (!token) {
+        console.error("Token manquant");
+        router.replace('/login');
+        return;
       }
-    };
 
-    checkStatus();
-    const interval = setInterval(checkStatus, 30000);
-    return () => clearInterval(interval);
-  }, [router]);
+      const response = await fetch(`${BASE_URL}/api/seller/validation-status`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      console.log('Réponse du serveur:', data);
+      
+      if (data.success) {
+        setStatus(data.status);
+        setMessage(data.message || '');
+        
+        if (data.status === 'approved') {
+          // Activer l'essai gratuit automatiquement
+          const trialResponse = await fetch(`${BASE_URL}/api/seller/start-trial`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (trialResponse.ok) {
+            router.replace('/seller/dashboard');
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la vérification du statut:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    checkValidationStatus();
+  }, [checkValidationStatus]);
 
   const getStatusDisplay = () => {
     console.log('Status actuel:', status);

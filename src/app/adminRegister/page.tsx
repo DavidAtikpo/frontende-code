@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { API_CONFIG } from "@/utils/config";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const { BASE_URL } = API_CONFIG;
 
 export default function AdminRegisterPage() {
   const router = useRouter();
@@ -20,26 +21,34 @@ export default function AdminRegisterPage() {
     e.preventDefault();
     setIsLoading(true);
 
+    console.log('Tentative d\'inscription admin vers:', `${BASE_URL}/api/admin/register`);
+
     try {
       const response = await fetch(`${BASE_URL}/api/admin/register`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
-        body: JSON.stringify(formData),
+        credentials: 'include',
+        body: JSON.stringify(formData)
       });
 
-      const data = await response.json();
+      console.log('Statut de la réponse:', response.status);
 
-      if (response.ok) {
-        localStorage.setItem("token", data.token);
-        router.push("/admin/login");
-      } else {
-        setError(data.message || "Erreur lors de l'inscription");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Erreur détaillée:', errorData);
+        throw new Error(errorData.message || 'Erreur lors de l\'inscription');
       }
+
+      const data = await response.json();
+      console.log('Inscription réussie:', data);
+      
+      router.push("/adminLogin");
     } catch (err) {
-      setError("Erreur de connexion au serveur");
       console.error("Erreur d'inscription:", err);
+      setError(err instanceof Error ? err.message : "Erreur de connexion au serveur");
     } finally {
       setIsLoading(false);
     }
@@ -54,6 +63,11 @@ export default function AdminRegisterPage() {
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-50 text-red-500 p-4 rounded-md text-sm">
+              {error}
+            </div>
+          )}
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="name" className="sr-only">

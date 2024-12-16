@@ -69,7 +69,8 @@ const ServicesPage = () => {
           <Image
             src="/services-hero.jpg"
             alt="Services Dubon"
-            fill
+            width={500}
+            height={500}
             className="object-cover brightness-50"
           />
         </div>

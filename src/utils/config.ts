@@ -1,17 +1,17 @@
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'https://dubon-server.onrender.com',
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
   API_PATH: '/api',
   HEADERS: {
     'Content-Type': 'application/json',
-    'Authorization': typeof window !== 'undefined' 
-      ? `Bearer ${localStorage.getItem('token')}` 
-      : ''
+    'Authorization': ''
   },
-  getFullUrl: (endpoint: string) => {
-    const base = API_CONFIG.BASE_URL;
-    const path = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
-    return `${base}${path}`;
-  }
+  FETCH_OPTIONS: {
+    credentials: 'include' as RequestCredentials,
+    mode: 'cors' as RequestMode
+  },
+  getFullUrl: (endpoint: string) => `${API_CONFIG.BASE_URL}${API_CONFIG.API_PATH}${endpoint}`
 };
 
 export const getApiConfig = () => {

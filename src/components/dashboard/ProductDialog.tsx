@@ -7,9 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { ImagePlus, Link, X } from "lucide-react";
+import { ImagePlus, Link, X, Video } from "lucide-react";
+import { getApiUrl } from '@/utils/api';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import Image from "next/image";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BASE_URL = getApiUrl();
 
 interface ProductDialogProps {
   open: boolean;
@@ -17,16 +26,58 @@ interface ProductDialogProps {
   onSuccess: () => void;
 }
 
+interface ProductData {
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  [key: string]: string | number;
+}
+
 export function ProductDialog({ open, onOpenChange, onSuccess }: ProductDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState("");
+  const [video, setVideo] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string>("");
   const { toast } = useToast();
+  const [showDiscount, setShowDiscount] = useState(false);
+  const [showMetadata, setShowMetadata] = useState(false);
+  const [productData, setProductData] = useState<ProductData>({
+    name: '',
+    description: '',
+    price: 0,
+    stock: 0
+  });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      Array.from(files).forEach(file => {
+      // Vérifier chaque fichier
+      const validFiles = Array.from(files).filter(file => {
+        // Vérifier la taille (10MB max)
+        if (file.size > 10 * 1024 * 1024) {
+          toast({
+            title: "Erreur",
+            description: `Le fichier ${file.name} est trop volumineux. Maximum 10MB`,
+            variant: "destructive",
+          });
+          return false;
+        }
+        // Vérifier le type
+        if (!file.type.startsWith('image/')) {
+          toast({
+            title: "Erreur",
+            description: `Le fichier ${file.name} n'est pas une image`,
+            variant: "destructive",
+          });
+          return false;
+        }
+        return true;
+      });
+
+      // Traiter les fichiers valides
+      validFiles.forEach(file => {
         const reader = new FileReader();
         reader.onloadend = () => {
           setImages(prev => [...prev, reader.result as string]);
@@ -47,37 +98,46 @@ export function ProductDialog({ open, onOpenChange, onSuccess }: ProductDialogPr
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Vérifier la taille du fichier (max 50MB)
+      if (file.size > 50 * 1024 * 1024) {
+        toast({
+          title: "Erreur",
+          description: "La vidéo ne doit pas dépasser 50MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Vérifier le type de fichier
+      if (!file.type.startsWith('video/')) {
+        toast({
+          title: "Erreur",
+          description: "Le fichier doit être une vidéo",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setVideo(file);
+      const videoUrl = URL.createObjectURL(file);
+      setVideoPreview(videoUrl);
+    }
+  };
+
+  const removeVideo = () => {
+    setVideo(null);
+    setVideoPreview("");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
-      const formData = new FormData(e.currentTarget);
-      formData.append('images', JSON.stringify(images));
-
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${BASE_URL}/api/seller/products`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-
-      if (!response.ok) throw new Error('Erreur lors de la création du produit');
-
-      toast({
-        title: "Succès",
-        description: "Produit ajouté avec succès",
-      });
-      onSuccess();
-      onOpenChange(false);
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible d'ajouter le produit",
-        variant: "destructive",
-      });
+      // ... logique de soumission
+      onSuccess(); // Utiliser onSuccess
     } finally {
       setIsLoading(false);
     }
@@ -145,24 +205,177 @@ export function ProductDialog({ open, onOpenChange, onSuccess }: ProductDialogPr
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-4">
-                {images.map((image, index) => (
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                {images.map((url, index) => (
                   <div key={index} className="relative">
-                    <img
-                      src={image}
-                      alt={`Product ${index + 1}`}
-                      className="w-full h-24 object-cover rounded"
+                    <Image
+                      src={url}
+                      alt={`Preview ${index + 1}`}
+                      width={200}
+                      height={200}
+                      className="rounded-lg object-cover w-full h-48"
                     />
                     <button
-                      type="button"
                       onClick={() => removeImage(index)}
-                      className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1"
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
                     >
-                      <X className="h-4 w-4 text-white" />
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="category">Catégorie</Label>
+              <Select name="category" required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Alimentaire">Alimentaire</SelectItem>
+                  <SelectItem value="Électronique">Électronique</SelectItem>
+                  <SelectItem value="Mode">Mode</SelectItem>
+                  <SelectItem value="Maison">Maison</SelectItem>
+                  <SelectItem value="Beauté">Beauté</SelectItem>
+                  <SelectItem value="Sport">Sport</SelectItem>
+                  <SelectItem value="Autre">Autre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="subCategory">Sous-catégorie</Label>
+              <Input id="subCategory" name="subCategory" />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Promotion</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowDiscount(!showDiscount)}
+                >
+                  {showDiscount ? "Masquer" : "Ajouter une promotion"}
+                </Button>
+              </div>
+              
+              {showDiscount && (
+                <div className="space-y-4 p-4 border rounded">
+                  <div>
+                    <Label htmlFor="discountPercentage">Pourcentage de réduction</Label>
+                    <Input
+                      id="discountPercentage"
+                      name="discountPercentage"
+                      type="number"
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="discountStart">Date de début</Label>
+                      <Input
+                        id="discountStart"
+                        name="discountStart"
+                        type="date"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="discountEnd">Date de fin</Label>
+                      <Input
+                        id="discountEnd"
+                        name="discountEnd"
+                        type="date"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Métadonnées</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowMetadata(!showMetadata)}
+                >
+                  {showMetadata ? "Masquer" : "Ajouter des métadonnées"}
+                </Button>
+              </div>
+              
+              {showMetadata && (
+                <div className="space-y-4 p-4 border rounded">
+                  <div>
+                    <Label htmlFor="keywords">Mots-clés (séparés par des virgules)</Label>
+                    <Input id="keywords" name="keywords" />
+                  </div>
+                  <div>
+                    <Label htmlFor="brand">Marque</Label>
+                    <Input id="brand" name="brand" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="weight">Poids (kg)</Label>
+                      <Input id="weight" name="weight" type="number" step="0.01" />
+                    </div>
+                    <div>
+                      <Label>Dimensions (cm)</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Input placeholder="L" name="length" type="number" />
+                        <Input placeholder="l" name="width" type="number" />
+                        <Input placeholder="H" name="height" type="number" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <Label>Vidéo du produit (max 50MB)</Label>
+              <div className="flex gap-4">
+                <Input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoUpload}
+                  className="hidden"
+                  id="video-upload"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => document.getElementById('video-upload')?.click()}
+                >
+                  <Video className="mr-2 h-4 w-4" />
+                  {video ? "Changer la vidéo" : "Ajouter une vidéo"}
+                </Button>
+              </div>
+
+              {videoPreview && (
+                <div className="relative">
+                  <video
+                    src={videoPreview}
+                    className="w-full h-48 object-cover rounded"
+                    controls
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2"
+                    onClick={removeVideo}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 

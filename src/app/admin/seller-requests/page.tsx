@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { RequestDetailsDialog } from "./components/RequestDetailsDialog";
+import { getApiUrl } from '@/utils/api';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BASE_URL = getApiUrl();
 
 interface SellerRequest {
   _id: string;
@@ -68,89 +69,43 @@ export default function SellerRequestsPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<SellerRequest | null>(null);
 
-  useEffect(() => {
-    const checkAuth = () => {
-      const token = document.cookie.includes('token=');
-      const isAdmin = document.cookie.includes('userRole=admin');
-      
-      if (!token || !isAdmin) {
-        router.replace('/adminLogin');
-        return false;
+  const fetchRequests = useCallback(async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) throw new Error('No authentication token');
+
+      const response = await fetch(`${BASE_URL}/api/admin/seller-requests`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          router.replace('/adminLogin');
+          return;
+        }
+        throw new Error('Failed to fetch requests');
       }
-      return true;
-    };
 
-    const authInterval = setInterval(checkAuth, 60000);
-
-    if (checkAuth()) {
-      fetchRequests();
+      const data = await response.json();
+      setRequests(data);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An error occurred');
+    } finally {
+      setLoading(false);
     }
-
-    return () => clearInterval(authInterval);
   }, [router]);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
 
   const getAuthToken = () => {
     const tokenCookie = document.cookie
       .split('; ')
       .find(row => row.startsWith('token='));
     return tokenCookie ? tokenCookie.split('=')[1] : null;
-  };
-
-  const fetchRequests = async () => {
-    console.log("Début fetchRequests");
-    try {
-      const token = getAuthToken();
-      console.log("Token récupéré:", token ? "Présent" : "Absent");
-
-      if (!token) {
-        router.replace('/adminLogin');
-        return;
-      }
-
-      const url = `${BASE_URL}/api/admin/seller-requests`;
-      console.log("URL de la requête:", url);
-
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-      });
-      
-      console.log("Status de la réponse:", response.status);
-      
-      if (response.status === 401) {
-        // Token expiré ou invalide
-        document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-        document.cookie = 'userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        router.replace('/adminLogin');
-        return;
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Erreur serveur:", errorData);
-        throw new Error(errorData.message || 'Failed to fetch seller requests');
-      }
-
-      const data = await response.json();
-      console.log("Données reçues:", data);
-
-      if (data.success && Array.isArray(data.data)) {
-        setRequests(data.data);
-      } else {
-        console.error("Format de données invalide:", data);
-        throw new Error('Invalid data format');
-      }
-    } catch (error) {
-      console.error('Error fetching requests:', error);
-      if (error instanceof Error) setError(error.message);
-    } finally {
-      setLoading(false);
-      console.log("Fin fetchRequests");
-    }
   };
 
   const handleApproval = async (id: string) => {

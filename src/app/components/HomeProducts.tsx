@@ -112,7 +112,8 @@ const HomeProducts = () => {
                 <Image
                   src={Array.isArray(product.images) ? product.images[0] : product.images}
                   alt={product.title}
-                  fill
+                  width={500}
+                  height={300}
                   className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 

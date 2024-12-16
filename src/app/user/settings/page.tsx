@@ -35,6 +35,8 @@ export default function SettingsPage() {
     security: true,
   });
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -152,6 +154,12 @@ export default function SettingsPage() {
     <div className="container max-w-4xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Paramètres du compte</h1>
       
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-md">
+          {error}
+        </div>
+      )}
+
       <Tabs defaultValue="profile">
         <TabsList className="mb-6">
           <TabsTrigger value="profile" className="flex items-center gap-2">

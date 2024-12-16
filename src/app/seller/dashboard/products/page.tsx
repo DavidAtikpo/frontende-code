@@ -13,8 +13,9 @@ import {
 import { ProductDialog } from "@/components/dashboard/ProductDialog";
 import { ProductCard } from "@/components/dashboard/ProductCard";
 import { useToast } from "@/components/ui/use-toast";
+import { getApiUrl } from '@/utils/api';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BASE_URL = getApiUrl();
 
 interface Product {
   id: string;

@@ -266,7 +266,8 @@ const ShopPage = () => {
                   <Image
                     src={product.images[0] || "/placeholder.jpg"}
                     alt={product.title}
-                    fill
+                    width={500}
+                    height={500}
                     className="object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                   

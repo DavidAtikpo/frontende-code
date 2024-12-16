@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProductDialog } from "@/components/dashboard/ProductDialog";
-import { RecentSalesTable } from "@/components/dashboard/RecentSalesTable";
 import { SalesChart } from "@/components/dashboard/SalesChart";
+import { TopProducts } from "@/components/dashboard/TopProducts";
 import { DollarSign, ArrowUp, ArrowDown, Plus } from "lucide-react";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -37,6 +37,8 @@ interface DashboardStats {
 export default function DashboardPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [salesData, setSalesData] = useState(null);
+  const [topProducts, setTopProducts] = useState([]);
 
   const fetchDashboardStats = async () => {
     try {
@@ -57,6 +59,8 @@ export default function DashboardPage() {
 
       const data = await response.json();
       setStats(data);
+      setSalesData(data.salesChart);
+      setTopProducts(data.topProducts);
     } catch (err) {
       console.error('Erreur:', err);
     }
@@ -150,19 +154,19 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Aperçu des ventes</CardTitle>
+            <CardTitle>Évolution des ventes</CardTitle>
           </CardHeader>
           <CardContent>
-            <SalesChart />
+            {salesData && <SalesChart data={salesData} />}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Ventes récentes</CardTitle>
+            <CardTitle>Produits les plus vendus</CardTitle>
           </CardHeader>
           <CardContent>
-            <RecentSalesTable />
+            <TopProducts products={topProducts} />
           </CardContent>
         </Card>
       </div>

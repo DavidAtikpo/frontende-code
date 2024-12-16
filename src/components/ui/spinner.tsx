@@ -1,26 +1,17 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import React from 'react';
 
-interface SpinnerProps {
-  className?: string;
-  size?: "sm" | "md" | "lg";
+interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
+  size?: 'sm' | 'md' | 'lg';
+  color?: string;
 }
 
-export function Spinner({ className, size = "md" }: SpinnerProps) {
-  const sizeClasses = {
-    sm: "h-4 w-4",
-    md: "h-6 w-6",
-    lg: "h-8 w-8",
-  };
-
+export const Spinner = ({ className = '', ...props }: SpinnerProps) => {
   return (
     <div
-      className={cn(
-        "animate-spin rounded-full border-2 border-current border-t-transparent",
-        sizeClasses[size],
-        className
-      )}
+      className={`animate-spin rounded-full border-4 border-gray-200 border-t-blue-600 ${className}`}
+      {...props}
     />
   );
-} 
+}; 

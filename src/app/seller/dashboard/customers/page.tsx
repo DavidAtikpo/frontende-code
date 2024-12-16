@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Download, Filter } from "lucide-react";
 import { CustomersFilterDialog } from "@/components/dashboard/CustomersFilterDialog";
+import { getApiUrl } from '@/utils/api';
 
-const BASE_URL = "http://localhost:5000/api"
+const BASE_URL = `${getApiUrl()}/api`;
 
 interface CustomerFilters {
   dateRange: string;

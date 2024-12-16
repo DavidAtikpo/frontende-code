@@ -1,11 +1,17 @@
 import { useState } from 'react';
 import { api } from '@/utils/api';
 
-export const useApi = () => {
+interface ApiResponse<T> {
+  data?: T;
+  error?: string;
+  status: number;
+}
+
+export const useApi = <T>() => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const request = async (method: 'get' | 'post', endpoint: string, data?: any) => {
+  const request = async <T>(method: 'get' | 'post', endpoint: string, data?: Record<string, unknown>) => {
     try {
       setLoading(true);
       setError(null);

@@ -69,7 +69,8 @@ export default function ProfilePage() {
               <Image
                 src={avatar}
                 alt="Photo de profil"
-                fill
+                width={500}
+                height={500}
                 className="rounded-full object-cover"
               />
             ) : (

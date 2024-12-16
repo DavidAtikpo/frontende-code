@@ -18,7 +18,8 @@ const DualBanner = () => {
           <Image
             src="/banner1.jpg"
             alt="Promotion Banner 1"
-            fill
+            width={500}
+            height={300}
             className="object-cover transition-transform duration-700 group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
@@ -47,7 +48,8 @@ const DualBanner = () => {
           <Image
             src="/banner2.jpg"
             alt="Promotion Banner 2"
-            fill
+            width={500}
+            height={300}
             className="object-cover transition-transform duration-700 group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-l from-black/60 to-transparent" />

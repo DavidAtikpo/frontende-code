@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import Image from 'next/image';
 import { useState } from "react";
+import { getApiUrl } from '@/utils/api';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000";
+const BASE_URL = getApiUrl();
 
 interface RequestDetailsDialogProps {
   request: SellerRequest;
@@ -171,8 +172,9 @@ export function RequestDetailsDialog({
                   <Image
                     src={normalizeImagePath(photo)}
                     alt={`Photo ${index + 1}`}
-                    fill
-                    className="object-cover rounded-lg"
+                    width={500}
+                    height={500}
+                    className="object-cover rounded-lg w-full h-full"
                   />
                   <a
                     href={normalizeImagePath(photo)}

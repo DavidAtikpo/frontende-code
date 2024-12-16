@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Package,
@@ -31,9 +30,12 @@ const getCookie = (name: string) => {
 };
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
-  const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(true);
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(true);
+
+  // Simplifier la logique de navigation active
+  const isActive = (href: string) => 
+    typeof window !== 'undefined' && window.location.pathname === href;
 
   useEffect(() => {
     const adminToken = getCookie('adminToken');
@@ -81,7 +83,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
               key={index}
               href={item.href}
               className={`flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors ${
-                pathname === item.href ? "bg-blue-50 text-blue-700 border-r-4 border-blue-700" : ""
+                isActive(item.href) ? "bg-blue-50 text-blue-700 border-r-4 border-blue-700" : ""
               }`}
             >
               <item.icon className="h-5 w-5" />

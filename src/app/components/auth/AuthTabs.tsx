@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 export default function AuthTabs() {
-  const pathname = usePathname();
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
 
   return (
     <div className="flex border-b mb-6">

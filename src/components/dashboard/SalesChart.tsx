@@ -9,8 +9,10 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend
-} from "chart.js";
+  Legend,
+  ChartData,
+  ChartOptions
+} from 'chart.js';
 
 ChartJS.register(
   CategoryScale,
@@ -22,32 +24,37 @@ ChartJS.register(
   Legend
 );
 
-export function SalesChart() {
-  const data = {
-    labels: ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin"],
-    datasets: [
-      {
-        label: "Ventes 2024",
-        data: [3000, 3500, 4200, 4800, 5100, 5400],
-        borderColor: "#1D4ED8",
-        tension: 0.4,
-      }
-    ]
-  };
+interface SalesData {
+  labels: string[];
+  datasets: {
+    label: string;
+    data: number[];
+    borderColor: string;
+    backgroundColor: string;
+  }[];
+}
 
-  const options = {
+interface SalesChartProps {
+  data: SalesData;
+}
+
+export function SalesChart({ data }: SalesChartProps) {
+  const options: ChartOptions<'line'> = {
     responsive: true,
     plugins: {
       legend: {
-        position: "top" as const,
+        position: 'top' as const,
       },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
+      title: {
+        display: true,
+        text: 'Évolution des ventes'
       }
     }
   };
 
-  return <Line data={data} options={options} />;
+  return (
+    <div className="w-full h-[300px]">
+      <Line options={options} data={data} />
+    </div>
+  );
 }

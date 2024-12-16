@@ -15,7 +15,7 @@ const ProductSlider = () => {
       title: "Produits Frais",
       subtitle: "Qualité Premium",
       description: "Découvrez notre sélection de produits frais, soigneusement choisis pour votre satisfaction",
-      image: "/images/produits-frais.jpg",
+      image: "/default-product.jpg",
       price: "À partir de 1500 FCFA",
       badge: "Nouveau",
       buttonText: "Découvrir",
@@ -25,7 +25,7 @@ const ProductSlider = () => {
       title: "Fruits de Mer",
       subtitle: "Fraîcheur Garantie",
       description: "Les meilleurs fruits de mer, directement de l'océan à votre table",
-      image: "/images/fruits-de-mer.jpg",
+      image: "/default-seafood.jpg",
       price: "À partir de 2500 FCFA",
       badge: "Populaire",
       buttonText: "Commander",
@@ -119,7 +119,8 @@ const ProductSlider = () => {
                   <Image
                     src={slides[currentIndex].image}
                     alt={slides[currentIndex].title}
-                    fill
+                    width={500}
+                    height={300}
                     className="object-cover object-center"
                   />
                 </div>

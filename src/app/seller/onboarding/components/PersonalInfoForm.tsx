@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { SellerFormData } from "../page";
-import { API_CONFIG } from '@/utils/config';
+
 
 interface PersonalInfoFormProps {
   data: SellerFormData;
@@ -17,7 +17,7 @@ interface PersonalInfoFormProps {
 
 export function PersonalInfoForm({ data, onUpdate, onNext }: PersonalInfoFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { BASE_URL } = API_CONFIG;
+
 
   const saveToLocalStorage = (updatedData: SellerFormData) => {
     localStorage.setItem('sellerFormData', JSON.stringify(updatedData));

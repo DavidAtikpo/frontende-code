@@ -357,7 +357,8 @@ const CategoriesSection = () => {
                 <Image
                   src={category.images}
                   alt={category.category}
-                  fill
+                  width={500}
+                  height={300}
                   className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div

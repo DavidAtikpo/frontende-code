@@ -17,9 +17,12 @@ export async function GET() {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (err) {
-    console.error("Erreur lors de la récupération des demandes:", err);
-    return NextResponse.json(
-      { success: false, message: "Erreur serveur" },
+    console.error('Erreur lors de la récupération des demandes:', err);
+    return new NextResponse(
+      JSON.stringify({ 
+        success: false, 
+        message: err instanceof Error ? err.message : "Erreur serveur" 
+      }), 
       { status: 500 }
     );
   }
