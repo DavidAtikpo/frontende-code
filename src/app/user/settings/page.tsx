@@ -138,6 +138,7 @@ export default function SettingsPage() {
         body: JSON.stringify({ [key]: value }),
       });
     } catch (error) {
+      console.log(error);
       toast({
         title: "Erreur",
         description: "Échec de la mise à jour des notifications",
