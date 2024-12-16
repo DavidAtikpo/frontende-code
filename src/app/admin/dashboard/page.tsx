@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { Users, ShoppingBag, Store, Clock } from 'lucide-react';
@@ -28,21 +28,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
 
-  useEffect(() => {
-    // Vérifier l'authentification admin avec les cookies
-    const adminToken = document.cookie.includes('adminToken=');
-    const userRole = document.cookie.split(';').find(c => c.trim().startsWith('userRole='));
-    const isAdmin = userRole?.includes('admin');
-
-    if (!adminToken || !isAdmin) {
-      router.replace('/adminLogin');
-      return;
-    }
-
-    fetchDashboardStats();
-  }, [router]);
-
-  const fetchDashboardStats = async () => {
+  const fetchDashboardStats = useCallback(async () => {
     try {
       const adminToken = document.cookie
         .split(';')
@@ -60,6 +46,7 @@ export default function AdminDashboard() {
       if (response.ok) {
         const data = await response.json();
         setStats(data.data);
+        console.log(data.data);
       } else {
         // Si la réponse n'est pas ok, vérifier si c'est un problème d'authentification
         if (response.status === 401) {
@@ -69,7 +56,21 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Erreur lors du chargement des statistiques:', error);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    // Vérifier l'authentification admin avec les cookies
+    const adminToken = document.cookie.includes('adminToken=');
+    const userRole = document.cookie.split(';').find(c => c.trim().startsWith('userRole='));
+    const isAdmin = userRole?.includes('admin');
+
+    if (!adminToken || !isAdmin) {
+      router.replace('/adminLogin');
+      return;
+    }
+
+    fetchDashboardStats();
+  }, [router, fetchDashboardStats]);
 
   return (
     <div className="p-6">
