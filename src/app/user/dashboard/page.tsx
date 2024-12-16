@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { API_CONFIG } from '@/utils/config';
 
+const { BASE_URL } = API_CONFIG;
 interface UserInfo {
   name: string;
   email: string;
@@ -34,8 +36,8 @@ export default function UserDashboard() {
         };
         
         const [userResponse, statsResponse] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/info`, { headers }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/payment-stats`, { headers })
+          fetch(`${BASE_URL}/api/user/info`, { headers }),
+          fetch(`${BASE_URL}/api/user/payment-stats`, { headers })
         ]);
 
         if (!userResponse.ok || !statsResponse.ok) {

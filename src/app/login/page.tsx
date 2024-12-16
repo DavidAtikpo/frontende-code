@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 import AuthTabs from "../components/auth/AuthTabs";
 import Image from "next/image";
 import { FcGoogle } from "react-icons/fc";
-import { API_CONFIG } from '@/utils/config';
 import { useRouter } from 'next/navigation';
+import { API_CONFIG } from '@/utils/config';
 
 const { BASE_URL } = API_CONFIG;
 
