@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { API_CONFIG } from '@/utils/config';
 import Image from "next/image";
+import { API_CONFIG } from '@/utils/config';
 
 const { BASE_URL } = API_CONFIG;
 interface UserInfo {
@@ -39,9 +39,15 @@ export default function UserDashboard() {
           'Content-Type': 'application/json'
         };
         
+        const options = {
+          method: 'GET',
+          headers,
+          credentials: 'include' as RequestCredentials
+        };
+        
         const [userResponse, statsResponse] = await Promise.all([
-          fetch(`${BASE_URL}/api/user/info`, { headers }),
-          fetch(`${BASE_URL}/api/user/payment-stats`, { headers })
+          fetch(`${BASE_URL}/api/user/info`, options),
+          fetch(`${BASE_URL}/api/user/payment-stats`, options)
         ]);
 
         if (!userResponse.ok || !statsResponse.ok) {

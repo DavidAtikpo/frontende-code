@@ -5,6 +5,10 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { FaHome, FaChevronRight } from 'react-icons/fa';
+import { API_CONFIG } from '@/utils/config';
+
+const { BASE_URL } = API_CONFIG;
+
 
 export default function ProfilePage() {
   const [avatar, setAvatar] = useState<string | null>(null);
@@ -19,7 +23,7 @@ export default function ProfilePage() {
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const response = await fetch('http://localhost:5000/api/user/upload-avatar', {
+      const response = await fetch(`${BASE_URL}/api/user/upload-avatar`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
