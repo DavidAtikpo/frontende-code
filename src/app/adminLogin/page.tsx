@@ -35,7 +35,6 @@ export default function AdminLoginPage() {
 
       const data = await response.json();
       
-      console.log(data);
       if (!response.ok) {
         throw new Error(data.message || "Erreur lors de la connexion");
       }
@@ -49,9 +48,9 @@ export default function AdminLoginPage() {
         role: data.user.role
       }));
 
-      // Rediriger vers le dashboard admin
-      router.replace("/admin/dashboard");
-
+      // Forcer la redirection avec window.location
+      window.location.href = "/admin/dashboard";
+      
     } catch (err) {
       console.error("Erreur de connexion:", err);
       setError(err instanceof Error ? err.message : "Erreur lors de la connexion");
