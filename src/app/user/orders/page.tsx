@@ -27,7 +27,11 @@ export default function OrdersPage() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/api/user/orders`);
+        const response = await fetch(`${BASE_URL}/api/user/orders`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
         if (!response.ok) throw new Error("Erreur lors du chargement des commandes");
         const data = await response.json();
         setOrders(data);
