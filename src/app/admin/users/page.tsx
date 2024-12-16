@@ -39,27 +39,40 @@ export default function UsersListPage() {
           .find(c => c.trim().startsWith('adminToken='))
           ?.split('=')[1];
 
+        if (!adminToken) {
+          console.error('Token non trouvé');
+          router.replace('/adminLogin');
+          return;
+        }
+
+        console.log('Token utilisé:', adminToken); // Pour déboguer
+
         const response = await fetch(`${BASE_URL}/api/admin/users`, {
           headers: {
-            Authorization: `Bearer ${adminToken}`,
+            'Authorization': `Bearer ${decodeURIComponent(adminToken)}`,
             'Content-Type': 'application/json'
           },
           credentials: 'include'
         });
 
+        console.log('Status réponse:', response.status); // Pour déboguer
+
         if (!response.ok) {
-          throw new Error("Erreur lors du chargement des utilisateurs");
+          const errorData = await response.json();
+          console.error('Erreur détaillée:', errorData);
+          if (response.status === 401) {
+            router.replace('/adminLogin');
+            return;
+          }
+          throw new Error(errorData.message || "Erreur lors du chargement des utilisateurs");
         }
 
         const data = await response.json();
-        console.log(data);
         if (data.success) {
           setUsers(data.data);
-        } else {
-          throw new Error(data.message || "Erreur lors du chargement des utilisateurs");
         }
       } catch (err) {
-        console.error("Erreur:", err);
+        console.error("Erreur complète:", err);
         setError(err instanceof Error ? err.message : "Une erreur est survenue");
       } finally {
         setIsLoading(false);
@@ -67,7 +80,7 @@ export default function UsersListPage() {
     };
 
     fetchUsers();
-  }, []);
+  }, [router]);
 
   const filteredUsers = users.filter((user) => {
     const searchLower = searchTerm.toLowerCase();
