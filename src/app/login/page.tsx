@@ -26,62 +26,26 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
-
-    if (!email || !email.includes("@")) {
-      setError("Veuillez entrer une adresse email valide.");
-      setIsLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Le mot de passe doit contenir au moins 6 caractères.");
-      setIsLoading(false);
-      return;
-    }
-
     try {
       const response = await fetch(`${BASE_URL}/api/user/login`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json'
         },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: email.trim(),
-          password,
-        }),
+        body: JSON.stringify({ email, password }),
+        credentials: 'include'
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-        switch (response.status) {
-          case 400:
-            throw new Error("Requête invalide. Vérifiez vos informations.");
-          case 401:
-            throw new Error("Identifiants incorrects. Réessayez.");
-          case 404:
-            throw new Error("Utilisateur introuvable. Créez un compte.");
-          case 500:
-            throw new Error("Erreur serveur. Veuillez réessayer plus tard.");
-          default:
-            throw new Error(data.message || "Erreur inconnue. Réessayez plus tard.");
-        }
-      }
-
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-
-        // Redirection en fonction du rôle utilisateur
+      if (data.success) {
+        // Stocker le token dans un cookie
+        document.cookie = `token=${data.token}; path=/; max-age=604800; secure; samesite=strict`;
         router.push('/user/dashboard');
       } else {
-        throw new Error("Token manquant dans la réponse.");
+        setError(data.message);
       }
-    } catch (err) {
-      console.error("Erreur de connexion:", err);
-      setError(err instanceof Error ? err.message : "Erreur lors de la connexion.");
+    } catch (error) {
+      setError('Une erreur est survenue');
     } finally {
       setIsLoading(false);
     }

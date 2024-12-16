@@ -47,9 +47,18 @@ export default function UserDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = document.cookie
+          .split(';')
+          .find(c => c.trim().startsWith('token='))
+          ?.split('=')[1];
+
+        if (!token) {
+          console.error('Token non trouvé');
+          return;
+        }
+
         const headers = {
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${decodeURIComponent(token)}`,
           'Content-Type': 'application/json'
         };
         
@@ -67,14 +76,18 @@ export default function UserDashboard() {
         if (userResponse.ok) {
           const userData = await userResponse.json();
           setUserInfo(userData.user);
+        } else {
+          console.error('Erreur réponse user:', await userResponse.json());
         }
 
         if (statsResponse.ok) {
           const statsData = await statsResponse.json();
           setPaymentStats(statsData);
+        } else {
+          console.error('Erreur réponse stats:', await statsResponse.json());
         }
-      } catch (err) {
-        console.error("Erreur:", err);
+      } catch (error) {
+        console.error("Erreur:", error);
       } finally {
         setLoading(false);
       }
