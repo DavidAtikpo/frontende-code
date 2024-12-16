@@ -127,7 +127,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 transition-transform duration-200 ease-in-out
       `}>
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col top-20">
           <div className="flex-1 py-6 overflow-y-auto">
             <div className="px-4 mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Mon compte</h2>
