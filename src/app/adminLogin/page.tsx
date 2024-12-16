@@ -35,6 +35,7 @@ export default function AdminLoginPage() {
 
       const data = await response.json();
       
+      console.log(data);
       if (!response.ok) {
         throw new Error(data.message || "Erreur lors de la connexion");
       }
