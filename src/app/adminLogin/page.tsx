@@ -7,18 +7,21 @@ import { getApiUrl } from '@/utils/api';
 
 const BASE_URL = getApiUrl();
 
+const setCookie = (name: string, value: string, days: number = 7) => {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; secure; samesite=strict`;
+};
+
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    setSuccessMessage("");
 
     try {
       const response = await fetch(`${BASE_URL}/api/admin/login`, {
@@ -36,9 +39,18 @@ export default function AdminLoginPage() {
         throw new Error(data.message || "Erreur lors de la connexion");
       }
 
-      // Afficher le message de succès
-      setSuccessMessage(data.message);
-      setEmail(""); // Réinitialiser le champ email
+      // Stocker le token et les informations utilisateur
+      setCookie('adminToken', data.token);
+      setCookie('userRole', data.user.role);
+      setCookie('userData', JSON.stringify({
+        id: data.user.id,
+        email: data.user.email,
+        role: data.user.role
+      }));
+
+      // Rediriger vers le dashboard admin
+      router.replace("/admin/dashboard");
+
     } catch (err) {
       console.error("Erreur de connexion:", err);
       setError(err instanceof Error ? err.message : "Erreur lors de la connexion");
@@ -55,18 +67,13 @@ export default function AdminLoginPage() {
             Connexion Admin
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Entrez votre email administrateur pour recevoir un lien de connexion
+            Entrez votre email administrateur
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-50 text-red-500 p-4 rounded-md text-sm">
               {error}
-            </div>
-          )}
-          {successMessage && (
-            <div className="bg-green-50 text-green-500 p-4 rounded-md text-sm">
-              {successMessage}
             </div>
           )}
           <div className="rounded-md shadow-sm">
@@ -93,7 +100,7 @@ export default function AdminLoginPage() {
               disabled={isLoading}
               className="w-full"
             >
-              {isLoading ? "Envoi en cours..." : "Recevoir le lien de connexion"}
+              {isLoading ? "Connexion..." : "Se connecter"}
             </Button>
           </div>
         </form>
