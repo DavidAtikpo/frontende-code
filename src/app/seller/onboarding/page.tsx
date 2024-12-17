@@ -11,8 +11,9 @@ import { BusinessInfoForm } from "./components/BusinessInfoForm";
 import { ComplianceForm } from "./components/ComplianceForm";
 import { ValidationStatusForm } from "./components/ValidationStatusForm";
 import { useRouter } from "next/navigation";
+import { API_CONFIG } from "@/utils/config";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const { BASE_URL } = API_CONFIG;
 
 export interface SellerFormData {
   _id?: string;
