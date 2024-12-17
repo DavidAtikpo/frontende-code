@@ -172,11 +172,14 @@ export default function SellerOnboardingPage() {
 
         const response = await fetch(`${BASE_URL}/api/seller/validation-status`, {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
         });
 
         const data = await response.json();
+        console.log('Status response:', data); // Pour le débogage
         
         if (data.success) {
           if (data.status === 'approved') {
@@ -188,8 +191,7 @@ export default function SellerOnboardingPage() {
             }));
             setCurrentStep(6);
             localStorage.setItem('sellerCurrentStep', '6');
-          } else {
-            // Si pas de demande ou nouvelle demande
+          } else if (data.status === 'not_started' || !data.status) {
             setFormData(prev => ({
               ...prev,
               validation: { status: 'not_started' }
