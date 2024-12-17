@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { SellerFormData } from "../page";
+import { API_CONFIG } from "@/utils/config";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const { BASE_URL } = API_CONFIG;
 
 interface ComplianceError {
   message: string;
