@@ -47,18 +47,18 @@ export default function UserDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = document.cookie
+        const adminToken = document.cookie
           .split(';')
-          .find(c => c.trim().startsWith('token='))
+          .find(c => c.trim().startsWith('adminToken='))
           ?.split('=')[1];
 
-        if (!token) {
+        if (!adminToken) {
           console.error('Token non trouvé');
           return;
         }
 
         const headers = {
-          'Authorization': `Bearer ${decodeURIComponent(token)}`,
+          'Authorization': `Bearer ${decodeURIComponent(adminToken)}`,
           'Content-Type': 'application/json'
         };
         
@@ -68,26 +68,45 @@ export default function UserDashboard() {
           credentials: 'include' as RequestCredentials
         };
         
-        const [userResponse, statsResponse] = await Promise.all([
-          fetch(`${BASE_URL}/api/user/info`, options),
-          fetch(`${BASE_URL}/api/user/payment-stats`, options)
-        ]);
-
+        const userResponse = await fetch(`${BASE_URL}/api/user/info`, options);
+        console.log('User Response:', userResponse.status);
+        
         if (userResponse.ok) {
           const userData = await userResponse.json();
-          setUserInfo(userData.user);
+          console.log('User Data:', userData);
+          if (userData.success && userData.user) {
+            setUserInfo({
+              name: userData.user.name || DEFAULT_USER.name,
+              email: userData.user.email || DEFAULT_USER.email,
+              address: userData.user.address || DEFAULT_USER.address,
+              phone: userData.user.phone || DEFAULT_USER.phone,
+              avatar: userData.user.avatar || DEFAULT_AVATAR
+            });
+          }
         } else {
-          console.error('Erreur réponse user:', await userResponse.json());
+          const errorData = await userResponse.json();
+          console.error('Erreur réponse user:', errorData);
         }
 
+        const statsResponse = await fetch(`${BASE_URL}/api/user/payment-stats`, options);
+        console.log('Stats Response:', statsResponse.status);
+        
         if (statsResponse.ok) {
           const statsData = await statsResponse.json();
-          setPaymentStats(statsData);
+          console.log('Stats Data:', statsData);
+          if (statsData.success) {
+            setPaymentStats({
+              total: statsData.total || 0,
+              pending: statsData.pending || 0,
+              completed: statsData.completed || 0
+            });
+          }
         } else {
-          console.error('Erreur réponse stats:', await statsResponse.json());
+          const errorData = await statsResponse.json();
+          console.error('Erreur réponse stats:', errorData);
         }
       } catch (error) {
-        console.error("Erreur:", error);
+        console.error("Erreur complète:", error);
       } finally {
         setLoading(false);
       }

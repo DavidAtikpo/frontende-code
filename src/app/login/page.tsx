@@ -38,8 +38,7 @@ export default function LoginPage() {
 
       const data = await response.json();
       if (data.success) {
-        // Stocker le token dans un cookie
-        document.cookie = `token=${data.token}; path=/; max-age=604800; secure; samesite=strict`;
+        document.cookie = `adminToken=${data.token}; path=/; max-age=604800; secure; samesite=strict`;
         router.push('/user/dashboard');
       } else {
         setError(data.message);
