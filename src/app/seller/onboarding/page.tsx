@@ -217,12 +217,7 @@ export default function SellerOnboardingPage() {
       // Vérifier le statut actuel
       const currentStatus = formData.validation?.status || 'not_started';
 
-      if (currentStatus === 'pending') {
-        if (newStep !== 6) {
-          alert("Votre demande est en cours de validation. Veuillez attendre la réponse de l'administrateur.");
-          return;
-        }
-      } else if (currentStatus === 'not_started') {
+      if (currentStatus === 'not_started') {
         // Permettre la navigation normale pour une nouvelle demande
         if (currentStep > newStep) {
           setCurrentStep(newStep);
