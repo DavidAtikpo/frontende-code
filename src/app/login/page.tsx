@@ -41,10 +41,14 @@ export default function LoginPage() {
         document.cookie = `adminToken=${data.token}; path=/; max-age=604800; secure; samesite=strict`;
         router.push('/user/dashboard');
       } else {
-        setError(data.message);
+        setError(data.message || "Échec de la connexion");
       }
     } catch (error) {
-      setError('Une erreur est survenue');
+      console.error('Erreur de connexion:', error);
+      setError(error instanceof Error 
+        ? error.message 
+        : "Une erreur est survenue lors de la connexion"
+      );
     } finally {
       setIsLoading(false);
     }

@@ -10,8 +10,6 @@ import { VideoVerificationForm } from "./components/VideoVerificationForm";
 import { BusinessInfoForm } from "./components/BusinessInfoForm";
 import { ComplianceForm } from "./components/ComplianceForm";
 import { ValidationStatusForm } from "./components/ValidationStatusForm";
-import { SubscriptionPlanForm } from "./components/SubscriptionPlanForm";
-import { PaymentForm } from "./components/PaymentForm";
 import { useRouter } from "next/navigation";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -127,14 +125,6 @@ const steps: Step[] = [
   {
     title: "Validation administrative",
     component: ValidationStatusForm,
-  },
-  {
-    title: "Choix de l'abonnement",
-    component: SubscriptionPlanForm,
-  },
-  {
-    title: "Paiement",
-    component: PaymentForm,
   }
 ];
 
@@ -188,14 +178,17 @@ export default function SellerOnboardingPage() {
         const data = await response.json();
         
         if (data.success) {
-          if (data.status === 'not_found') {
-            setCurrentStep(0);
-            localStorage.setItem('sellerCurrentStep', '0');
+          if (data.status === 'approved') {
+            // Rediriger vers le dashboard vendeur si déjà approuvé
+            router.replace('/seller/dashboard');
           } else if (data.status === 'pending') {
+            // Si en attente, afficher l'étape de validation
             setCurrentStep(6);
             localStorage.setItem('sellerCurrentStep', '6');
-          } else if (data.status === 'approved') {
-            router.replace('/seller/dashboard');
+          } else if (data.status === 'not_started') {
+            // Si pas encore commencé, commencer au début
+            setCurrentStep(0);
+            localStorage.setItem('sellerCurrentStep', '0');
           }
         }
       } catch (error) {
@@ -204,7 +197,7 @@ export default function SellerOnboardingPage() {
     };
 
     loadSavedData();
-  }, [router, formData.payment, formData.subscription]);
+  }, [router]);
 
   // Sauvegarder les données à chaque modification
   useEffect(() => {
@@ -215,29 +208,21 @@ export default function SellerOnboardingPage() {
   // Modifier la fonction handleStepChange
   const handleStepChange = (newStep: number) => {
     if (newStep >= 0 && newStep < steps.length) {
-      // Empêcher de revenir en arrière si en attente de validation
-      if (formData.validation?.status === 'pending' && newStep !== 6) {
-        alert("Votre demande est en cours de validation. Vous ne pouvez pas modifier les informations pour le moment.");
-        setCurrentStep(6);
-        return;
-      }
-
-      // Empêcher de sauter les étapes d'abonnement et de paiement si approuvé
-      if (formData.validation?.status === 'approved') {
-        if (!formData.subscription && newStep > 7) {
-          alert("Veuillez d'abord choisir un abonnement.");
-          setCurrentStep(7);
+      // Vérifier si l'utilisateur peut changer d'étape
+      if (formData.validation?.status === 'pending') {
+        if (newStep !== 6) {
+          alert("Votre demande est en cours de validation. Veuillez attendre la réponse de l'administrateur.");
           return;
         }
-        if ((!formData.payment || formData.payment.status !== 'completed' as const) && newStep > 8) {
-          alert("Veuillez d'abord compléter le paiement.");
-          setCurrentStep(8);
-          return;
-        }
+      } else if (currentStep > newStep) {
+        // Permettre de revenir en arrière seulement si pas en validation
+        setCurrentStep(newStep);
+        localStorage.setItem('sellerCurrentStep', newStep.toString());
+      } else if (newStep - currentStep === 1) {
+        // Permettre d'avancer seulement d'une étape à la fois
+        setCurrentStep(newStep);
+        localStorage.setItem('sellerCurrentStep', newStep.toString());
       }
-      
-      setCurrentStep(newStep);
-      localStorage.setItem('sellerCurrentStep', newStep.toString());
     }
   };
 
@@ -259,27 +244,49 @@ export default function SellerOnboardingPage() {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto p-2">
-      <Card>
-        <CardContent className="pt-6">
-          <Stepper 
-            steps={steps.map((s) => s.title)}
-            currentStep={currentStep}
-            onStepClick={handleStepChange}
-          />
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="container max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Card className="shadow-lg">
+          <CardContent className="p-6">
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold text-center text-gray-900">
+                Devenir vendeur
+              </h1>
+              <p className="mt-2 text-center text-gray-600">
+                Complétez les étapes suivantes pour commencer à vendre
+              </p>
+            </div>
 
-          <div className="mt-8">
-            {React.createElement(currentStepComponent, {
-              data: formData,
-              onUpdate: setFormData,
-              onNext: () => handleStepChange(currentStep + 1),
-              onBack: () => handleStepChange(currentStep - 1),
-              isFirstStep: currentStep === 0,
-              isLastStep: currentStep === steps.length - 1,
-            })}
-          </div>
-        </CardContent>
-      </Card>
+            <div className="hidden sm:block mb-8">
+              <Stepper 
+                steps={steps.map((s) => s.title)}
+                currentStep={currentStep}
+                onStepClick={handleStepChange}
+              />
+            </div>
+
+            <div className="sm:hidden mb-4">
+              <p className="text-sm font-medium text-gray-700">
+                Étape {currentStep + 1} sur {steps.length}:
+              </p>
+              <p className="text-lg font-semibold text-gray-900">
+                {steps[currentStep].title}
+              </p>
+            </div>
+
+            <div className="mt-8">
+              {React.createElement(currentStepComponent, {
+                data: formData,
+                onUpdate: setFormData,
+                onNext: () => handleStepChange(currentStep + 1),
+                onBack: () => handleStepChange(currentStep - 1),
+                isFirstStep: currentStep === 0,
+                isLastStep: currentStep === steps.length - 1,
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
