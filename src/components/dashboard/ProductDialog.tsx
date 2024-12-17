@@ -8,7 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { ImagePlus, Link, X, Video } from "lucide-react";
-// import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from "@/utils/config";
+
+const { BASE_URL } = API_CONFIG;
 import {
   Select,
   SelectContent,
@@ -17,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from "next/image";
+import { Product } from "@/types/product";
 
 interface ProductDialogProps {
   open: boolean;
@@ -33,6 +36,14 @@ export function ProductDialog({ open, onOpenChange, onSuccess }: ProductDialogPr
   const { toast } = useToast();
   const [showDiscount, setShowDiscount] = useState(false);
   const [showMetadata, setShowMetadata] = useState(false);
+  const [formData, setFormData] = useState<Partial<Product>>({
+    name: "",
+    description: "",
+    price: 0,
+    stock: 0,
+    category: "",
+    images: [],
+  });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -119,11 +130,97 @@ export function ProductDialog({ open, onOpenChange, onSuccess }: ProductDialogPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
-      // ... logique de soumission
-      onSuccess(); // Utiliser onSuccess
+      const formDataToSend = new FormData();
+      
+      // Process images
+      await Promise.all(images.map(async (image, index) => {
+        if (image.startsWith('http')) {
+          formDataToSend.append(`imageUrls[${index}]`, image);
+        } else {
+          const blob = await fetch(image).then(r => r.blob());
+          formDataToSend.append(`images`, blob, `image-${index}.jpg`);
+        }
+      }));
+
+      // Ajouter la vidéo si elle existe
+      if (video) {
+        formDataToSend.append('video', video);
+      }
+
+      // Ajouter les autres données
+      const productData = {
+        ...formData,
+        price: Number(formData.price),
+        stock: Number(formData.stock),
+        discount: showDiscount ? {
+          percentage: Number(formData.discount?.percentage),
+          startDate: formData.discount?.startDate,
+          endDate: formData.discount?.endDate,
+        } : undefined,
+        metadata: showMetadata ? {
+          keywords: formData.metadata?.keywords || [],
+          brand: formData.metadata?.brand,
+          weight: Number(formData.metadata?.weight),
+          dimensions: {
+            length: Number(formData.metadata?.dimensions?.length),
+            width: Number(formData.metadata?.dimensions?.width),
+            height: Number(formData.metadata?.dimensions?.height),
+          },
+        } : undefined,
+      };
+
+      formDataToSend.append('data', JSON.stringify(productData));
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${BASE_URL}/api/products`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formDataToSend,
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la création du produit');
+      }
+
+      toast({
+        title: "Succès",
+        description: "Le produit a été créé avec succès",
+      });
+
+      onSuccess();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la création du produit",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    
+    if (name === 'keywords') {
+      setFormData(prev => ({
+        ...prev,
+        metadata: {
+          ...prev.metadata,
+          keywords: value.split(',').map(k => k.trim())
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+      }));
     }
   };
 
@@ -137,22 +234,51 @@ export function ProductDialog({ open, onOpenChange, onSuccess }: ProductDialogPr
           <div className="space-y-4">
             <div>
               <Label htmlFor="name">Nom du produit</Label>
-              <Input id="name" name="name" required />
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+              />
             </div>
             
             <div>
               <Label htmlFor="description">Description</Label>
-              <Textarea id="description" name="description" required />
+              <Textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                required
+              />
             </div>
 
             <div>
               <Label htmlFor="price">Prix</Label>
-              <Input id="price" name="price" type="number" min="0" step="0.01" required />
+              <Input
+                id="price"
+                name="price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.price}
+                onChange={handleInputChange}
+                required
+              />
             </div>
 
             <div>
               <Label htmlFor="stock">Stock</Label>
-              <Input id="stock" name="stock" type="number" min="0" required />
+              <Input
+                id="stock"
+                name="stock"
+                type="number"
+                min="0"
+                value={formData.stock}
+                onChange={handleInputChange}
+                required
+              />
             </div>
 
             <div>
@@ -212,7 +338,12 @@ export function ProductDialog({ open, onOpenChange, onSuccess }: ProductDialogPr
 
             <div>
               <Label htmlFor="category">Catégorie</Label>
-              <Select name="category" required>
+              <Select
+                name="category"
+                value={formData.category}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                required
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une catégorie" />
                 </SelectTrigger>
@@ -230,7 +361,12 @@ export function ProductDialog({ open, onOpenChange, onSuccess }: ProductDialogPr
 
             <div>
               <Label htmlFor="subCategory">Sous-catégorie</Label>
-              <Input id="subCategory" name="subCategory" />
+              <Input
+                id="subCategory"
+                name="subCategory"
+                value={formData.subCategory}
+                onChange={handleInputChange}
+              />
             </div>
 
             <div className="space-y-2">
@@ -256,6 +392,8 @@ export function ProductDialog({ open, onOpenChange, onSuccess }: ProductDialogPr
                       type="number"
                       min="0"
                       max="100"
+                      value={formData.discount?.percentage}
+                      onChange={handleInputChange}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -265,6 +403,8 @@ export function ProductDialog({ open, onOpenChange, onSuccess }: ProductDialogPr
                         id="discountStart"
                         name="discountStart"
                         type="date"
+                        value={formData.discount?.startDate}
+                        onChange={handleInputChange}
                       />
                     </div>
                     <div>
@@ -273,6 +413,8 @@ export function ProductDialog({ open, onOpenChange, onSuccess }: ProductDialogPr
                         id="discountEnd"
                         name="discountEnd"
                         type="date"
+                        value={formData.discount?.endDate}
+                        onChange={handleInputChange}
                       />
                     </div>
                   </div>
@@ -297,23 +439,58 @@ export function ProductDialog({ open, onOpenChange, onSuccess }: ProductDialogPr
                 <div className="space-y-4 p-4 border rounded">
                   <div>
                     <Label htmlFor="keywords">Mots-clés (séparés par des virgules)</Label>
-                    <Input id="keywords" name="keywords" />
+                    <Input
+                      id="keywords"
+                      name="keywords"
+                      value={formData.metadata?.keywords?.join(',') || ''}
+                      onChange={handleInputChange}
+                    />
                   </div>
                   <div>
                     <Label htmlFor="brand">Marque</Label>
-                    <Input id="brand" name="brand" />
+                    <Input
+                      id="brand"
+                      name="brand"
+                      value={formData.metadata?.brand}
+                      onChange={handleInputChange}
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="weight">Poids (kg)</Label>
-                      <Input id="weight" name="weight" type="number" step="0.01" />
+                      <Input
+                        id="weight"
+                        name="weight"
+                        type="number"
+                        step="0.01"
+                        value={formData.metadata?.weight}
+                        onChange={handleInputChange}
+                      />
                     </div>
                     <div>
                       <Label>Dimensions (cm)</Label>
                       <div className="grid grid-cols-3 gap-2">
-                        <Input placeholder="L" name="length" type="number" />
-                        <Input placeholder="l" name="width" type="number" />
-                        <Input placeholder="H" name="height" type="number" />
+                        <Input
+                          placeholder="L"
+                          name="length"
+                          type="number"
+                          value={formData.metadata?.dimensions?.length}
+                          onChange={handleInputChange}
+                        />
+                        <Input
+                          placeholder="l"
+                          name="width"
+                          type="number"
+                          value={formData.metadata?.dimensions?.width}
+                          onChange={handleInputChange}
+                        />
+                        <Input
+                          placeholder="H"
+                          name="height"
+                          type="number"
+                          value={formData.metadata?.dimensions?.height}
+                          onChange={handleInputChange}
+                        />
                       </div>
                     </div>
                   </div>
