@@ -4,10 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { RequestDetailsDialog } from "./components/RequestDetailsDialog";
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from "@/utils/config";
 import { ApprovedSellers } from "./components/ApprovedSellers";
 
-const BASE_URL = getApiUrl();
+const { BASE_URL } = API_CONFIG;
 
 interface SellerRequest {
   _id: string;
