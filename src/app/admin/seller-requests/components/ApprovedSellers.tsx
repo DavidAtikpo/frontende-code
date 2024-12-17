@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from "@/utils/config";
 import { Eye, Store, Mail, Phone } from "lucide-react";
 import Image from "next/image";
 
-const BASE_URL = getApiUrl();
+const { BASE_URL } = API_CONFIG;
 
 interface ApprovedSeller {
   _id: string;

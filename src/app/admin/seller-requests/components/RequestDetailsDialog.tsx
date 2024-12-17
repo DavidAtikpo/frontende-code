@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import Image from 'next/image';
 import { useState } from "react";
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from "@/utils/config";
 
-const BASE_URL = getApiUrl();
+const { BASE_URL } = API_CONFIG;
 
 interface RequestDetailsDialogProps {
   request: SellerRequest;

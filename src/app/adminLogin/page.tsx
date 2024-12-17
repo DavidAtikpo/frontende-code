@@ -8,7 +8,8 @@ const BASE_URL = getApiUrl();
 
 const setCookie = (name: string, value: string, days: number = 7) => {
   const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; secure; samesite=strict`;
+  const cookieValue = name === 'adminToken' ? value : encodeURIComponent(value);
+  document.cookie = `${name}=${cookieValue}; expires=${expires}; path=/; secure; samesite=strict`;
 };
 
 export default function AdminLoginPage() {

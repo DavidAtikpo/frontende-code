@@ -70,19 +70,39 @@ export default function SellerRequestsPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<SellerRequest | null>(null);
 
+  const getAuthToken = () => {
+    const tokenCookie = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('adminToken='));
+    
+    if (!tokenCookie) {
+      console.error('No adminToken found in cookies');
+      return null;
+    }
+    
+    return tokenCookie.split('=')[1];
+  };
+
   const fetchRequests = useCallback(async () => {
     try {
-      const token = getAuthToken();
-      if (!token) throw new Error('No authentication token');
+      const adminToken = getAuthToken();
+      if (!adminToken) {
+        console.error('No authentication token found');
+        router.replace('/adminLogin');
+        return;
+      }
 
       const response = await fetch(`${BASE_URL}/api/admin/seller-requests`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
       });
 
       if (!response.ok) {
         if (response.status === 401) {
+          console.error('Unauthorized access');
           router.replace('/adminLogin');
           return;
         }
@@ -90,8 +110,13 @@ export default function SellerRequestsPage() {
       }
 
       const data = await response.json();
-      setRequests(data);
+      if (data.success) {
+        setRequests(data.data || []);
+      } else {
+        throw new Error(data.message || 'Failed to fetch requests');
+      }
     } catch (error) {
+      console.error('Error fetching requests:', error);
       setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);
@@ -102,24 +127,21 @@ export default function SellerRequestsPage() {
     fetchRequests();
   }, [fetchRequests]);
 
-  const getAuthToken = () => {
-    const tokenCookie = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('token='));
-    return tokenCookie ? tokenCookie.split('=')[1] : null;
-  };
-
   const handleApproval = async (id: string) => {
     try {
-      const token = getAuthToken();
-      if (!token) throw new Error('No authentication token');
+      const adminToken = getAuthToken();
+      if (!adminToken) {
+        router.replace('/adminLogin');
+        return;
+      }
 
       const response = await fetch(`${BASE_URL}/api/admin/seller-requests/${id}/approve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${adminToken}`
         },
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -137,15 +159,19 @@ export default function SellerRequestsPage() {
 
   const handleRejection = async (id: string, reason: string) => {
     try {
-      const token = getAuthToken();
-      if (!token) throw new Error('No authentication token');
+      const adminToken = getAuthToken();
+      if (!adminToken) {
+        router.replace('/adminLogin');
+        return;
+      }
 
       const response = await fetch(`${BASE_URL}/api/admin/seller-requests/${id}/reject`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${adminToken}`
         },
+        credentials: 'include',
         body: JSON.stringify({ reason })
       });
 
@@ -160,6 +186,7 @@ export default function SellerRequestsPage() {
       await fetchRequests();
       setSelectedRequest(null);
     } catch (error) {
+      console.error('Error rejecting request:', error);
       if (error instanceof Error) setError(error.message);
     }
   };
