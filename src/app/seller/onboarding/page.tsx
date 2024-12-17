@@ -131,12 +131,13 @@ const steps: Step[] = [
 export default function SellerOnboardingPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(() => {
-    // Récupérer l'étape sauvegardée du localStorage
     if (typeof window !== 'undefined') {
       return parseInt(localStorage.getItem('sellerCurrentStep') || '0');
     }
     return 0;
   });
+
+  // Modifier l'état initial de formData
   const [formData, setFormData] = useState<SellerFormData>(() => {
     if (typeof window !== 'undefined') {
       const savedData = localStorage.getItem('sellerFormData');
@@ -155,7 +156,7 @@ export default function SellerOnboardingPage() {
         bankDetails: {},
       },
       compliance: {},
-      validation: { status: "pending" }
+      validation: { status: "not_started" }
     };
   });
 
@@ -168,7 +169,6 @@ export default function SellerOnboardingPage() {
           return;
         }
 
-        // Vérifier le statut de validation
         const response = await fetch(`${BASE_URL}/api/seller/validation-status`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -179,14 +179,20 @@ export default function SellerOnboardingPage() {
         
         if (data.success) {
           if (data.status === 'approved') {
-            // Rediriger vers le dashboard vendeur si déjà approuvé
             router.replace('/seller/dashboard');
           } else if (data.status === 'pending') {
-            // Si en attente, afficher l'étape de validation
+            setFormData(prev => ({
+              ...prev,
+              validation: { status: 'pending' }
+            }));
             setCurrentStep(6);
             localStorage.setItem('sellerCurrentStep', '6');
-          } else if (data.status === 'not_started') {
-            // Si pas encore commencé, commencer au début
+          } else {
+            // Si pas de demande ou nouvelle demande
+            setFormData(prev => ({
+              ...prev,
+              validation: { status: 'not_started' }
+            }));
             setCurrentStep(0);
             localStorage.setItem('sellerCurrentStep', '0');
           }
@@ -208,21 +214,24 @@ export default function SellerOnboardingPage() {
   // Modifier la fonction handleStepChange
   const handleStepChange = (newStep: number) => {
     if (newStep >= 0 && newStep < steps.length) {
-      // Vérifier si l'utilisateur peut changer d'étape
-      if (formData.validation?.status === 'pending') {
+      // Vérifier le statut actuel
+      const currentStatus = formData.validation?.status || 'not_started';
+
+      if (currentStatus === 'pending') {
         if (newStep !== 6) {
           alert("Votre demande est en cours de validation. Veuillez attendre la réponse de l'administrateur.");
           return;
         }
-      } else if (currentStep > newStep) {
-        // Permettre de revenir en arrière seulement si pas en validation
-        setCurrentStep(newStep);
-        localStorage.setItem('sellerCurrentStep', newStep.toString());
-      } else if (newStep - currentStep === 1) {
-        // Permettre d'avancer seulement d'une étape à la fois
-        setCurrentStep(newStep);
-        localStorage.setItem('sellerCurrentStep', newStep.toString());
+      } else if (currentStatus === 'not_started') {
+        // Permettre la navigation normale pour une nouvelle demande
+        if (currentStep > newStep) {
+          setCurrentStep(newStep);
+        } else if (newStep - currentStep === 1) {
+          setCurrentStep(newStep);
+        }
       }
+      
+      localStorage.setItem('sellerCurrentStep', newStep.toString());
     }
   };
 
