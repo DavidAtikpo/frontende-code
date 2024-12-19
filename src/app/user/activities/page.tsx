@@ -11,9 +11,10 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from '@/utils/config';
 
-const BASE_URL = getApiUrl();
+const { BASE_URL } = API_CONFIG;
+
 
 interface Activity {
   id: string;

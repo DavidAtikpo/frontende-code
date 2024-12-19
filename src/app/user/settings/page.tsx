@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from '@/utils/config';
 
-const BASE_URL = getApiUrl();
+const { BASE_URL } = API_CONFIG;
+
 
 interface UserInfo {
   name: string;
