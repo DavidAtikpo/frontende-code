@@ -1,185 +1,401 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ProductDialog } from "@/components/dashboard/ProductDialog";
-import { SalesChart } from "@/components/dashboard/SalesChart";
-import { TopProducts } from "@/components/dashboard/TopProducts";
-import { DollarSign, ArrowUp, ArrowDown, Plus } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { 
+  // Supprimer ShoppingBag, Users, DollarSign, Package
+  // ... garder les autres imports nécessaires
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle
+} from "lucide-react";
+import { getApiUrl } from '@/utils/api';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts';
+import { RecentReviews } from "@/components/dashboard/RecentReviews";
+import { SalesGoals } from "@/components/dashboard/SalesGoals";
+import { RecentMessages } from "@/components/dashboard/RecentMessages";
+import { ActivePromotions } from "@/components/dashboard/ActivePromotions";
+import { ReturnsOverview } from "@/components/dashboard/ReturnsOverview";
+import { ProductPerformance } from "@/components/dashboard/ProductPerformance";
+import { DeliveryStats } from "@/components/dashboard/DeliveryStats";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const BASE_URL = `${getApiUrl()}/api`;
 
-interface DashboardStats {
-  revenue: {
+interface DashboardData {
+  recentOrders: Array<{
+    id: string;
+    orderNumber: string;
+    customerName: string;
     total: number;
-    change: number;
-    trend: "up" | "down";
-    percentage: number;
+    status: string;
+    createdAt: string;
+  }>;
+  lowStockProducts: Array<{
+    id: string;
+    name: string;
+    stock: number;
+    minStock: number;
+  }>;
+  metrics: {
+    totalRevenue: number;
+    totalOrders: number;
+    totalCustomers: number;
+    totalProducts: number;
+    revenueGrowth: number;
+    ordersGrowth: number;
+    customersGrowth: number;
   };
-  orders: {
-    total: number;
-    change: number;
-    pending: number;
-    trend: "up" | "down";
-    percentage: number;
-  };
-  products: {
-    total: number;
-    active: number;
-  };
-  customers: {
-    total: number;
-    new: number;
+  salesTrend: Array<{
+    date: string;
+    revenue: number;
+  }>;
+  recentReviews: Array<{
+    id: string;
+    customerName: string;
+    customerAvatar?: string;
+    rating: number;
+    comment: string;
+    productName: string;
+    createdAt: string;
+  }>;
+  salesGoals: Array<{
+    label: string;
+    current: number;
+    target: number;
+    unit: string;
+  }>;
+  recentMessages: Array<{
+    id: string;
+    customerName: string;
+    customerAvatar?: string;
+    content: string;
+    createdAt: string;
+    read: boolean;
+  }>;
+  activePromotions: Array<{
+    id: string;
+    name: string;
+    type: 'percentage' | 'fixed_amount';
+    value: number;
+    startDate: string;
+    endDate: string;
+    usageCount: number;
+    maxUses: number | null;
+    minPurchase: number | null;
+    products: Array<{
+      id: string;
+      name: string;
+    }>;
+  }>;
+  returns: Array<{
+    id: string;
+    orderNumber: string;
+    customerName: string;
+    productName: string;
+    reason: string;
+    status: 'pending' | 'approved' | 'rejected';
+    createdAt: string;
+    refundAmount: number;
+  }>;
+  productStats: Array<{
+    id: string;
+    name: string;
+    sales: number;
+    revenue: number;
+    views: number;
+    conversionRate: number;
+    rating: number;
+    stockLevel: number;
+    trend: Array<{
+      date: string;
+      sales: number;
+    }>;
+  }>;
+  deliveryStats: {
+    inTransit: number;
+    delivered: number;
+    delayed: number;
+    zones: Array<{
+      name: string;
+      count: number;
+      avgTime: number;
+    }>;
+    metrics: {
+      avgDeliveryTime: number;
+      onTimeDeliveryRate: number;
+      returnRate: number;
+    };
   };
 }
 
 export default function DashboardPage() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [salesData, setSalesData] = useState(null);
-  const [topProducts, setTopProducts] = useState([]);
+  const { toast } = useToast();
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const fetchDashboardStats = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
-      let token = '';
-      if (typeof window !== 'undefined') {
-        token = localStorage.getItem('token') || '';
-      }
-
-      const response = await fetch(`${BASE_URL}/api/seller/dashboard/stats`, {
+      const response = await fetch(`${BASE_URL}/seller/dashboard`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+        },
+        credentials: 'include'
       });
-      
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des statistiques');
-      }
-
       const data = await response.json();
-      setStats(data);
-      setSalesData(data.salesChart);
-      setTopProducts(data.topProducts);
-    } catch (err) {
-      console.error('Erreur:', err);
+      if (data.success) {
+        setData(data.data);
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchDashboardStats();
   }, []);
 
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  const getStatusColor = (status: string) => {
+    const colors = {
+      pending: "text-yellow-600",
+      processing: "text-blue-600",
+      completed: "text-green-600",
+      cancelled: "text-red-600",
+    };
+    return colors[status as keyof typeof colors] || "text-gray-600";
+  };
+
+  if (isLoading) {
+    return <div>Chargement...</div>;
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Tableau de bord</h1>
-        <Button onClick={() => setIsDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Ajouter un produit
-        </Button>
+    <div className="space-y-4 md:space-y-6">
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold">Tableau de bord</h1>
+        <p className="text-muted-foreground">
+          Bienvenue sur votre espace vendeur
+        </p>
       </div>
 
-      {/* Cartes de statistiques */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {/* Carte Chiffre d'affaires */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">
-              Chiffre d&apos;affaires
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Chiffre d'affaires
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.revenue?.total.toLocaleString()} €</div>
-            <div className="flex items-center pt-1">
-              {stats?.revenue?.trend === "up" ? (
-                <ArrowUp className="h-4 w-4 text-green-500" />
+            <div className="text-2xl font-bold">
+              {data?.metrics.totalRevenue} FCFA
+            </div>
+            <div className={`flex items-center text-sm ${
+              (data?.metrics?.revenueGrowth ?? 0) >= 0 ? "text-green-600" : "text-red-600"
+            }`}>
+              {(data?.metrics?.revenueGrowth ?? 0) >= 0 ? (
+                <TrendingUp className="h-4 w-4 mr-1" />
               ) : (
-                <ArrowDown className="h-4 w-4 text-red-500" />
+                <TrendingDown className="h-4 w-4 mr-1" />
               )}
-              <span className={`text-xs ${stats?.revenue?.trend === "up" ? "text-green-500" : "text-red-500"}`}>
-                {stats?.revenue?.percentage}%
-              </span>
-              <span className="text-xs text-gray-500 ml-1">vs mois dernier</span>
+              {Math.abs(data?.metrics?.revenueGrowth ?? 0)}% vs mois dernier
             </div>
           </CardContent>
         </Card>
 
-        {/* Carte Commandes */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Commandes</CardTitle>
-            <DollarSign className="h-4 w-4 text-gray-500" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Commandes
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.orders?.total.toLocaleString()}</div>
-            <div className="flex items-center pt-1">
-              {stats?.orders?.trend === "up" ? (
-                <ArrowUp className="h-4 w-4 text-green-500" />
+            <div className="text-2xl font-bold">
+              {data?.metrics.totalOrders}
+            </div>
+            <div className={`flex items-center text-sm ${
+              (data?.metrics?.ordersGrowth ?? 0) >= 0 ? "text-green-600" : "text-red-600"
+            }`}>
+              {(data?.metrics?.ordersGrowth ?? 0) >= 0 ? (
+                <TrendingUp className="h-4 w-4 mr-1" />
               ) : (
-                <ArrowDown className="h-4 w-4 text-red-500" />
+                <TrendingDown className="h-4 w-4 mr-1" />
               )}
-              <span className={`text-xs ${stats?.orders?.trend === "up" ? "text-green-500" : "text-red-500"}`}>
-                {stats?.orders?.percentage}%
-              </span>
-              <span className="text-xs text-gray-500 ml-1">vs mois dernier</span>
+              {Math.abs(data?.metrics?.ordersGrowth ?? 0)}% vs mois dernier
             </div>
           </CardContent>
         </Card>
 
-        {/* Carte Produits */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Produits</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Clients
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.products?.active} / {stats?.products?.total}</div>
+            <div className="text-2xl font-bold">
+              {data?.metrics.totalCustomers}
+            </div>
+            <div className={`flex items-center text-sm ${
+              (data?.metrics?.customersGrowth ?? 0) >= 0 ? "text-green-600" : "text-red-600"
+            }`}>
+              {(data?.metrics?.customersGrowth ?? 0) >= 0 ? (
+                <TrendingUp className="h-4 w-4 mr-1" />
+              ) : (
+                <TrendingDown className="h-4 w-4 mr-1" />
+              )}
+              {Math.abs(data?.metrics?.customersGrowth ?? 0)}% vs mois dernier
+            </div>
           </CardContent>
         </Card>
 
-        {/* Carte Clients */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Clients</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Produits
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.customers?.total.toLocaleString()}</div>
-            <div className="text-sm text-gray-500">{stats?.customers?.new} nouveaux ce mois-ci</div>
+            <div className="text-2xl font-bold">
+              {data?.metrics.totalProducts}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {data?.lowStockProducts.length} en stock faible
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Graphique et Tableau */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
             <CardTitle>Évolution des ventes</CardTitle>
           </CardHeader>
           <CardContent>
-            {salesData && <SalesChart data={salesData} />}
+            <div className="h-[200px] md:h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data?.salesTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line 
+                    type="monotone" 
+                    dataKey="revenue" 
+                    stroke="#2563eb" 
+                    name="Revenus"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Produits les plus vendus</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TopProducts products={topProducts} />
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Commandes récentes</span>
+                <Button variant="link" className="text-sm">
+                  Voir tout
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {data?.recentOrders.map((order) => (
+                  <div key={order.id} className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">#{order.orderNumber}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {order.customerName}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="font-medium text-right">
+                        {order.total} FCFA
+                      </div>
+                      <div className={`text-sm ${getStatusColor(order.status)}`}>
+                        {order.status}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
+                Alertes stock
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {data?.lowStockProducts.map((product) => (
+                  <div key={product.id} className="flex items-center justify-between">
+                    <div className="font-medium">{product.name}</div>
+                    <div className="text-sm text-red-600">
+                      Stock: {product.stock} / {product.minStock}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      {/* Dialog pour ajouter un produit */}
-      <ProductDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onSuccess={() => {
-          // Implémentez un rafraîchissement des données si nécessaire
-          console.log("Produit ajouté !");
-        }}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <RecentReviews reviews={data?.recentReviews ?? []} />
+        <SalesGoals goals={data?.salesGoals ?? []} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <RecentMessages 
+          messages={data?.recentMessages ?? []}
+          onReply={(messageId) => {
+            console.log('Répondre au message:', messageId);
+          }}
+        />
+        <ActivePromotions promotions={data?.activePromotions ?? []} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ReturnsOverview 
+          returns={data?.returns ?? []}
+          onViewDetails={(returnId) => {
+            console.log('Voir les détails du retour:', returnId);
+          }}
+        />
+        <ProductPerformance products={data?.productStats ?? []} />
+      </div>
+
+      <div className="w-full lg:w-1/2">
+        <DeliveryStats data={data?.deliveryStats ?? {
+          inTransit: 0,
+          delivered: 0,
+          delayed: 0,
+          zones: [],
+          metrics: {
+            avgDeliveryTime: 0,
+            onTimeDeliveryRate: 0,
+            returnRate: 0
+          }
+        }} />
+      </div>
     </div>
   );
 }

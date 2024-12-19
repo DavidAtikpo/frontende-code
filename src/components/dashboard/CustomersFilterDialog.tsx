@@ -10,13 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-interface CustomerFilters {
-  dateRange: string;
-  orderCount: string;
-  totalSpent: string;
-  status: string;
-}
+import { CustomerFilters } from "@/types/customer";
 
 interface CustomersFilterDialogProps {
   open: boolean;
@@ -30,10 +24,11 @@ export function CustomersFilterDialog({
   onFilter,
 }: CustomersFilterDialogProps) {
   const [filters, setFilters] = useState<CustomerFilters>({
-    dateRange: "",
+    dateRange: undefined,
+    status: "",
+    spentRange: { min: 0, max: 0 },
     orderCount: "",
-    totalSpent: "",
-    status: ""
+    totalSpent: ""
   });
 
   const handleSubmit = (e: React.FormEvent) => {

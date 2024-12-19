@@ -1,201 +1,116 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import { API_CONFIG } from '@/utils/config';
-import { Skeleton } from "@/components/ui/skeleton";
+import { UserStats } from "@/components/dashboard/user/UserStats";
+import { RecentOrders } from "@/components/dashboard/user/RecentOrders";
+import { RecentActivity } from "@/components/dashboard/user/RecentActivity";
+import { FavoriteProducts } from "@/components/dashboard/user/FavoriteProducts";
+import { API_CONFIG } from "@/utils/config";
 
 const { BASE_URL } = API_CONFIG;
 
-interface UserInfo {
-  name: string;
-  email: string;
-  address: string;
-  phone: string;
-  avatar: string;
+interface DashboardData {
+  recentOrders: Array<{
+    id: string;
+    orderNumber: string;
+    total: number;
+    status: string;
+    createdAt: string;
+    items: Array<{
+      name: string;
+      quantity: number;
+    }>;
+  }>;
+  recentReviews: Array<{
+    id: string;
+    productName: string;
+    rating: number;
+    comment: string;
+    createdAt: string;
+  }>;
+  recentActivities: Array<{
+    id: string;
+    type: string;
+    description: string;
+    createdAt: string;
+  }>;
+  favoriteProducts: Array<{
+    id: string;
+    name: string;
+    price: number;
+    imageUrl: string;
+  }>;
+  stats: {
+    totalOrders: number;
+    favoriteCount: number;
+    addressCount: number;
+    reviewCount: number;
+  };
 }
 
-interface PaymentStats {
-  total: number;
-  pending: number;
-  completed: number;
-}
+export default function DashboardPage() {
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-const DEFAULT_AVATAR = '/user-profile-svgrepo-com (1).svg';
-const DEFAULT_USER: UserInfo = {
-  name: "Utilisateur",
-  email: "utilisateur@example.com",
-  address: "Adresse non renseignée",
-  phone: "Numéro non renseigné",
-  avatar: DEFAULT_AVATAR
-};
-
-const DEFAULT_STATS: PaymentStats = {
-  total: 0,
-  pending: 0,
-  completed: 0
-};
-
-export default function UserDashboard() {
-  const [userInfo, setUserInfo] = useState<UserInfo>(DEFAULT_USER);
-  const [paymentStats, setPaymentStats] = useState<PaymentStats>(DEFAULT_STATS);
-  const [loading, setLoading] = useState(true);
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/user/dashboard`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const result = await response.json();
+      setDashboardData(result.dashboard);
+    } catch (error) {
+      console.error("Erreur lors du chargement des données:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const adminToken = document.cookie
-          .split(';')
-          .find(c => c.trim().startsWith('adminToken='))
-          ?.split('=')[1];
-
-        if (!adminToken) {
-          console.error('Token non trouvé');
-          return;
-        }
-
-        const headers = {
-          'Authorization': `Bearer ${decodeURIComponent(adminToken)}`,
-          'Content-Type': 'application/json'
-        };
-        
-        const options = {
-          method: 'GET',
-          headers,
-          credentials: 'include' as RequestCredentials
-        };
-        
-        const userResponse = await fetch(`${BASE_URL}/api/user/info`, options);
-        console.log('User Response:', userResponse.status);
-        
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          console.log('User Data:', userData);
-          if (userData.success && userData.user) {
-            setUserInfo({
-              name: userData.user.name || DEFAULT_USER.name,
-              email: userData.user.email || DEFAULT_USER.email,
-              address: userData.user.address || DEFAULT_USER.address,
-              phone: userData.user.phone || DEFAULT_USER.phone,
-              avatar: userData.user.avatar || DEFAULT_AVATAR
-            });
-          }
-        } else {
-          const errorData = await userResponse.json();
-          console.error('Erreur réponse user:', errorData);
-        }
-
-        const statsResponse = await fetch(`${BASE_URL}/api/user/payment-stats`, options);
-        console.log('Stats Response:', statsResponse.status);
-        
-        if (statsResponse.ok) {
-          const statsData = await statsResponse.json();
-          console.log('Stats Data:', statsData);
-          if (statsData.success) {
-            setPaymentStats({
-              total: statsData.total || 0,
-              pending: statsData.pending || 0,
-              completed: statsData.completed || 0
-            });
-          }
-        } else {
-          const errorData = await statsResponse.json();
-          console.error('Erreur réponse stats:', errorData);
-        }
-      } catch (error) {
-        console.error("Erreur complète:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchDashboardData();
   }, []);
 
-  return (
-    <div className="container mx-auto p-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Info du compte */}
-        <Card className="p-6">
-          <h2 className="text-xl font-bold mb-4">INFO DU COMPTE</h2>
-          <div className="flex items-start space-x-4">
-            <div className="w-16 h-16 rounded-full bg-gray-200">
-              {loading ? (
-                <Skeleton className="w-full h-full rounded-full" />
-              ) : (
-                <Image 
-                  src={userInfo.avatar || DEFAULT_AVATAR}
-                  alt="Profile" 
-                  className="w-full h-full rounded-full object-cover"
-                  width={100}
-                  height={100}
-                />
-              )}
-            </div>
-            <div className="flex-1">
-              {loading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-[200px]" />
-                  <Skeleton className="h-4 w-[150px]" />
-                  <Skeleton className="h-4 w-[150px]" />
-                </div>
-              ) : (
-                <>
-                  <h3 className="font-bold">{userInfo.name}</h3>
-                  <p className="text-sm text-gray-500">{userInfo.address}</p>
-                  <div className="mt-2 space-y-1 text-sm">
-                    <p>Email: {userInfo.email}</p>
-                    <p>Téléphone: {userInfo.phone}</p>
-                  </div>
-                </>
-              )}
-              <Link href="/user/settings">
-                <Button variant="outline" size="sm" className="mt-3">
-                  MODIFIER LE COMPTE
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </Card>
+  const handleRemoveFavorite = async (productId: string) => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/user/favorites/toggle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ productId })
+      });
+      
+      if (response.ok) {
+        // Mettre à jour les données du dashboard après la suppression
+        fetchDashboardData();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression du favori:", error);
+    }
+  };
 
-        {/* Statistiques */}
-        <Card className="p-6">
-          <div className="grid grid-cols-3 gap-4">
-            {loading ? (
-              Array(3).fill(null).map((_, i) => (
-                <div key={i} className="text-center">
-                  <Skeleton className="h-8 w-16 mx-auto mb-2" />
-                  <Skeleton className="h-4 w-24 mx-auto" />
-                </div>
-              ))
-            ) : (
-              <>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600">
-                    {paymentStats.total}
-                  </div>
-                  <p className="text-sm text-gray-500">Paiements totaux</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-yellow-600">
-                    {paymentStats.pending}
-                  </div>
-                  <p className="text-sm text-gray-500">En attente</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600">
-                    {paymentStats.completed}
-                  </div>
-                  <p className="text-sm text-gray-500">Achevées</p>
-                </div>
-              </>
-            )}
-          </div>
-        </Card>
+  if (isLoading || !dashboardData) {
+    return <div>Chargement...</div>;
+  }
+
+  return (
+    <div className="space-y-6 p-6">
+      <h1 className="text-3xl font-bold">Tableau de bord</h1>
+      
+      <UserStats stats={dashboardData.stats} />
+      
+      <div className="grid gap-6 md:grid-cols-2">
+        <RecentOrders orders={dashboardData.recentOrders} />
+        <RecentActivity activities={dashboardData.recentActivities} />
       </div>
+      
+      <FavoriteProducts 
+        products={dashboardData.favoriteProducts}
+        onRemove={handleRemoveFavorite}
+      />
     </div>
   );
 } 

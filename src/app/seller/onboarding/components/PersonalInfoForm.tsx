@@ -41,6 +41,7 @@ export function PersonalInfoForm({ data, onUpdate, onNext }: PersonalInfoFormPro
 
     if (data.type === "individual") {
       if (!info.fullName) newErrors.fullName = "Le nom complet est requis";
+      if (!info.idType) newErrors.idType = "Le type de document est requis";
       if (!info.idNumber) newErrors.idNumber = "Le numéro d'identification est requis";
     } else {
       if (!info.companyName) newErrors.companyName = "La raison sociale est requise";
@@ -51,7 +52,11 @@ export function PersonalInfoForm({ data, onUpdate, onNext }: PersonalInfoFormPro
     if (!info.address) newErrors.address = "L'adresse est requise";
     if (!info.phone) newErrors.phone = "Le numéro de téléphone est requis";
     if (!info.email) newErrors.email = "L'email est requis";
-    if (!info.taxNumber) newErrors.taxNumber = "Le numéro IFU est requis";
+    if (!info.taxNumber) {
+      newErrors.taxNumber = "Le numéro IFU est requis";
+    } else if (!/^\d{13}$/.test(info.taxNumber)) {
+      newErrors.taxNumber = "Le numéro IFU doit contenir exactement 13 chiffres";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -104,16 +109,34 @@ export function PersonalInfoForm({ data, onUpdate, onNext }: PersonalInfoFormPro
             </div>
             <div className="space-y-2">
               <Label htmlFor="idNumber">
-                Numéro d&apos;identification <span className="text-red-500">*</span>
+                Numéro d'identification <span className="text-red-500">*</span>
               </Label>
+              <div className="space-y-2">
+                <select
+                  id="idType"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  value={data.personalInfo.idType || ""}
+                  onChange={(e) => handleChange("idType", e.target.value)}
+                >
+                  <option value="">Sélectionnez le type de document</option>
+                  <option value="CIP">Carte d'identité nationale (CIP)</option>
+                  <option value="PASSPORT">Passeport</option>
+                  <option value="CEDEAO">Carte CEDEAO</option>
+                  <option value="RAVIP">Carte RAVIP</option>
+                </select>
+              </div>
               <Input
                 id="idNumber"
+                placeholder="Entrez le numéro du document"
                 value={data.personalInfo.idNumber || ""}
                 onChange={(e) => handleChange("idNumber", e.target.value)}
               />
               {errors.idNumber && (
                 <p className="text-sm text-red-500">{errors.idNumber}</p>
               )}
+              <p className="text-sm text-muted-foreground">
+                Veuillez fournir un document d'identification officiel valide
+              </p>
             </div>
           </div>
         ) : (
@@ -197,7 +220,7 @@ export function PersonalInfoForm({ data, onUpdate, onNext }: PersonalInfoFormPro
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="taxNumber">Numéro IFU</Label>
+            <Label htmlFor="taxNumber">Numéro IFU(un numéro unique attribué par la Direction Générale des Impôts (DGI) à chaque contribuable, qu'il s'agisse d'une personne physique (individu) ou d'une personne morale (entreprise).)</Label>
             <Input
               id="taxNumber"
               value={data.personalInfo.taxNumber || ""}

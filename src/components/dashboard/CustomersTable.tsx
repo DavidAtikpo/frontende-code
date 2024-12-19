@@ -6,27 +6,36 @@ import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
 
-interface Customer {
+interface CustomerData {
   id: string;
   name: string;
   email: string;
   phone: string;
+  orders: number;
+  spent: number;
   totalOrders: number;
   totalSpent: number;
   lastOrderDate: string;
   status: "active" | "inactive";
+  lastOrder?: string;
 }
 
 interface CustomersTableProps {
-  customers: Customer[];
+  data: CustomerData[];
   isLoading: boolean;
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
+  currentPage?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
 }
 
-export function CustomersTable({ customers, isLoading, currentPage, totalPages, onPageChange }: CustomersTableProps) {
-  const getStatusVariant = (status: Customer["status"]) => {
+export function CustomersTable({ 
+  data, 
+  isLoading, 
+  currentPage = 1, 
+  totalPages = 1, 
+  onPageChange 
+}: CustomersTableProps) {
+  const getStatusVariant = (status: CustomerData["status"]) => {
     return status === "active" ? "success" : "secondary";
   };
 
@@ -49,7 +58,7 @@ export function CustomersTable({ customers, isLoading, currentPage, totalPages, 
           </TableRow>
         </TableHeader>
         <TableBody>
-          {customers.map((customer) => (
+          {data.map((customer) => (
             <TableRow key={customer.id}>
               <TableCell>{customer.name}</TableCell>
               <TableCell>
@@ -88,16 +97,16 @@ export function CustomersTable({ customers, isLoading, currentPage, totalPages, 
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+            onClick={() => onPageChange?.(currentPage - 1)}
+            disabled={currentPage === 1 || !onPageChange}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            onClick={() => onPageChange?.(currentPage + 1)}
+            disabled={currentPage === totalPages || !onPageChange}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

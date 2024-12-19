@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import AuthTabs from "../components/auth/AuthTabs";
 // import Popup from "../components/Popup";
-import { API_CONFIG } from '@/utils/config';
 import { useRouter } from 'next/navigation';
+import { API_CONFIG } from '@/utils/config';
 
 const { BASE_URL } = API_CONFIG;
 // const BASE_URL = 'http://localhost:5000';

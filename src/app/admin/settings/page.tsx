@@ -1,445 +1,177 @@
 "use client";
 
-import { useState } from "react";
-import { Eye, EyeOff, Upload } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getApiUrl } from '@/utils/api';
+import { Save, RefreshCcw } from 'lucide-react';
 
-// const BASE_URL = "http://localhost:5000/api";
+const BASE_URL = getApiUrl();
 
-export default function SettingsPage() {
-  const [personalInfo, setPersonalInfo] = useState({
-    avatar: null as File | null,
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-  });
+interface SettingsData {
+  id: string;
+  key: string;
+  name: string;
+  value: string | number | boolean;
+  type: string;
+  category: string;
+  description?: string;
+}
 
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
+interface _SettingValue {
+  key: string;
+  value: string | number | boolean;
+}
 
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading] = useState(false);
-  const [error] = useState("");
-  const [success] = useState("");
-  const [avatarPreview, setAvatarPreview] = useState<string>("");
+interface GroupedSettings {
+  [key: string]: SettingsData[];
+}
 
-  const handlePersonalInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPersonalInfo({ ...personalInfo, [e.target.name]: e.target.value });
-  };
+export default function AdminSettings() {
+  const [settings, setSettings] = useState<GroupedSettings>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
-  };
+  useEffect(() => {
+    fetchSettings();
+  }, []);
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setPersonalInfo({ ...personalInfo, avatar: file });
-      setAvatarPreview(URL.createObjectURL(file));
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/admin/settings`);
+      const data = await response.json();
+      if (data.success) {
+        const grouped = data.data.reduce((acc: GroupedSettings, setting: SettingsData) => {
+          const category = setting.category || 'Général';
+          if (!acc[category]) acc[category] = [];
+          acc[category].push(setting);
+          return acc;
+        }, {});
+        setSettings(grouped);
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handlePersonalInfoSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // API implementation à venir
+  const handleUpdateSettings = async () => {
+    setSaving(true);
+    try {
+      const flatSettings = Object.values(settings).flat();
+      const response = await fetch(`${BASE_URL}/api/admin/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+        },
+        body: JSON.stringify({ settings: flatSettings }),
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        // Recharger les paramètres pour confirmer les changements
+        await fetchSettings();
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // API implementation à venir
+  const updateSettingValue = (category: string, key: string, value: string | number | boolean) => {
+    setSettings((prev: GroupedSettings) => ({
+      ...prev,
+      [category]: prev[category].map(setting => 
+        setting.key === key ? { ...setting, value } : setting
+      )
+    }));
   };
+
+  if (loading) {
+    return <div className="p-6">Chargement...</div>;
+  }
 
   return (
-    <div className="container max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Paramètres du compte</h1>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Paramètres système</h1>
+        <Button 
+          onClick={handleUpdateSettings}
+          disabled={saving}
+        >
+          {saving ? (
+            <RefreshCcw className="h-4 w-4 animate-spin mr-2" />
+          ) : (
+            <Save className="h-4 w-4 mr-2" />
+          )}
+          Enregistrer les modifications
+        </Button>
+      </div>
 
-      <Tabs defaultValue="personal" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="personal">Informations personnelles</TabsTrigger>
-          <TabsTrigger value="security">Sécurité</TabsTrigger>
+      <Tabs defaultValue={Object.keys(settings)[0]}>
+        <TabsList className="mb-4">
+          {Object.keys(settings).map(category => (
+            <TabsTrigger key={category} value={category}>
+              {category}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        <TabsContent value="personal">
-          <Card>
-            <CardContent className="pt-6">
-              <form onSubmit={handlePersonalInfoSubmit} className="space-y-6">
-                <div className="flex items-center space-x-4">
-                  {avatarPreview ? (
-                    <Image
-                      src={avatarPreview}
-                      alt="Avatar preview"
-                      className="w-24 h-24 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-gray-200" />
-                  )}
-                  <div>
-                    <Input
-                      id="avatar"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarChange}
-                      className="hidden"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById('avatar')?.click()}
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      Changer la photo
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">Prénom</Label>
-                    <Input
-                      id="firstName"
-                      name="firstName"
-                      value={personalInfo.firstName}
-                      onChange={handlePersonalInfoChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Nom</Label>
-                    <Input
-                      id="lastName"
-                      name="lastName"
-                      value={personalInfo.lastName}
-                      onChange={handlePersonalInfoChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Adresse email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={personalInfo.email}
-                    onChange={handlePersonalInfoChange}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Téléphone</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={personalInfo.phone}
-                    onChange={handlePersonalInfoChange}
-                    required
-                  />
-                </div>
-
-                {error && <div className="text-sm text-red-600">{error}</div>}
-                {success && <div className="text-sm text-green-600">{success}</div>}
-
-                <Button
-                  type="submit"
-                  className="w-full bg-[#1D4ED8] hover:bg-[#1e40af]"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="security">
-          <Card>
-            <CardContent className="pt-6">
-              <form onSubmit={handlePasswordSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Mot de passe actuel</Label>
-                  <div className="relative">
-                    <Input
-                      id="currentPassword"
-                      name="currentPassword"
-                      type={showCurrentPassword ? "text" : "password"}
-                      value={passwordData.currentPassword}
-                      onChange={handlePasswordChange}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    >
-                      {showCurrentPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
+        {Object.entries(settings).map(([category, categorySettings]) => (
+          <TabsContent key={category} value={category}>
+            <Card className="p-6">
+              <div className="grid gap-6">
+                {categorySettings.map(setting => (
+                  <div key={setting.key} className="space-y-2">
+                    <Label htmlFor={setting.key}>
+                      {setting.key}
+                      {setting.description && (
+                        <span className="text-sm text-gray-500 ml-2">
+                          {setting.description}
+                        </span>
                       )}
-                    </Button>
+                    </Label>
+                    
+                    {typeof setting.value === 'boolean' ? (
+                      <Switch
+                        id={setting.key}
+                        checked={setting.value}
+                        onCheckedChange={(checked) => 
+                          updateSettingValue(category, setting.key, checked)
+                        }
+                      />
+                    ) : typeof setting.value === 'number' ? (
+                      <Input
+                        id={setting.key}
+                        type="number"
+                        value={setting.value}
+                        onChange={(e) => 
+                          updateSettingValue(category, setting.key, Number(e.target.value))
+                        }
+                      />
+                    ) : (
+                      <Input
+                        id={setting.key}
+                        value={setting.value}
+                        onChange={(e) => 
+                          updateSettingValue(category, setting.key, e.target.value)
+                        }
+                      />
+                    )}
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-                  <div className="relative">
-                    <Input
-                      id="newPassword"
-                      name="newPassword"
-                      type={showNewPassword ? "text" : "password"}
-                      value={passwordData.newPassword}
-                      onChange={handlePasswordChange}
-                      required
-                      placeholder="8+ caractères"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                    >
-                      {showNewPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmer le nouveau mot de passe</Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={passwordData.confirmPassword}
-                      onChange={handlePasswordChange}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                {error && <div className="text-sm text-red-600">{error}</div>}
-                {success && <div className="text-sm text-green-600">{success}</div>}
-
-                <Button
-                  type="submit"
-                  className="w-full bg-[#1D4ED8] hover:bg-[#1e40af]"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Modification en cours..." : "Modifier le mot de passe"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                ))}
+              </div>
+            </Card>
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );
-} 
-
-// "use client";
-
-// import { useState } from "react";
-// import {  Upload } from "lucide-react";
-// import Image from "next/image"; // Importation de `Image`
-// import { Button } from "@/components/ui/button";
-// import { Card, CardContent } from "@/components/ui/card";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-// export default function SettingsPage() {
-//   const [personalInfo, setPersonalInfo] = useState({
-//     avatar: null as File | null,
-//     firstName: "",
-//     lastName: "",
-//     email: "",
-//     phone: "",
-//   });
-
-//   const [passwordData, setPasswordData] = useState({
-//     currentPassword: "",
-//     newPassword: "",
-//     confirmPassword: "",
-//   });
-
-//   // const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-//   // const [showNewPassword, setShowNewPassword] = useState(false);
-//   // const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-//   const [isLoading] = useState(false);
-//   const [error] = useState("");
-//   const [success] = useState("");
-//   const [avatarPreview, setAvatarPreview] = useState<string>("");
-
-//   const handlePersonalInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-//     setPersonalInfo({ ...personalInfo, [e.target.name]: e.target.value });
-//   };
-
-//   // const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-//   //   setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
-//   // };
-
-//   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-//     if (e.target.files && e.target.files[0]) {
-//       const file = e.target.files[0];
-//       setPersonalInfo({ ...personalInfo, avatar: file });
-//       setAvatarPreview(URL.createObjectURL(file));
-//     }
-//   };
-
-//   const handlePersonalInfoSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     // API implementation à venir
-//   };
-
-//   // const handlePasswordSubmit = async (e: React.FormEvent) => {
-//   //   e.preventDefault();
-//   //   // API implementation à venir
-//   // };
-
-//   return (
-//     <div className="container max-w-4xl mx-auto p-6">
-//       <h1 className="text-2xl font-bold mb-6">Paramètres du compte</h1>
-
-//       <Tabs defaultValue="personal" className="space-y-6">
-//         <TabsList>
-//           <TabsTrigger value="personal">Informations personnelles</TabsTrigger>
-//           <TabsTrigger value="security">Sécurité</TabsTrigger>
-//         </TabsList>
-
-//         <TabsContent value="personal">
-//           <Card>
-//             <CardContent className="pt-6">
-//               <form onSubmit={handlePersonalInfoSubmit} className="space-y-6">
-//                 <div className="flex items-center space-x-4">
-//                   {avatarPreview ? (
-//                     <Image
-//                       src={avatarPreview}
-//                       alt="Avatar preview"
-//                       width={96} // Correspond à 24 * 4
-//                       height={96} // Correspond à 24 * 4
-//                       className="w-24 h-24 rounded-full object-cover"
-//                     />
-//                   ) : (
-//                     <div className="w-24 h-24 rounded-full bg-gray-200" />
-//                   )}
-//                   <div>
-//                     <Input
-//                       id="avatar"
-//                       type="file"
-//                       accept="image/*"
-//                       onChange={handleAvatarChange}
-//                       className="hidden"
-//                     />
-//                     <Button
-//                       type="button"
-//                       variant="outline"
-//                       onClick={() => document.getElementById('avatar')?.click()}
-//                     >
-//                       <Upload className="h-4 w-4 mr-2" />
-//                       Changer la photo
-//                     </Button>
-//                   </div>
-//                 </div>
-
-//                 <div className="grid grid-cols-2 gap-4">
-//                   <div className="space-y-2">
-//                     <Label htmlFor="firstName">Prénom</Label>
-//                     <Input
-//                       id="firstName"
-//                       name="firstName"
-//                       value={personalInfo.firstName}
-//                       onChange={handlePersonalInfoChange}
-//                       required
-//                     />
-//                   </div>
-//                   <div className="space-y-2">
-//                     <Label htmlFor="lastName">Nom</Label>
-//                     <Input
-//                       id="lastName"
-//                       name="lastName"
-//                       value={personalInfo.lastName}
-//                       onChange={handlePersonalInfoChange}
-//                       required
-//                     />
-//                   </div>
-//                 </div>
-
-//                 <div className="space-y-2">
-//                   <Label htmlFor="email">Adresse email</Label>
-//                   <Input
-//                     id="email"
-//                     name="email"
-//                     type="email"
-//                     value={personalInfo.email}
-//                     onChange={handlePersonalInfoChange}
-//                     required
-//                   />
-//                 </div>
-
-//                 <div className="space-y-2">
-//                   <Label htmlFor="phone">Téléphone</Label>
-//                   <Input
-//                     id="phone"
-//                     name="phone"
-//                     type="tel"
-//                     value={personalInfo.phone}
-//                     onChange={handlePersonalInfoChange}
-//                     required
-//                   />
-//                 </div>
-
-//                 {error && <div className="text-sm text-red-600">{error}</div>}
-//                 {success && <div className="text-sm text-green-600">{success}</div>}
-
-//                 <Button
-//                   type="submit"
-//                   className="w-full bg-[#1D4ED8] hover:bg-[#1e40af]"
-//                   disabled={isLoading}
-//                 >
-//                   {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
-//                 </Button>
-//               </form>
-//             </CardContent>
-//           </Card>
-//         </TabsContent>
-
-//         {/* Contenu pour l'onglet de sécurité non modifié */}
-//         {/* ... */}
-//       </Tabs>
-//     </div>
-//   );
-// }
+}

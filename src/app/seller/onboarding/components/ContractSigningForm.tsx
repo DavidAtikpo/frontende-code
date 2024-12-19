@@ -20,8 +20,11 @@ export function ContractSigningForm({ data, onUpdate, onNext, onBack }: Contract
 
 
   const handleDownloadContract = () => {
-    // Simulation du téléchargement du contrat
-    const contractUrl = "/contracts/seller-agreement.pdf";
+    // Le fichier doit être dans le dossier public
+    const contractUrl = "/contracts/fr/seller-agreement.pdf";
+    window.open(contractUrl, '_blank'); // Ouvre dans un nouvel onglet
+    
+    // Ou pour forcer le téléchargement :
     const link = document.createElement("a");
     link.href = contractUrl;
     link.download = "contrat-vendeur-dubon.pdf";

@@ -9,16 +9,22 @@ import {
   Package,
   List,
   Users,
-  MessageSquare,
-  Calendar,
   ShoppingCart,
-  GraduationCap,
+  
   Settings,
-  LogOut,
+  
   Menu,
-  X
+  X,
+  Star,
+  Activity,
+  FolderTree,
+  CreditCard,
+  BarChart,
+  Database,
+  Image as ImageIcon
 } from "lucide-react";
 import LogoutButton from "@/components/auth/LogoutButton";
+import { LoadingSpinner } from "@/components/ui/loading";
 
 const getCookie = (name: string) => {
   const value = `; ${document.cookie}`;
@@ -33,19 +39,26 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const isActive = (href: string) => 
     typeof window !== 'undefined' && window.location.pathname === href;
 
   useEffect(() => {
-    const adminToken = getCookie('adminToken');
-    const userRole = getCookie('userRole');
+    const checkAuth = async () => {
+      const adminToken = getCookie('adminToken');
+      const userRole = getCookie('userRole');
 
-    if (!adminToken || userRole !== 'admin') {
-      router.replace('/adminLogin');
-    }
+      if (!adminToken || userRole !== 'admin') {
+        router.replace('/adminLogin');
+      } else {
+        setIsLoading(false);
+      }
+    };
 
-    // Fermer la sidebar sur mobile par défaut
+    checkAuth();
+
+    // Gérer le redimensionnement
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setIsSidebarOpen(false);
@@ -59,23 +72,131 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, [router]);
 
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
   const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
-    { icon: Package, label: "Ajouter produits", href: "/admin/add-product" },
-    { icon: List, label: "Liste produits", href: "/admin/products" },
-    { icon: Users, label: "Utilisateurs", href: "/admin/users" },
+    { 
+      icon: LayoutDashboard, 
+      label: "Dashboard", 
+      href: "/admin/dashboard",
+      description: "Statistiques générales et KPIs"
+    },
+    { 
+      icon: List, 
+      label: "Produits", 
+      href: "/admin/products",
+      description: "Gestion des produits et modération"
+    },
+    { 
+      icon: Users, 
+      label: "Utilisateurs", 
+      href: "/admin/users",
+      description: "Gestion des utilisateurs et rôles"
+    },
     {
       icon: Users,
-      label: "Demandes vendeurs",
+      label: "Vendeurs",
       href: "/admin/seller-requests",
-      badge: true,
+      description: "Gestion des vendeurs et demandes",
+      badge: true
     },
-    { icon: MessageSquare, label: "Messages", href: "/admin/messages" },
-    { icon: Calendar, label: "Evènements", href: "/admin/events" },
-    { icon: ShoppingCart, label: "Commandes", href: "/admin/orders" },
-    { icon: GraduationCap, label: "Formations", href: "/admin/trainings" },
-    { icon: Settings, label: "Paramètres", href: "/admin/settings" },
-    { icon: LogOut, label: "Déconnexion", href: "/logout" },
+    { 
+      icon: ShoppingCart, 
+      label: "Commandes", 
+      href: "/admin/orders",
+      description: "Suivi des commandes et paiements"
+    },
+    { 
+      icon: Star, 
+      label: "Avis", 
+      href: "/admin/reviews",
+      description: "Modération des avis"
+    },
+    { 
+      icon: Activity, 
+      label: "Logs Système", 
+      href: "/admin/logs",
+      description: "Journaux d'activité système"
+    },
+    { 
+      icon: Package, 
+      label: "Avis", 
+      href: "/admin/reviews",
+      description: "Gestion des avis"
+    },
+    { 
+      icon: Package, 
+      label: "Plugins", 
+      href: "/admin/plugins",
+      description: "Gestion des plugins"
+    },
+    { 
+      icon: ImageIcon, 
+      label: "media-library", 
+      href: "/admin/media-library",
+      description: "Gestion des médias"
+    },
+    { 
+      icon: CreditCard, 
+      label: "payments", 
+      href: "/admin/payments",
+      description: "Gestion des paiements"
+    },
+    { 
+      icon: Settings, 
+      label: "site-settings", 
+      href: "/admin/site-settings",
+      description: "Gestion des paramètres du site"
+    },    { 
+      icon: FolderTree, 
+      label: "themes", 
+      href: "/admin/themes",
+      description: "Gestion des thèmes"
+    },
+    { 
+      icon: Settings, 
+      label: "system", 
+      href: "/admin/system",
+      description: "Gestion des paramètres du site"
+    },
+    { 
+      icon: BarChart, 
+      label: "reports", 
+      href: "/admin/reports",
+      description: "Gestion des rapports"
+    },
+    { 
+      icon: Database, 
+      label: "backup", 
+      href: "/admin/backup",
+      description: "Gestion des sauvegardes"
+    },
+    { 
+      icon: BarChart, 
+      label: "analytics", 
+      href: "/admin/analytics",
+      description: "Analyse des données"
+    },
+    { 
+      icon: Settings, 
+      label: "Paramètres", 
+      href: "/admin/settings",
+      description: "Configuration du système"
+    },
+    { 
+      icon: Settings, 
+      label: "Maintenance", 
+      href: "/admin/maintenance",
+      description: "Maintenance et nettoyage système" 
+    },
+    { 
+      icon: FolderTree, 
+      label: "Catégories", 
+      href: "/admin/categories",
+      description: "Gestion des catégories"
+    },
   ];
 
   const toggleSidebar = () => {
@@ -110,7 +231,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           </button>
         </div>
 
-        <nav className="mt-6">
+        <nav className="mt-6 h-[calc(100vh-5rem)] overflow-y-auto">
           {menuItems.map((item, index) => (
             <Link
               key={index}

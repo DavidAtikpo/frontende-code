@@ -15,20 +15,23 @@ import { API_CONFIG } from "@/utils/config";
 
 const { BASE_URL } = API_CONFIG;
 
+interface PersonalInfo {
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  companyName?: string;
+  idNumber?: string;
+  idType?: string;
+  taxNumber: string;
+  legalRepName?: string;
+  rccmNumber?: string;
+}
+
 export interface SellerFormData {
   _id?: string;
   type: 'individual' | 'company';
-  personalInfo: {
-    fullName: string;
-    email: string;
-    phone: string;
-    address: string;
-    companyName?: string;
-    idNumber?: string;
-    taxNumber: string;
-    legalRepName?: string;
-    rccmNumber?: string;
-  };
+  personalInfo: PersonalInfo;
   documents: {
     idCard: File | null;
     proofOfAddress: File | null;

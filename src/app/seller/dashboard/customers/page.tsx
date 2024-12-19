@@ -1,118 +1,136 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { CustomersTable } from "@/components/dashboard/CustomersTable";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { Download, Filter } from "lucide-react";
+import { useState, useEffect } from "react";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { CustomersFilterDialog } from "@/components/dashboard/CustomersFilterDialog";
-import { getApiUrl } from '@/utils/api';
+import { CustomersTable } from "@/components/dashboard/CustomersTable";
+import { DateRange } from "react-day-picker";
 
-const BASE_URL = `${getApiUrl()}/api`;
-
-interface CustomerFilters {
-  dateRange: string;
-  orderCount: string;
-  totalSpent: string;
-  status: string;
+interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  orders: number;
+  spent: number;
+  totalOrders: number;
+  totalSpent: number;
+  lastOrderDate: string;
+  status: "active" | "inactive";
+  lastOrder?: string;
 }
 
-export default function CustomersPage() {
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
-  const [customers, setCustomers] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
-  const [filters, setFilters] = useState<CustomerFilters>({
-    dateRange: "",
-    orderCount: "",
-    totalSpent: "",
-    status: ""
-  });
+interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  status: number;
+}
 
-  // Fonction fetchCustomers mémorisée
-  const fetchCustomers = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // Simulation d'appel API
-      const response = await fetch(
-        `${BASE_URL}/seller/customers?page=${currentPage}&status=${filters.status}`
-      );
-      if (!response.ok) throw new Error("Erreur lors du chargement des clients");
-      const data = await response.json();
-      setCustomers(data.customers);
-      setTotalPages(data.totalPages);
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger la liste des clients",
-        variant: "destructive",
-      });
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentPage, filters, toast]);
+interface CustomerStats {
+  totalCustomers: number;
+  averageOrderValue: number;
+  totalOrders: number;
+}
+
+interface CustomerFilters {
+  dateRange?: DateRange;
+  status?: string;
+  spentRange?: { min: number; max: number };
+}
+
+export default function Customers() {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [stats, setStats] = useState<CustomerStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [date, setDate] = useState<DateRange | undefined>();
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
-  }, [fetchCustomers]);
+    fetchStats();
+  }, []);
 
-  const handleExport = async () => {
+  const fetchCustomers = async (): Promise<ApiResponse<Customer[]>> => {
     try {
-      toast({
-        title: "Export en cours",
-        description: "Le fichier sera téléchargé dans quelques instants",
-      });
+      const res = await fetch('/api/seller/customers');
+      const data = await res.json();
+      if (data.success) {
+        setCustomers(data.data);
+        return { data: data.data, status: 200 };
+      }
+      return { data: [], status: 400 };
     } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible d'exporter les données",
-        variant: "destructive",
-      });
-      console.log(error);
+      console.error(error);
+      return { data: [], status: 500 };
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleFilter = (newFilters: CustomerFilters) => {
-    setFilters(newFilters);
-    // Appliquer les filtres ici
+  const fetchStats = async () => {
+    try {
+      const res = await fetch('/api/seller/customers/stats');
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleFilter = (filters: CustomerFilters) => {
+    console.log(filters);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Clients</h1>
-        <div className="flex gap-4">
-          <Button variant="outline" onClick={() => setIsFilterDialogOpen(true)}>
-            <Filter className="h-4 w-4 mr-2" />
-            Filtrer
-          </Button>
-          <Button onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
+        <div>
+          <h2 className="text-2xl font-bold">Clients</h2>
+          <p className="text-muted-foreground">
+            Gérez vos clients et suivez leurs activités
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <DateRangePicker
+            value={date}
+            onChange={setDate}
+          />
+          <CustomersFilterDialog 
+            open={isFilterOpen}
+            onOpenChange={setIsFilterOpen}
+            onFilter={handleFilter}
+          />
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <CustomersTable
-            customers={customers}
-            isLoading={isLoading}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        </CardContent>
-      </Card>
+      {stats && (
+        <div className="grid grid-cols-3 gap-4">
+          <div className="p-4 bg-white rounded-lg shadow">
+            <h3 className="font-medium text-muted-foreground">Total Clients</h3>
+            <p className="text-2xl font-bold">{stats.totalCustomers}</p>
+          </div>
+          <div className="p-4 bg-white rounded-lg shadow">
+            <h3 className="font-medium text-muted-foreground">Commande Moyenne</h3>
+            <p className="text-2xl font-bold">{stats.averageOrderValue} FCFA</p>
+          </div>
+          <div className="p-4 bg-white rounded-lg shadow">
+            <h3 className="font-medium text-muted-foreground">Total Commandes</h3>
+            <p className="text-2xl font-bold">{stats.totalOrders}</p>
+          </div>
+        </div>
+      )}
 
-      <CustomersFilterDialog
-        open={isFilterDialogOpen}
-        onOpenChange={setIsFilterDialogOpen}
-        onFilter={handleFilter}
+      <CustomersTable 
+        data={customers} 
+        isLoading={loading}
+        currentPage={1}
+        totalPages={1}
+        onPageChange={(page) => {
+          // Gérer le changement de page
+        }}
       />
     </div>
   );

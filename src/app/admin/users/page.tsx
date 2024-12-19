@@ -1,236 +1,176 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { Search, Eye, Mail, Phone } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getApiUrl } from '@/utils/api';
+import { User, Shield, Ban } from 'lucide-react';
+import { DateRange } from "react-day-picker";
 
 const BASE_URL = getApiUrl();
 
 interface User {
-  _id: string;
+  id: string;
   name: string;
   email: string;
-  mobile?: string;
-  region?: string;
-  zipCode?: string;
-  avatar?: string;
-  status: string;
-  lastConnection?: string;
   role: string;
+  status: string;
+  createdAt: string;
 }
 
-export default function UsersListPage() {
+// Ajouter une interface pour les filtres
+interface UserFilters {
+  status?: string;
+  role?: string;
+  dateRange?: DateRange;
+}
+
+export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const router = useRouter();
+  const [_loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const adminToken = document.cookie
-          .split(';')
-          .find(c => c.trim().startsWith('adminToken='))
-          ?.split('=')[1];
-
-        if (!adminToken) {
-          console.error('Token non trouvé');
-          router.replace('/adminLogin');
-          return;
-        }
-
-        console.log('Token utilisé:', adminToken); // Pour déboguer
-
-        const response = await fetch(`${BASE_URL}/api/admin/users`, {
-          headers: {
-            'Authorization': `Bearer ${decodeURIComponent(adminToken)}`,
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include'
-        });
-
-        console.log('Status réponse:', response.status); // Pour déboguer
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Erreur détaillée:', errorData);
-          if (response.status === 401) {
-            router.replace('/adminLogin');
-            return;
-          }
-          throw new Error(errorData.message || "Erreur lors du chargement des utilisateurs");
-        }
-
-        const data = await response.json();
-        if (data.success) {
-          setUsers(data.data);
-        }
-      } catch (err) {
-        console.error("Erreur complète:", err);
-        setError(err instanceof Error ? err.message : "Une erreur est survenue");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchUsers();
-  }, [router]);
+  }, []);
 
-  const filteredUsers = users.filter((user) => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      user.name?.toLowerCase().includes(searchLower) ||
-      user.email?.toLowerCase().includes(searchLower)
-    );
-  });
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'vérifié':
-        return 'bg-green-100 text-green-800';
-      case 'non vérifié':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'bloqué':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/admin/users`, {
+        headers: {
+          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+        },
+        credentials: 'include'
+      });
+      const data = await response.json();
+      if (data.success) {
+        setUsers(data.data.users);
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleViewUser = (id: string) => {
-    router.push(`/admin/users/${id}`);
+  // Préfixer la fonction et son paramètre non utilisés avec _
+  const _handleFilter = (_filters: UserFilters) => {
+    // Logique de filtrage à implémenter
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p>Chargement des utilisateurs...</p>
-      </div>
-    );
-  }
+  // Remplacer any par le type approprié dans handleUpdateUser
+  const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/admin/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+        },
+        body: JSON.stringify(updates),
+        credentials: 'include'
+      });
 
-  if (error) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-red-600">Erreur : {error}</p>
-      </div>
-    );
-  }
+      if (response.ok) {
+        fetchUsers();
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Utilisateurs</h1>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
       </div>
 
-      <div className="flex items-center space-x-4 bg-white p-4 rounded-lg shadow">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <Input
-            type="search"
-            placeholder="Rechercher un utilisateur..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <Card>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Utilisateur
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Contact
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Région
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <Image
-                        src={user.avatar || "/user-profile-svgrepo-com (1).svg"}
-                        alt={user.name || "Utilisateur"}
-                        width={40}
-                        height={40}
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {user.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {user.email}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900 flex items-center">
-                      <Mail className="h-4 w-4 mr-2" />
-                      {user.email}
-                    </div>
-                    {user.mobile && (
-                      <div className="text-sm text-gray-500 flex items-center mt-1">
-                        <Phone className="h-4 w-4 mr-2" />
-                        {user.mobile}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    {(user.region || user.zipCode) && (
-                      <>
-                        <div className="text-sm text-gray-900">
-                          {user.region || "Non renseigné"}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {user.zipCode || "Non renseigné"}
-                        </div>
-                      </>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(user.status)}`}
-                    >
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
+      <Card className="p-6">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nom</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Rôle</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead>Date d'inscription</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>{user.name}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  <Select
+                    value={user.role}
+                    onValueChange={(value) => handleUpdateUser(user.id, { role: value })}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Sélectionner un rôle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">Utilisateur</SelectItem>
+                      <SelectItem value="seller">Vendeur</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <Select
+                    value={user.status}
+                    onValueChange={(value) => handleUpdateUser(user.id, { status: value })}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Sélectionner un statut" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Actif</SelectItem>
+                      <SelectItem value="suspended">Suspendu</SelectItem>
+                      <SelectItem value="banned">Banni</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  {new Date(user.createdAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
                     <Button
-                      onClick={() => handleViewUser(user._id)}
-                      variant="ghost"
                       size="sm"
+                      variant="outline"
+                      onClick={() => handleUpdateUser(user.id, { status: 'active' })}
                     >
-                      <Eye className="h-4 w-4" />
+                      <Shield className="h-4 w-4" />
                     </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleUpdateUser(user.id, { status: 'banned' })}
+                    >
+                      <Ban className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </Card>
     </div>
   );

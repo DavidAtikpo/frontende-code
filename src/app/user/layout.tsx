@@ -7,19 +7,17 @@ import Header from "../components/Header";
 import { usePathname } from "next/navigation";
 import { 
   LayoutDashboard, 
-  CreditCard, 
-  Clock, 
   Settings, 
-  LogOut,
-  // Laptop2Icon,
-  MessageSquare,
-  Menu,
-  X,
-  ShoppingCart,
-  Heart,
-  Store,
-  UserPlus,
-  GraduationCap
+  LogOut, 
+  Menu, 
+  X, 
+  Heart, 
+  Store, 
+  UserPlus, 
+  User, 
+  ShoppingBag, 
+  MapPin, 
+  Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -29,25 +27,36 @@ const navigation = [
     href: "/user/dashboard",
     icon: LayoutDashboard
   },
+
   {
-    name: "Historique des paiements",
-    href: "/user/payments",
-    icon: CreditCard
+    name: "Profil",
+    href: "/user/profile",
+    icon: User
   },
   {
     name: "Commandes",
     href: "/user/orders",
-    icon: Clock
+    icon: ShoppingBag
   },
   {
-    name: "Mon Panier",
-    href: "/cart",
-    icon: ShoppingCart
-  },
-  {
-    name: "Wishlist",
-    href: "/wishlist",
+    name: "Favoris",
+    href: "/user/favorites",
     icon: Heart
+  },
+  {
+    name: "Adresses",
+    href: "/user/addresses",
+    icon: MapPin
+  },
+  {
+    name: "Activités",
+    href: "/user/activities",
+    icon: Activity
+  },
+  {
+    name: "Paramètres",
+    href: "/user/settings",
+    icon: Settings
   },
   {
     name: "Boutique",
@@ -58,21 +67,6 @@ const navigation = [
     name: "Devenir Vendeur",
     href: "/seller/onboarding",
     icon: UserPlus
-  },
-  {
-    name: "Suivre Une formation",
-    href: "/courses",
-    icon: GraduationCap
-  },
-  {
-    name: "Message",
-    href: "/messages",
-    icon: MessageSquare
-  },
-  {
-    name: "Paramètres",
-    href: "/user/settings",
-    icon: Settings
   }
 ];
 

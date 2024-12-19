@@ -3,30 +3,37 @@
 import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
-import { Users, ShoppingBag, Store, Clock } from 'lucide-react';
+import { Users, ShoppingBag, Package, DollarSign } from 'lucide-react';
 import { getApiUrl } from '@/utils/api';
 
 const BASE_URL = getApiUrl();
-// const BASE_URL = 'http://localhost:3000';
 
 interface DashboardStats {
-  users: {
+  users: { 
     total: number;
-    regular: number;
-    sellers: number;
+    new: number;
   };
-  pendingRequests: number;
-  totalOrders: number;
+  sellers: {
+    total: number;
+    pending: number;
+  };
+  products: {
+    total: number;
+  };
+  orders: {
+    total: number;
+    today: number;
+  };
   revenue: {
     total: number;
-    weekly: number;
-    monthly: number;
+    today: number;
   };
 }
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const fetchDashboardStats = useCallback(async () => {
     try {
@@ -34,8 +41,6 @@ export default function AdminDashboard() {
         .split(';')
         .find(c => c.trim().startsWith('adminToken='))
         ?.split('=')[1];
-
-      console.log('Token utilisé:', adminToken);
 
       const response = await fetch(`${BASE_URL}/api/admin/dashboard/stats`, {
         headers: {
@@ -45,24 +50,22 @@ export default function AdminDashboard() {
         credentials: 'include'
       });
 
-      console.log('Réponse status:', response.status);
-
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Erreur détaillée:', errorData);
-        throw new Error(errorData.message || "Erreur lors du chargement des statistiques");
+        throw new Error("Erreur lors du chargement des statistiques");
       }
 
       const data = await response.json();
-      console.log('Données reçues:', data);
-      setStats(data.data);
+      if (data.success) {
+        setStats(data.data);
+      }
     } catch (error) {
-      console.error('Erreur complète:', error);
+      console.error('Erreur:', error);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    // Vérifier l'authentification admin avec les cookies
     const adminToken = document.cookie.includes('adminToken=');
     const userRole = document.cookie.split(';').find(c => c.trim().startsWith('userRole='));
     const isAdmin = userRole?.includes('admin');
@@ -75,11 +78,16 @@ export default function AdminDashboard() {
     fetchDashboardStats();
   }, [router, fetchDashboardStats]);
 
+  if (loading) {
+    return <div className="p-6">Chargement...</div>;
+  }
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Tableau de bord administrateur</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Utilisateurs */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">
@@ -89,46 +97,73 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.users.total || 0}</div>
-            <p className="text-sm text-gray-500">Réguliers: {stats?.users.regular || 0}</p>
+            <p className="text-sm text-gray-500">
+              +{stats?.users.new || 0} aujourd'hui
+            </p>
           </CardContent>
         </Card>
 
+        {/* Vendeurs */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">
               Vendeurs
             </CardTitle>
-            <Store className="h-4 w-4 text-gray-500" />
+            <Package className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.users.sellers || 0}</div>
+            <div className="text-2xl font-bold">{stats?.sellers.total || 0}</div>
+            <p className="text-sm text-orange-500">
+              {stats?.sellers.pending || 0} en attente
+            </p>
           </CardContent>
         </Card>
 
+        {/* Commandes */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">
-              Demandes en attente
-            </CardTitle>
-            <Clock className="h-4 w-4 text-gray-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.pendingRequests || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">
-              Commandes totales
+              Commandes
             </CardTitle>
             <ShoppingBag className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalOrders || 0}</div>
-            <p className="text-sm text-gray-500">
-              Revenu total: {stats?.revenue.total.toLocaleString()} FCFA
+            <div className="text-2xl font-bold">{stats?.orders.total || 0}</div>
+            <p className="text-sm text-green-500">
+              +{stats?.orders.today || 0} aujourd'hui
             </p>
+          </CardContent>
+        </Card>
+
+        {/* Revenus */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">
+              Revenus
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats?.revenue.total.toLocaleString()} FCFA
+            </div>
+            <p className="text-sm text-green-500">
+              +{stats?.revenue.today.toLocaleString()} FCFA aujourd'hui
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Autres statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Produits</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats?.products.total || 0} produits
+            </div>
           </CardContent>
         </Card>
       </div>
