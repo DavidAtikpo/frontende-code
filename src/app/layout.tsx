@@ -13,14 +13,21 @@ import { CookieConsent } from '../components/CookieConsent';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+
   const noLayoutRoutes = ['/admin', '/admin/login', '/user', '/seller/dashboard'];
+
   const shouldRenderLayout = !noLayoutRoutes.some((route) => pathname.startsWith(route));
 
   return (
     <html lang="en">
       <head>
-        <title>DUBON SERVICES</title>
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/logo192.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#0066cc" />
+        <title>DUBON SERVICE</title>
         <meta name="description" content="Découvrez Dubon Services Event : votre marketplace pour des produits frais, congelés, formations spécialisées, et services événementiels. Simplifiez votre quotidien dès aujourd'hui !"/>
+
       </head>
       <body>
         <CartProvider>
