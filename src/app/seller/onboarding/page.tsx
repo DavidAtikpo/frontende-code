@@ -12,6 +12,7 @@ import { ComplianceForm } from "./components/ComplianceForm";
 import { ValidationStatusForm } from "./components/ValidationStatusForm";
 import { useRouter } from "next/navigation";
 import { API_CONFIG } from "@/utils/config";
+import { getCookie } from "cookies-next";
 
 const { BASE_URL } = API_CONFIG;
 
@@ -181,7 +182,7 @@ export default function SellerOnboardingPage() {
   useEffect(() => {
     const loadSavedData = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = getCookie('token');
         if (!token) {
           router.replace('/login');
           return;
