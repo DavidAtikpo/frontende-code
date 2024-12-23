@@ -8,9 +8,12 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Link from "next/link";
+import { getCookie } from 'cookies-next';
+import { useToast } from "@/components/ui/use-toast";
+import { API_CONFIG } from '@/utils/config';
 
-const BASE_URL = "https://dubon-server.onrender.com";
-// const BASE_URL = "http://localhost:5000";
+const { BASE_URL } = API_CONFIG;
+
 // Interface pour les produits
 interface Product {
   _id: string;
@@ -33,6 +36,7 @@ const ShopPage = () => {
   const [sortBy, setSortBy] = useState("popular");
   const { state, dispatch } = useCartContext();
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -111,14 +115,60 @@ const ShopPage = () => {
     setFilteredProducts(filtered);
   }, [filterCategory, filterRating, search, sortBy, products]);
 
-  const handleCheckout = () => {
-    const isAuthenticated = !!localStorage.getItem("token");
-    if (!isAuthenticated) {
-      router.push("/login");
-    } else {
-      const hasShippingAddress =
-        localStorage.getItem("hasShippingAddress") === "true";
-      router.push(hasShippingAddress ? "/checkout" : "/checkout/shipping-address");
+  const handleDirectCheckout = async (product: Product) => {
+    try {
+      const token = getCookie('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const finalPrice = product.discount
+        ? product.price * (1 - product.discount / 100)
+        : product.price;
+
+      const cartItem = {
+        ...product,
+        quantity: 1,
+        finalPrice
+      };
+
+      const cartResponse = await fetch(`${BASE_URL}/api/user/cart`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ productId: product._id, quantity: 1 })
+      });
+
+      if (cartResponse.ok) {
+        dispatch({ type: "ADD_TO_CART", payload: cartItem });
+        
+        // Vérifier l'adresse de livraison
+        const userResponse = await fetch(`${BASE_URL}/api/user/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        const userData = await userResponse.json();
+        
+        if (userData.shippingAddress) {
+          // Si l'adresse existe, aller directement au paiement
+          router.push('/checkout/payment');
+        } else {
+          // Sinon, aller à la page d'adresse de livraison
+          router.push('/checkout/shipping-address');
+        }
+      }
+    } catch (error) {
+      console.error('Erreur checkout:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de procéder au paiement",
+        variant: "destructive"
+      });
     }
   };
 
@@ -333,7 +383,7 @@ const ShopPage = () => {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={handleCheckout}
+                      onClick={() => handleDirectCheckout(product)}
                       className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       Acheter

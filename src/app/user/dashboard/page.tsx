@@ -6,6 +6,7 @@ import { RecentOrders } from "@/components/dashboard/user/RecentOrders";
 import { RecentActivity } from "@/components/dashboard/user/RecentActivity";
 import { FavoriteProducts } from "@/components/dashboard/user/FavoriteProducts";
 import { API_CONFIG } from "@/utils/config";
+import { getCookie } from "cookies-next";
 
 const { BASE_URL } = API_CONFIG;
 
@@ -56,7 +57,7 @@ export default function DashboardPage() {
     try {
       const response = await fetch(`${BASE_URL}/api/user/dashboard`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${getCookie('token')}`
         }
       });
       const result = await response.json();
@@ -78,7 +79,7 @@ export default function DashboardPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${getCookie('token')}`
         },
         body: JSON.stringify({ productId })
       });

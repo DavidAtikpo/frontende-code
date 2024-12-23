@@ -110,8 +110,9 @@ import Image from "next/image";
 import { Plus, Calendar, MapPin, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-
-const BASE_URL = "http://localhost:5000/api";
+import { getCookie } from "cookies-next";
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
 
 interface Event {
   id: string;
@@ -135,7 +136,7 @@ export default function EventsPage() {
       try {
         const response = await fetch(`${BASE_URL}/events`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            Authorization: `Bearer ${getCookie('token')}`,
           },
         });
 

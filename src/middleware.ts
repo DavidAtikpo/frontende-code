@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    const adminToken = request.cookies.get('adminToken');
+    const adminToken = request.cookies.get('token');
     const userRole = request.cookies.get('userRole');
 
     // Rediriger vers la page de login si pas de token ou pas admin

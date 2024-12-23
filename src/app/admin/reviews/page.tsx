@@ -11,10 +11,10 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { getApiUrl } from '@/utils/api';
 import { Star, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
-
-const BASE_URL = getApiUrl();
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
+import { getCookie } from "cookies-next";
 
 interface Review {
   id: string;
@@ -42,7 +42,7 @@ export default function AdminReviews() {
     try {
       const response = await fetch(`${BASE_URL}/api/admin/reviews`, {
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });
@@ -63,7 +63,7 @@ export default function AdminReviews() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         body: JSON.stringify({ status }),
         credentials: 'include'

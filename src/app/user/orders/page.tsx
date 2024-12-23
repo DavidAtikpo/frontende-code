@@ -8,6 +8,7 @@ import { ChevronRight, ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { API_CONFIG } from '@/utils/config';
+import { getCookie } from "cookies-next";
 
 const { BASE_URL } = API_CONFIG;
 
@@ -29,7 +30,7 @@ export default function OrdersPage() {
       try {
         const response = await fetch(`${BASE_URL}/api/user/orders`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${getCookie('token')}`
           }
         });
         if (!response.ok) throw new Error("Erreur lors du chargement des commandes");

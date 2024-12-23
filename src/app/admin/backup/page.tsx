@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from "@/utils/config";
 import { Download, Upload, RefreshCw, Database, Clock } from 'lucide-react';
 import {
   Select,
@@ -13,8 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getCookie } from "cookies-next";
 
-const BASE_URL = getApiUrl();
+const { BASE_URL } = API_CONFIG;
 
 interface Backup {
   id: string;
@@ -42,7 +43,7 @@ export default function BackupRestore() {
     try {
       const response = await fetch(`${BASE_URL}/api/admin/backups`, {
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });
@@ -64,7 +65,7 @@ export default function BackupRestore() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         body: JSON.stringify({ type: backupType }),
         credentials: 'include'
@@ -86,7 +87,7 @@ export default function BackupRestore() {
       const response = await fetch(`${BASE_URL}/api/admin/backups/${backupId}/restore`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });
@@ -106,7 +107,7 @@ export default function BackupRestore() {
     try {
       const response = await fetch(`${BASE_URL}/api/admin/backups/${backupId}/download`, {
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });

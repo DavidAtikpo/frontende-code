@@ -5,7 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from "@/utils/config";
+import { getCookie } from "cookies-next";
 import { 
   FolderPlus, 
   Edit, 
@@ -14,7 +15,7 @@ import {
   X
 } from 'lucide-react';
 
-const BASE_URL = getApiUrl();
+const { BASE_URL } = API_CONFIG;
 
 interface Category {
   id: string;
@@ -43,7 +44,7 @@ export default function AdminCategories() {
     try {
       const response = await fetch(`${BASE_URL}/api/admin/categories`, {
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });
@@ -66,7 +67,7 @@ export default function AdminCategories() {
           method: category.id ? 'PUT' : 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+            'Authorization': `Bearer ${getCookie('token')}`,
           },
           body: JSON.stringify(category),
           credentials: 'include'
@@ -90,7 +91,7 @@ export default function AdminCategories() {
       const response = await fetch(`${BASE_URL}/api/admin/categories/${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });

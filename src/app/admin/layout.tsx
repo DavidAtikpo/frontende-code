@@ -25,15 +25,8 @@ import {
 } from "lucide-react";
 import LogoutButton from "@/components/auth/LogoutButton";
 import { LoadingSpinner } from "@/components/ui/loading";
+import { getCookie } from "cookies-next";
 
-const getCookie = (name: string) => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) {
-    return parts.pop()?.split(';').shift();
-  }
-  return null;
-};
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
@@ -46,7 +39,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const adminToken = getCookie('adminToken');
+      const adminToken = getCookie('token');
       const userRole = getCookie('userRole');
 
       if (!adminToken || userRole !== 'admin') {

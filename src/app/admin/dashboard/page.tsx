@@ -38,11 +38,11 @@ export default function AdminDashboard() {
 
   const fetchDashboardStats = useCallback(async () => {
     try {
-      const adminToken = getCookie('adminToken');
+   
 
       const response = await fetch(`${BASE_URL}/api/admin/dashboard/stats`, {
         headers: {
-          'Authorization': `Bearer ${adminToken}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
           'Content-Type': 'application/json'
         },
         credentials: 'include'
@@ -64,7 +64,7 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    const adminToken = document.cookie.includes('adminToken=');
+    const adminToken = getCookie('token');
     const userRole = document.cookie.split(';').find(c => c.trim().startsWith('userRole='));
     const isAdmin = userRole?.includes('admin');
 

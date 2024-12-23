@@ -5,11 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { getApiUrl } from '@/utils/api';
+
 import { Download, FileText, BarChart2, TrendingUp } from 'lucide-react';
 import { DateRange } from "react-day-picker";
-
-const BASE_URL = getApiUrl();
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
+import { getCookie } from "cookies-next";
 
 export default function AdminReports() {
   const [loading, setLoading] = useState(false);
@@ -34,7 +35,7 @@ export default function AdminReports() {
         `endDate=${dateRange.to.toISOString()}`,
         {
           headers: {
-            'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+            'Authorization': `Bearer ${getCookie('token')}`,
           }
         }
       );

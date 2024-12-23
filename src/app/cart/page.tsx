@@ -1,18 +1,106 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useCartContext } from "../context/CartContext";
+import { getCookie } from 'cookies-next';
+import { API_CONFIG } from '@/utils/config';
+import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+const { BASE_URL } = API_CONFIG;
+
 const CartPage = () => {
   const { state, dispatch } = useCartContext();
   const [couponCode, setCouponCode] = useState<string>("");
   const [discount, setDiscount] = useState<number>(0);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
   const router = useRouter();
+
+  // Charger le panier depuis le backend
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        const token = getCookie('token');
+        const response = await fetch(`${BASE_URL}/api/user/cart`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          dispatch({ type: "SET_CART", payload: data.cart });
+        }
+      } catch (error) {
+        console.error('Erreur chargement panier:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCart();
+  }, [dispatch]);
+
+  // Mettre à jour la quantité
+  const handleUpdateQuantity = async (productId: string, delta: number) => {
+    try {
+      const token = getCookie('token');
+      const response = await fetch(`${BASE_URL}/api/user/cart/${productId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ delta })
+      });
+
+      if (response.ok) {
+        dispatch({
+          type: "UPDATE_QUANTITY",
+          payload: { _id: productId, delta }
+        });
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour quantité:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour la quantité",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Supprimer du panier
+  const handleRemoveFromCart = async (productId: string) => {
+    try {
+      const token = getCookie('token');
+      const response = await fetch(`${BASE_URL}/api/user/cart/${productId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        dispatch({ type: "REMOVE_FROM_CART", payload: productId });
+        toast({
+          title: "Succès",
+          description: "Produit retiré du panier"
+        });
+      }
+    } catch (error) {
+      console.error('Erreur suppression panier:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de retirer le produit",
+        variant: "destructive"
+      });
+    }
+  };
 
   const shippingCost = 0;
 
@@ -25,10 +113,8 @@ const CartPage = () => {
     if (couponCode === "PROMO10") {
       const discountAmount = calculateSubtotal() * 0.1;
       setDiscount(discountAmount);
-      setErrorMessage(null);
     } else {
       setDiscount(0);
-      setErrorMessage("Code coupon invalide.");
     }
   };
 
@@ -42,6 +128,8 @@ const CartPage = () => {
       router.push(hasShippingAddress ? "/checkout" : "/checkout/shipping-address");
     }
   };
+
+  if (isLoading) return <div>Chargement...</div>;
 
   return (
     <div className="bg-gray-50 min-h-screen py-10">
@@ -82,7 +170,7 @@ const CartPage = () => {
                       <td className="py-4 flex items-center space-x-4">
                         <button
                           onClick={() =>
-                            dispatch({ type: "REMOVE_FROM_CART", payload: item._id })
+                            handleRemoveFromCart(item._id)
                           }
                           className="text-red-600 hover:text-red-800"
                         >
@@ -102,10 +190,7 @@ const CartPage = () => {
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() =>
-                              dispatch({
-                                type: "UPDATE_QUANTITY",
-                                payload: { _id: item._id, delta: -1 },
-                              })
+                              handleUpdateQuantity(item._id, -1)
                             }
                             className="px-2 py-1 text-xs border rounded hover:bg-gray-200"
                           >
@@ -114,10 +199,7 @@ const CartPage = () => {
                           <span>{item.quantity || 1}</span>
                           <button
                             onClick={() =>
-                              dispatch({
-                                type: "UPDATE_QUANTITY",
-                                payload: { _id: item._id, delta: 1 },
-                              })
+                              handleUpdateQuantity(item._id, 1)
                             }
                             className="px-2 py-1 text-xs border rounded hover:bg-gray-200"
                           >
@@ -187,9 +269,6 @@ const CartPage = () => {
               Appliquer
             </button>
           </div>
-          {errorMessage && (
-            <p className="mt-2 text-red-500 text-sm">{errorMessage}</p>
-          )}
         </motion.div>
       </div>
     </div>

@@ -11,9 +11,9 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { getApiUrl } from '@/utils/api';
-
-const BASE_URL = getApiUrl();
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
+import { getCookie } from "cookies-next";
 
 interface Activity {
   id: string;
@@ -51,7 +51,7 @@ export default function UserActivities() {
         `${BASE_URL}/api/user/activity?page=${page}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${getCookie('token')}`
           }
         }
       );

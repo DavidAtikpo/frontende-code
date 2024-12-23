@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getApiUrl } from '@/utils/api';
-
-const BASE_URL = getApiUrl();
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
+import { getCookie } from "cookies-next";
 
 interface UserInfo {
   name: string;
@@ -29,7 +29,7 @@ export default function UserSettings() {
 
   const fetchUserInfo = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie('token');
       const response = await fetch(`${BASE_URL}/api/user/info`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -57,7 +57,7 @@ export default function UserSettings() {
     e.preventDefault();
     setSaving(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie('token');
       const response = await fetch(`${BASE_URL}/api/user/update`, {
         method: 'PUT',
         headers: {

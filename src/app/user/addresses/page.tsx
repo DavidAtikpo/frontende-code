@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { MapPin, Plus, Trash2, Star, StarOff } from "lucide-react";
 import { API_CONFIG } from "@/utils/config";
+import { getCookie } from "cookies-next";
 
 const { BASE_URL } = API_CONFIG;
 
@@ -37,7 +38,7 @@ export default function AddressesPage() {
     try {
       const response = await fetch(`${BASE_URL}/api/user/address`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${getCookie('token')}`
         }
       });
       const data = await response.json();
@@ -63,7 +64,7 @@ export default function AddressesPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${getCookie('token')}`
         },
         body: JSON.stringify(newAddress)
       });
@@ -88,7 +89,7 @@ export default function AddressesPage() {
       const response = await fetch(`${BASE_URL}/api/user/address/${addressId}/default`, {
         method: 'PUT',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${getCookie('token')}`
         }
       });
 
@@ -110,7 +111,7 @@ export default function AddressesPage() {
       const response = await fetch(`${BASE_URL}/api/user/address/${addressId}`, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${getCookie('token')}`
         }
       });
 

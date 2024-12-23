@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
+import { getCookie } from "cookies-next";
 import { AlertTriangle, Power, Trash2, RefreshCw, CheckCircle } from 'lucide-react';
 import {
   Dialog,
@@ -15,8 +17,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-
-const BASE_URL = getApiUrl();
 
 export default function MaintenancePage() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -34,7 +34,7 @@ export default function MaintenancePage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         body: JSON.stringify({ reason, estimatedDuration: duration }),
         credentials: 'include'
@@ -57,7 +57,7 @@ export default function MaintenancePage() {
       const response = await fetch(`${BASE_URL}/api/admin/system/maintenance/end`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });
@@ -78,7 +78,7 @@ export default function MaintenancePage() {
       const response = await fetch(`${BASE_URL}/api/admin/system/cleanup`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });

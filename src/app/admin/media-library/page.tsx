@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { getApiUrl } from '@/utils/api';
 import { Image as ImageIcon, Trash2, Upload, Grid, List } from 'lucide-react';
 import {
   Dialog,
@@ -14,8 +13,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import Image from 'next/image';
-
-const BASE_URL = getApiUrl();
+import { API_CONFIG } from "@/utils/config";
+import { getCookie } from "cookies-next";
+const { BASE_URL } = API_CONFIG;
 
 interface MediaFile {
   id: string;
@@ -41,7 +41,7 @@ export default function MediaLibrary() {
         `${BASE_URL}/api/admin/media?folder=${currentFolder}`,
         {
           headers: {
-            'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+            'Authorization': `Bearer ${getCookie('token')}`,
           },
           credentials: 'include'
         }
@@ -78,7 +78,7 @@ export default function MediaLibrary() {
       const response = await fetch(`${BASE_URL}/api/admin/media/upload`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         body: formData,
         credentials: 'include'
@@ -99,7 +99,7 @@ export default function MediaLibrary() {
       const response = await fetch(`${BASE_URL}/api/admin/media/${fileId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });

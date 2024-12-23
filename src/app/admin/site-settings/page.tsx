@@ -8,10 +8,11 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { getApiUrl } from '@/utils/api';
 import { Save, RefreshCcw } from 'lucide-react';
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
+import { getCookie } from "cookies-next";
 
-const BASE_URL = getApiUrl();
 
 interface SiteSettings {
   general: {
@@ -56,7 +57,7 @@ export default function SiteSettings() {
     try {
       const response = await fetch(`${BASE_URL}/api/admin/site-settings`, {
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });
@@ -78,7 +79,7 @@ export default function SiteSettings() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         body: JSON.stringify(settings),
         credentials: 'include'

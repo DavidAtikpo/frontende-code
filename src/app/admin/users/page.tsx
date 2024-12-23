@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+
 import { 
   Table, 
   TableBody, 
@@ -18,11 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getApiUrl } from '@/utils/api';
+
 import { User, Shield, Ban } from 'lucide-react';
 import { DateRange } from "react-day-picker";
-
-const BASE_URL = getApiUrl();
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
+import { getCookie } from "cookies-next";
 
 interface User {
   id: string;
@@ -52,7 +54,7 @@ export default function AdminUsers() {
     try {
       const response = await fetch(`${BASE_URL}/api/admin/users`, {
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });
@@ -79,7 +81,7 @@ export default function AdminUsers() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         body: JSON.stringify(updates),
         credentials: 'include'

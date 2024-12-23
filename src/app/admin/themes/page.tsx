@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { getApiUrl } from '@/utils/api';
 import { Paintbrush, Check, Upload, Trash2, Eye } from 'lucide-react';
 import {
   Dialog,
@@ -14,8 +13,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
-
-const BASE_URL = getApiUrl();
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
+import { getCookie } from "cookies-next";
 
 interface Theme {
   id: string;
@@ -52,7 +52,7 @@ export default function ThemeManager() {
     try {
       const response = await fetch(`${BASE_URL}/api/admin/themes`, {
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });
@@ -72,7 +72,7 @@ export default function ThemeManager() {
       const response = await fetch(`${BASE_URL}/api/admin/themes/${themeId}/activate`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });
@@ -90,7 +90,7 @@ export default function ThemeManager() {
       const response = await fetch(`${BASE_URL}/api/admin/themes/${themeId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });
@@ -114,7 +114,7 @@ export default function ThemeManager() {
       const response = await fetch(`${BASE_URL}/api/admin/themes/upload`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         body: formData,
         credentials: 'include'

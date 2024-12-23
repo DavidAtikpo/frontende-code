@@ -12,10 +12,11 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { getApiUrl } from '@/utils/api';
-import { CreditCard, DollarSign, AlertCircle } from 'lucide-react';
 
-const BASE_URL = getApiUrl();
+import { CreditCard, DollarSign, AlertCircle } from 'lucide-react';
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
+import { getCookie } from "cookies-next";
 
 interface Payment {
   id: string;
@@ -46,7 +47,7 @@ export default function AdminPayments() {
     try {
       const response = await fetch(`${BASE_URL}/api/admin/payments`, {
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });

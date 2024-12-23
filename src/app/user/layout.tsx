@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Header from "../components/Header";
+import { deleteCookie, getCookie } from "cookies-next";
 // import NavigationBar from "../components/NavBar";
 import { usePathname } from "next/navigation";
 import { 
@@ -27,7 +28,11 @@ const navigation = [
     href: "/user/dashboard",
     icon: LayoutDashboard
   },
-
+{
+  name: "Products",
+  href: "/products",
+  icon: Store
+},
   {
     name: "Profil",
     href: "/user/profile",
@@ -77,7 +82,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     // Vérification du token d'authentification
-    const token = localStorage.getItem("token");
+    const token = getCookie('token');
     if (!token) {
       window.location.href = "/login";
     } else {
@@ -86,7 +91,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    deleteCookie('token');
     window.location.href = "/login";
   };
 

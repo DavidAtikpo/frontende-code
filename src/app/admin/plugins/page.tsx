@@ -5,7 +5,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
+import { getCookie } from "cookies-next";
 import { 
   Settings, 
   Power, 
@@ -20,8 +22,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-const BASE_URL = getApiUrl();
 
 interface Plugin {
   id: string;
@@ -57,7 +57,7 @@ export default function PluginManager() {
     try {
       const response = await fetch(`${BASE_URL}/api/admin/plugins`, {
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });
@@ -79,7 +79,7 @@ export default function PluginManager() {
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+            'Authorization': `Bearer ${getCookie('token')}`,
           },
           credentials: 'include'
         }
@@ -99,7 +99,7 @@ export default function PluginManager() {
       const response = await fetch(`${BASE_URL}/api/admin/plugins/${pluginId}/update`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });
@@ -125,7 +125,7 @@ export default function PluginManager() {
       const response = await fetch(`${BASE_URL}/api/admin/plugins/upload`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         body: formData,
         credentials: 'include'

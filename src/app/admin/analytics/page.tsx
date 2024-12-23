@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { DateRangePicker as DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from "@/utils/config";
 import { 
   BarChart, 
   Bar,
@@ -16,8 +16,9 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { DateRange } from "react-day-picker";
+import { getCookie } from "cookies-next";
 
-const BASE_URL = getApiUrl();
+const { BASE_URL } = API_CONFIG;
 
 interface Analytics {
   revenue: {
@@ -57,7 +58,7 @@ export default function AdminAnalytics() {
         `endDate=${dateRange?.to?.toISOString()}`,
         {
           headers: {
-            'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+            'Authorization': `Bearer ${getCookie('token')}`,
           },
           credentials: 'include'
         }

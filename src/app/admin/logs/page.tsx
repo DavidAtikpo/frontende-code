@@ -19,11 +19,13 @@ import {
 } from "@/components/ui/select";
 import { DateRangePicker as DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { getApiUrl } from '@/utils/api';
+
 import { AlertTriangle, AlertCircle, Info, AlertOctagon } from 'lucide-react';
 import { DateRange } from "react-day-picker";
+import { getCookie } from "cookies-next";
 
-const BASE_URL = getApiUrl();
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
 
 interface LogMetadata {
   ip?: string;
@@ -69,7 +71,7 @@ export default function SystemLogs() {
 
       const response = await fetch(`${BASE_URL}/api/admin/logs?${queryParams}`, {
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });

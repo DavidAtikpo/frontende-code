@@ -5,7 +5,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 import { LoadingSpinner } from "@/components/ui/loading";
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
+import { getCookie } from "cookies-next";
 import { 
   Database, 
   Server, 
@@ -21,8 +23,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-
-const BASE_URL = getApiUrl();
 
 interface SystemInfo {
   database: {
@@ -72,7 +72,7 @@ export default function SystemConfig() {
     try {
       const response = await fetch(`${BASE_URL}/api/admin/system/info`, {
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });

@@ -3,15 +3,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+
 import { 
-  // Supprimer ShoppingBag, Users, DollarSign, Package
-  // ... garder les autres imports nécessaires
   TrendingUp,
   TrendingDown,
   AlertTriangle
 } from "lucide-react";
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from '@/utils/config';
+
+const { BASE_URL } = API_CONFIG;
 import {
   LineChart,
   Line,
@@ -28,8 +28,8 @@ import { ActivePromotions } from "@/components/dashboard/ActivePromotions";
 import { ReturnsOverview } from "@/components/dashboard/ReturnsOverview";
 import { ProductPerformance } from "@/components/dashboard/ProductPerformance";
 import { DeliveryStats } from "@/components/dashboard/DeliveryStats";
+import { getCookie } from "cookies-next";
 
-const BASE_URL = `${getApiUrl()}/api`;
 
 interface DashboardData {
   recentOrders: Array<{
@@ -139,7 +139,7 @@ interface DashboardData {
 }
 
 export default function DashboardPage() {
-  const { toast } = useToast();
+ 
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -147,7 +147,7 @@ export default function DashboardPage() {
     try {
       const response = await fetch(`${BASE_URL}/seller/dashboard`, {
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('sellerToken')}`,
         },
         credentials: 'include'
       });

@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Link from "next/link";
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
 
-const BASE_URL = "http://localhost:5000/api";
 
 export default function AddProductPage() {
   const [isLoading, setIsLoading] = useState(false);

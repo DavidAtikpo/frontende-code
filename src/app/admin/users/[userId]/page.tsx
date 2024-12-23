@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
-import { getApiUrl } from '@/utils/api';
-
-const BASE_URL = getApiUrl();
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
+import { getCookie } from "cookies-next";
 
 interface User {
   avatar?: string;
@@ -32,10 +32,7 @@ export default function UserDetailPage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const adminToken = document.cookie
-          .split(';')
-          .find(c => c.trim().startsWith('adminToken='))
-          ?.split('=')[1];
+        const adminToken = getCookie('token');
 
         const response = await fetch(`${BASE_URL}/api/admin/users/${params.userId}`, {
           headers: {

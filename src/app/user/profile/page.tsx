@@ -48,40 +48,26 @@ export default function UserProfile() {
   const { toast } = useToast();
 
   useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = getCookie('token');
+        const response = await fetch(`${BASE_URL}/api/user/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setProfile(data);
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+      }
+    };
+
     fetchProfile();
   }, []);
-
-  const fetchProfile = async () => {
-    try {
-      const token = getCookie('token');
-      
-      if (!token) {
-        throw new Error('Token non trouvé');
-      }
-
-      const response = await fetch(`${BASE_URL}/api/user/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Erreur lors du chargement du profil');
-      }
-
-      const data = await response.json();
-      setProfile(data.profile);
-    } catch (error) {
-      console.error("Erreur lors du chargement du profil:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger le profil",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handlePreferenceUpdate = async (key: string, value: string | boolean | Record<string, boolean>) => {
     try {

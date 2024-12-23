@@ -6,8 +6,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
-// const BASE_URL = "http://localhost:5000/api";
-
 interface Order {
   id: string;
   orderNumber: string;

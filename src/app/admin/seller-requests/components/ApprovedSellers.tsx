@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { API_CONFIG } from "@/utils/config";
 import { Eye, Store, Mail, Phone } from "lucide-react";
 import Image from "next/image";
+import { getCookie } from "cookies-next";
 
 const { BASE_URL } = API_CONFIG;
 
@@ -39,14 +40,11 @@ export function ApprovedSellers() {
   useEffect(() => {
     const fetchApprovedSellers = async () => {
       try {
-        const adminToken = document.cookie
-          .split(';')
-          .find(c => c.trim().startsWith('adminToken='))
-          ?.split('=')[1];
+      
 
         const response = await fetch(`${BASE_URL}/api/admin/approved-sellers`, {
           headers: {
-            'Authorization': `Bearer ${adminToken}`,
+            'Authorization': `Bearer ${getCookie('token')}`,
             'Content-Type': 'application/json'
           },
           credentials: 'include'

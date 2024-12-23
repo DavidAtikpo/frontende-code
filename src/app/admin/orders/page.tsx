@@ -19,7 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
+import { getCookie } from "cookies-next";
 import { 
   Package, 
   Truck, 
@@ -33,8 +35,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-const BASE_URL = getApiUrl();
 
 interface Order {
   id: string;
@@ -80,7 +80,7 @@ export default function AdminOrders() {
       const queryParams = statusFilter !== 'all' ? `?status=${statusFilter}` : '';
       const response = await fetch(`${BASE_URL}/api/admin/orders${queryParams}`, {
         headers: {
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         credentials: 'include'
       });
@@ -105,7 +105,7 @@ export default function AdminOrders() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${document.cookie.split('adminToken=')[1]}`,
+          'Authorization': `Bearer ${getCookie('token')}`,
         },
         body: JSON.stringify({ status }),
         credentials: 'include'

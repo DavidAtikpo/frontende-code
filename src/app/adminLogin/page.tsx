@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
       }
 
       // Stocker le token et les informations utilisateur
-      setCookie('adminToken', data.accessToken);
+      setCookie('token', data.accessToken);
       setCookie('userRole', data.user.role);
       setCookie('userData', JSON.stringify({
         id: data.user.id,
