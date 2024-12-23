@@ -82,7 +82,7 @@ export function ComplianceForm({
     setIsSubmitting(true);
 
     const formData = new FormData();
-    const token = getCookie('token');
+    const token = getCookie('token'); 
 
     if (!token) {
       setErrors((prev) => ({ ...prev, submit: "Veuillez vous connecter" }));
@@ -90,76 +90,64 @@ export function ComplianceForm({
       return;
     }
 
-    // Log des données avant envoi
-    console.log("=== DÉBUT SOUMISSION ===");
-    console.log("Type:", data.type);
-    console.log("Personal Info:", data.personalInfo);
-    console.log("Documents:", data.documents);
-    console.log("Contract:", data.contract);
-    console.log("Video:", data.videoVerification);
-    console.log("Business Info:", data.businessInfo);
-    console.log("Compliance:", data.compliance);
-
-    // Convertir les données de base en JSON
-    const baseData = {
-      type: data.type,
-      personalInfo: data.personalInfo,
-      businessInfo: data.businessInfo,
-      compliance: data.compliance,
-      validation: data.validation
-    };
-    formData.append('data', JSON.stringify(baseData));
-
-    // Ajouter les fichiers
-    if (data.documents.idCard) 
-      formData.append('idCard', data.documents.idCard);
-    if (data.documents.proofOfAddress) 
-      formData.append('proofOfAddress', data.documents.proofOfAddress);
-    if (data.documents.taxCertificate) 
-      formData.append('taxCertificate', data.documents.taxCertificate);
-    
-    data.documents.photos.forEach((photo) => {
-      formData.append('photos', photo);
-    });
-
-    if (data.contract.signedDocument) {
-      formData.append('signedDocument', data.contract.signedDocument);
-    }
-
-    // Convertir et ajouter la vidéo
-    if (data.videoVerification.recordingUrl) {
-      try {
-        const videoBlob = await fetch(data.videoVerification.recordingUrl).then(r => r.blob());
-        formData.append('verificationVideo', videoBlob, 'verification.webm');
-      } catch (error) {
-        console.error('Erreur lors de la conversion de la vidéo:', error);
-      }
-    }
-
-    // Log du FormData
-    console.log("=== CONTENU FORMDATA ===");
-    for (const [key, value] of formData.entries()) {
-      if (value instanceof File) {
-        console.log(key, ":", value.name, "(", value.size, "bytes )");
-      } else {
-        console.log(key, ":", value);
-      }
-    }
-
     try {
+      // Convertir les données de base en JSON
+      const baseData = {
+        type: data.type,
+        personalInfo: data.personalInfo,
+        businessInfo: {
+          ...data.businessInfo,
+          products: data.businessInfo.products.map(product => ({
+            ...product,
+            images: [] // Les images seront gérées séparément
+          }))
+        },
+        compliance: data.compliance
+      };
+      formData.append('data', JSON.stringify(baseData));
+
+      // Ajouter les fichiers avec leurs noms d'origine
+      if (data.documents.idCard?.file) {
+        formData.append('idCard', data.documents.idCard.file);
+      }
+      if (data.documents.proofOfAddress?.file) {
+        formData.append('proofOfAddress', data.documents.proofOfAddress.file);
+      }
+      if (data.documents.taxCertificate?.file) {
+        formData.append('taxCertificate', data.documents.taxCertificate.file);
+      }
+
+      // Ajouter les photos
+      data.documents.photos.forEach((photo) => {
+        if (photo.file) {
+          formData.append('photos', photo.file);
+        }
+      });
+
+      // Ajouter le document signé
+      if (data.contract.signedDocument?.file) {
+        formData.append('signedDocument', data.contract.signedDocument.file);
+      }
+
+      // Ajouter la vidéo
+      if (data.videoVerification.recordingBlob) {
+        formData.append('verificationVideo', 
+          new File([data.videoVerification.recordingBlob], 'verification.webm', 
+          { type: 'video/webm' })
+        );
+      }
+
       const response = await fetch(`${BASE_URL}/api/seller/register`, {
         method: "POST",
         headers: {
-          'Accept': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: formData,
       });
 
-      const responseData = await response.json();
-
       if (!response.ok) {
-        throw new Error(responseData.message || "Erreur lors de l'inscription");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erreur lors de l'inscription");
       }
 
       onNext();

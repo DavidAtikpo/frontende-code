@@ -28,40 +28,41 @@ interface PersonalInfo {
   rccmNumber?: string;
 }
 
+interface DocumentFile {
+  file?: File;
+  name: string;
+  url?: string;
+}
+
 export interface SellerFormData {
   _id?: string;
   type: 'individual' | 'company';
-  personalInfo: PersonalInfo;
+  personalInfo: {
+    fullName: string;
+    address: string;
+    phone: string;
+    idNumber: string;
+    email: string;
+    taxNumber: string;
+  };
   documents: {
-    idCard: File | null;
-    proofOfAddress: File | null;
-    taxCertificate: File | null;
-    photos: File[];
-    rccm?: File | null;
-    companyStatutes?: File | null;
-  };
-  contract: {
-    signed: boolean;
-    signedDocument: File | null;
-  };
-  videoVerification: {
-    completed: boolean;
-    recordingUrl?: string;
+    idCard: DocumentFile | null;
+    proofOfAddress: DocumentFile | null;
+    taxCertificate: DocumentFile | null;
+    photos: DocumentFile[];
   };
   businessInfo: {
-    category: string;
-    description: string;
     products: Array<{
       name: string;
       description: string;
       price: number;
-      images: File[];
+      images: DocumentFile[];
     }>;
     bankDetails: {
-      type: "bank" | "mobile";
       accountNumber: string;
-      bankName?: string;
     };
+    category: string;
+    description: string;
     returnPolicy: string;
   };
   compliance: {
@@ -69,21 +70,16 @@ export interface SellerFormData {
     qualityStandardsAccepted: boolean;
     antiCounterfeitingAccepted: boolean;
   };
+  contract: {
+    signed: boolean;
+    signedDocument: DocumentFile | null;
+  };
+  videoVerification: {
+    recordingBlob?: Blob;
+  };
   validation?: {
-    status?: string;
+    status?: 'not_started' | 'pending' | 'approved' | 'rejected';
     message?: string;
-  };
-  subscription?: {
-    plan: 'monthly' | 'yearly' | 'premium';
-    price: number;
-    startDate?: string;
-    endDate?: string;
-  };
-  payment?: {
-    method: 'mobile_money' | 'card' | 'bank_transfer';
-    status: 'pending' | 'completed' | 'failed';
-    transactionId?: string;
-    amount: number;
   };
 }
 
