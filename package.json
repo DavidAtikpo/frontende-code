@@ -26,6 +26,7 @@
     "chart.js": "^4.4.6",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "cookies-next": "^5.0.2",
     "date-fns": "^4.1.0",
     "dubonfrontend": "file:",
     "framer-motion": "^11.12.0",
