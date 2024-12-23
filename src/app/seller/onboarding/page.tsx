@@ -44,6 +44,10 @@ export interface SellerFormData {
     idNumber: string;
     email: string;
     taxNumber: string;
+    idType?: string;
+    companyName?: string;
+    rccmNumber?: string;
+    legalRepName?: string;
   };
   documents: {
     idCard: DocumentFile | null;
@@ -76,10 +80,24 @@ export interface SellerFormData {
   };
   videoVerification: {
     recordingBlob?: Blob;
+    completed?: boolean;
+    recordingUrl?: string;
   };
   validation?: {
     status?: 'not_started' | 'pending' | 'approved' | 'rejected';
     message?: string;
+  };
+  subscription?: {
+    plan: 'monthly' | 'yearly' | 'premium';
+    price: number;
+    startDate?: string;
+    endDate?: string;
+  };
+  payment?: {
+    method: 'mobile_money' | 'card' | 'bank_transfer';
+    status: 'pending' | 'completed' | 'failed';
+    amount: number;
+    transactionId?: string;
   };
 }
 

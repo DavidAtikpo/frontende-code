@@ -51,38 +51,28 @@ export function DocumentUploadForm({ data, onUpdate, onNext, onBack }: DocumentU
 
   const saveToLocalStorage = (updatedData: SellerFormData) => {
     const storedDocuments: StoredDocuments = {
-      idCard: updatedData.documents.idCard ? {
+      idCard: updatedData.documents.idCard?.file ? {
         name: updatedData.documents.idCard.name,
-        url: URL.createObjectURL(updatedData.documents.idCard)
+        url: URL.createObjectURL(updatedData.documents.idCard.file)
       } : null,
-      proofOfAddress: updatedData.documents.proofOfAddress ? {
+      proofOfAddress: updatedData.documents.proofOfAddress?.file ? {
         name: updatedData.documents.proofOfAddress.name,
-        url: URL.createObjectURL(updatedData.documents.proofOfAddress)
+        url: URL.createObjectURL(updatedData.documents.proofOfAddress.file)
       } : null,
-      taxCertificate: updatedData.documents.taxCertificate ? {
+      taxCertificate: updatedData.documents.taxCertificate?.file ? {
         name: updatedData.documents.taxCertificate.name,
-        url: URL.createObjectURL(updatedData.documents.taxCertificate)
+        url: URL.createObjectURL(updatedData.documents.taxCertificate.file)
       } : null,
       photos: updatedData.documents.photos.map(photo => ({
         name: photo.name,
-        url: URL.createObjectURL(photo)
-      })),
-      rccm: updatedData.documents.rccm ? {
-        name: updatedData.documents.rccm.name,
-        url: URL.createObjectURL(updatedData.documents.rccm)
-      } : null,
-      companyStatutes: updatedData.documents.companyStatutes ? {
-        name: updatedData.documents.companyStatutes.name,
-        url: URL.createObjectURL(updatedData.documents.companyStatutes)
-      } : null,
+        url: photo.file ? URL.createObjectURL(photo.file) : photo.url
+      }))
     };
 
-    const dataToSave = {
+    localStorage.setItem('sellerFormData', JSON.stringify({
       ...updatedData,
       documents: storedDocuments
-    };
-
-    localStorage.setItem('sellerFormData', JSON.stringify(dataToSave));
+    }));
   };
 
   const handleFileChange = (field: string, files: FileList | null) => {
@@ -136,7 +126,7 @@ export function DocumentUploadForm({ data, onUpdate, onNext, onBack }: DocumentU
       }
     });
 
-    if (docs.photos && docs.photos.some(photo => photo.size > 5 * 1024 * 1024)) {
+    if (docs.photos && docs.photos.some(photo => photo.file && photo.file.size > 5 * 1024 * 1024)) {
       newErrors.photos = "Chaque photo doit être inférieure à 5 Mo";
     }
 
