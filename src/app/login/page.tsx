@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthTabs from "../components/auth/AuthTabs";
 import Image from "next/image"
-import { getCookie, setCookie } from "cookies-next";
+import {  setCookie } from "cookies-next";
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from 'next/navigation';
 import { API_CONFIG } from '@/utils/config';

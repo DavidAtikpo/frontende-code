@@ -4,9 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { Users, ShoppingBag, Package, DollarSign } from 'lucide-react';
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from '@/utils/config';
+import { getCookie } from "cookies-next";
 
-const BASE_URL = getApiUrl();
+const { BASE_URL } = API_CONFIG;
 
 interface DashboardStats {
   users: { 
@@ -37,10 +38,7 @@ export default function AdminDashboard() {
 
   const fetchDashboardStats = useCallback(async () => {
     try {
-      const adminToken = document.cookie
-        .split(';')
-        .find(c => c.trim().startsWith('adminToken='))
-        ?.split('=')[1];
+      const adminToken = getCookie('adminToken');
 
       const response = await fetch(`${BASE_URL}/api/admin/dashboard/stats`, {
         headers: {
