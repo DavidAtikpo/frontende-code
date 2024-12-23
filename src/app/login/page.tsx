@@ -8,7 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthTabs from "../components/auth/AuthTabs";
-import Image from "next/image";
+import Image from "next/image"
+import { getCookie, setCookie } from "cookies-next";
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from 'next/navigation';
 import { API_CONFIG } from '@/utils/config';
@@ -38,7 +39,21 @@ export default function LoginPage() {
 
       const data = await response.json();
       if (data.success) {
-        document.cookie = `adminToken=${data.token}; path=/; max-age=604800; secure; samesite=strict`;
+        setCookie('token', data.accessToken, {
+          maxAge: 3600,
+          path: '/',
+          secure: true,
+          sameSite: 'strict'
+        });
+        
+        localStorage.setItem('userData', JSON.stringify({
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          profilePhotoUrl: data.user.profilePhotoUrl,
+          role: data.user.role
+        }));
+
         router.push('/user/dashboard');
       } else {
         setError(data.message || "Échec de la connexion");

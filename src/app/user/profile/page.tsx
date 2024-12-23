@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
+import { getCookie } from 'cookies-next';
 
 const { BASE_URL } = API_CONFIG;
 
@@ -52,15 +53,31 @@ export default function UserProfile() {
 
   const fetchProfile = async () => {
     try {
+      const token = getCookie('token');
+      
+      if (!token) {
+        throw new Error('Token non trouvé');
+      }
+
       const response = await fetch(`${BASE_URL}/api/user/profile`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${token}`
         }
       });
+      
+      if (!response.ok) {
+        throw new Error('Erreur lors du chargement du profil');
+      }
+
       const data = await response.json();
       setProfile(data.profile);
     } catch (error) {
       console.error("Erreur lors du chargement du profil:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger le profil",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -68,11 +85,13 @@ export default function UserProfile() {
 
   const handlePreferenceUpdate = async (key: string, value: string | boolean | Record<string, boolean>) => {
     try {
+      const token = getCookie('token');
+      
       const response = await fetch(`${BASE_URL}/api/user/preferences`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ [key]: value })
       });

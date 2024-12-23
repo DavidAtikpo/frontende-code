@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { SellerFormData } from "../page";
 import { API_CONFIG } from "@/utils/config";
+import { getCookie } from "cookies-next";
 
 const { BASE_URL } = API_CONFIG;
 
@@ -81,7 +82,7 @@ export function ComplianceForm({
     setIsSubmitting(true);
 
     const formData = new FormData();
-    const token = localStorage.getItem('token');
+    const token = getCookie('token');
 
     if (!token) {
       setErrors((prev) => ({ ...prev, submit: "Veuillez vous connecter" }));
