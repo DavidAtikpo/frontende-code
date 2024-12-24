@@ -179,34 +179,32 @@ export function ComplianceForm({
       formData.append('data', JSON.stringify(baseData));
 
       // Ajouter les fichiers
-      if (data.documents.idCard?.file) {
+      if (data.documents.idCard instanceof File) {
+        formData.append('idCard', data.documents.idCard);
+      } else if (data.documents.idCard?.file instanceof File) {
         formData.append('idCard', data.documents.idCard.file);
-      } else {
-        console.error("Pièce d'identité manquante");
       }
 
-      if (data.documents.proofOfAddress?.file) {
+      if (data.documents.proofOfAddress instanceof File) {
+        formData.append('proofOfAddress', data.documents.proofOfAddress);
+      } else if (data.documents.proofOfAddress?.file instanceof File) {
         formData.append('proofOfAddress', data.documents.proofOfAddress.file);
-      } else {
-        console.error("Justificatif de domicile manquant");
       }
 
-      if (data.documents.taxCertificate?.file) {
+      if (data.documents.taxCertificate instanceof File) {
+        formData.append('taxCertificate', data.documents.taxCertificate);
+      } else if (data.documents.taxCertificate?.file instanceof File) {
         formData.append('taxCertificate', data.documents.taxCertificate.file);
-      } else {
-        console.error("Attestation fiscale manquante");
       }
 
-      if (data.documents.photos.length) {
-        data.documents.photos.forEach((photo, index) => {
-          if (photo.file) {
+      if (data.documents.photos?.length > 0) {
+        data.documents.photos.forEach((photo) => {
+          if (photo instanceof File) {
+            formData.append('photos', photo);
+          } else if (photo.file instanceof File) {
             formData.append('photos', photo.file);
-          } else {
-            console.error(`Photo d'identité manquante à l'index ${index}`);
           }
         });
-      } else {
-        console.error("Photos d'identité manquantes");
       }
 
       // Log avant l'envoi

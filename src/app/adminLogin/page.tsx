@@ -1,22 +1,27 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { API_CONFIG } from '@/utils/config';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { API_CONFIG } from "@/utils/config";
 import { setCookie } from "cookies-next";
 
 const { BASE_URL } = API_CONFIG;
 
-
-
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLoading(true);
     setError("");
 
     try {
@@ -25,33 +30,28 @@ export default function AdminLoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: 'include',
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.message || "Erreur lors de la connexion");
+        throw new Error(data.message || "Erreur de connexion");
       }
 
-      // Stocker le token et les informations utilisateur
-      setCookie('token', data.accessToken);
-      setCookie('userRole', data.user.role);
-      setCookie('userData', JSON.stringify({
-        id: data.user.id,
-        email: data.user.email,
-        role: data.user.role
-      }));
-
-      // Forcer la redirection avec window.location
-      window.location.href = "/admin/dashboard";
-      
+      if (data.token) {
+        setCookie('token', data.token);
+        setCookie('role', 'admin');
+        router.push('/admin/dashboard');
+      } else {
+        throw new Error("Token non reçu");
+      }
     } catch (err) {
-      console.error("Erreur de connexion:", err);
-      setError(err instanceof Error ? err.message : "Erreur lors de la connexion");
+      const error = err as Error;
+      console.error("Erreur de connexion:", error);
+      setError(error.message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -84,8 +84,8 @@ export default function AdminLoginPage() {
                 required
                 className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Email administrateur"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
           </div>
@@ -93,10 +93,10 @@ export default function AdminLoginPage() {
           <div>
             <Button 
               type="submit" 
-              disabled={isLoading}
+              disabled={loading}
               className="w-full"
             >
-              {isLoading ? "Connexion..." : "Se connecter"}
+              {loading ? "Connexion..." : "Se connecter"}
             </Button>
           </div>
         </form>
