@@ -39,8 +39,8 @@ export default function AdminLoginPage() {
         throw new Error(data.message || "Erreur de connexion");
       }
 
-      if (data.token) {
-        setCookie('token', data.token);
+      if (data.accessToken) {
+        setCookie('token', data.accessToken);
         setCookie('role', 'admin');
         router.push('/admin/dashboard');
       } else {
