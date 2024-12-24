@@ -12,7 +12,7 @@ export function middleware(request: NextRequest) {
     const adminToken = request.cookies.get('token');
 
     // Rediriger vers la page de login si pas de token ou pas admin
-    if (!adminToken || localStorage.getItem('role') !== 'admin') {
+    if (!adminToken || localStorage.getItem('userData.role') !== 'admin') {
       return NextResponse.redirect(new URL('/adminLogin', request.url));
     }
   }
