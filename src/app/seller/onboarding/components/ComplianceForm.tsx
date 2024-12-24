@@ -172,19 +172,33 @@ export function ComplianceForm({
       // Ajouter les fichiers
       if (data.documents.idCard?.file) {
         formData.append('idCard', data.documents.idCard.file);
+      } else {
+        console.error("Pièce d'identité manquante");
       }
+
       if (data.documents.proofOfAddress?.file) {
         formData.append('proofOfAddress', data.documents.proofOfAddress.file);
+      } else {
+        console.error("Justificatif de domicile manquant");
       }
+
       if (data.documents.taxCertificate?.file) {
         formData.append('taxCertificate', data.documents.taxCertificate.file);
+      } else {
+        console.error("Attestation fiscale manquante");
       }
-      
-      data.documents.photos.forEach((photo, index) => {
-        if (photo.file) {
-          formData.append('photos', photo.file);
-        }
-      });
+
+      if (data.documents.photos.length) {
+        data.documents.photos.forEach((photo, index) => {
+          if (photo.file) {
+            formData.append('photos', photo.file);
+          } else {
+            console.error(`Photo d'identité manquante à l'index ${index}`);
+          }
+        });
+      } else {
+        console.error("Photos d'identité manquantes");
+      }
 
       // Log avant l'envoi
       console.log('FormData contenu:');
