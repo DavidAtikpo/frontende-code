@@ -40,7 +40,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       const adminToken = getCookie('token');
-      const userRole = getCookie('userRole');
+      const userRole = localStorage.getItem('role');
 
       if (!adminToken || userRole !== 'admin') {
         router.replace('/adminLogin');
