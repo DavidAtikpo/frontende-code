@@ -82,7 +82,7 @@ export function ComplianceForm({
     setIsSubmitting(true);
 
     const formData = new FormData();
-    const token = getCookie('token'); 
+    const token = getCookie('token');
 
     if (!token) {
       setErrors((prev) => ({ ...prev, submit: "Veuillez vous connecter" }));
@@ -91,22 +91,26 @@ export function ComplianceForm({
     }
 
     try {
-      // Convertir les données de base en JSON
+      // Préparer les données de base
       const baseData = {
         type: data.type,
         personalInfo: data.personalInfo,
         businessInfo: {
           ...data.businessInfo,
           products: data.businessInfo.products.map(product => ({
-            ...product,
-            images: [] // Les images seront gérées séparément
+            name: product.name,
+            description: product.description,
+            price: product.price
           }))
         },
-        compliance: data.compliance
+        compliance: data.compliance,
+        validation: { status: "pending" }
       };
+
+      // Ajouter les données JSON
       formData.append('data', JSON.stringify(baseData));
 
-      // Ajouter les fichiers avec leurs noms d'origine
+      // Ajouter les fichiers requis
       if (data.documents.idCard?.file) {
         formData.append('idCard', data.documents.idCard.file);
       }
@@ -116,20 +120,18 @@ export function ComplianceForm({
       if (data.documents.taxCertificate?.file) {
         formData.append('taxCertificate', data.documents.taxCertificate.file);
       }
-
-      // Ajouter les photos
-      data.documents.photos.forEach((photo) => {
-        if (photo.file) {
-          formData.append('photos', photo.file);
-        }
-      });
-
-      // Ajouter le document signé
+      if (data.documents.photos) {
+        data.documents.photos.forEach((photo, index) => {
+          if (photo.file) {
+            formData.append(`photos`, photo.file);
+          }
+        });
+      }
       if (data.contract.signedDocument?.file) {
         formData.append('signedDocument', data.contract.signedDocument.file);
       }
 
-      // Ajouter la vidéo
+      // Ajouter la vidéo si disponible
       if (data.videoVerification.recordingBlob) {
         formData.append('verificationVideo', 
           new File([data.videoVerification.recordingBlob], 'verification.webm', 
