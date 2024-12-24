@@ -170,9 +170,15 @@ export function ComplianceForm({
       formData.append('data', JSON.stringify(baseData));
 
       // Ajouter les fichiers
-      formData.append('idCard', data.documents.idCard.file);
-      formData.append('proofOfAddress', data.documents.proofOfAddress.file);
-      formData.append('taxCertificate', data.documents.taxCertificate.file);
+      if (data.documents.idCard?.file) {
+        formData.append('idCard', data.documents.idCard.file);
+      }
+      if (data.documents.proofOfAddress?.file) {
+        formData.append('proofOfAddress', data.documents.proofOfAddress.file);
+      }
+      if (data.documents.taxCertificate?.file) {
+        formData.append('taxCertificate', data.documents.taxCertificate.file);
+      }
       
       data.documents.photos.forEach((photo, index) => {
         if (photo.file) {
