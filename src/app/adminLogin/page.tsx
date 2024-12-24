@@ -3,14 +3,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { API_CONFIG } from '@/utils/config';
+import { setCookie } from "cookies-next";
 
 const { BASE_URL } = API_CONFIG;
 
-const setCookie = (name: string, value: string, days: number = 7) => {
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  const cookieValue = name === 'adminToken' ? value : encodeURIComponent(value);
-  document.cookie = `${name}=${cookieValue}; expires=${expires}; path=/; secure; samesite=strict`;
-};
+
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
