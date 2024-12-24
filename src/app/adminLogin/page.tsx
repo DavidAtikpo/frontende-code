@@ -44,10 +44,12 @@ export default function AdminLoginPage() {
         setCookie('token', data.accessToken);
         
         // Sauvegarder les informations de l'admin
-        setCookie('role', data.admin.role);
-        setCookie('userId', data.admin.id);
-        setCookie('email', data.admin.email);
-        
+        localStorage.setItem('userData', JSON.stringify({
+          id: data.admin.id,
+          name: data.admin.name,
+          email: data.admin.email,
+          role: data.admin.role
+        }));
         // Optionnel : sauvegarder le refresh token
         setCookie('refreshToken', data.refreshToken);
 

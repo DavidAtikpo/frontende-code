@@ -50,7 +50,6 @@ export default function LoginPage() {
           id: data.user.id,
           name: data.user.name,
           email: data.user.email,
-          profilePhotoUrl: data.user.profilePhotoUrl,
           role: data.user.role
         }));
 
