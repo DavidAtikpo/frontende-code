@@ -38,10 +38,11 @@ export default function AdminLoginPage() {
       if (!response.ok) {
         throw new Error(data.message || "Erreur de connexion");
       }
+      console.log(data);
 
       if (data.accessToken) {
         setCookie('token', data.accessToken);
-        setCookie('role', 'admin');
+        setCookie('role', 'admin', 'profilePhotoUrl');
         router.push('/admin/dashboard');
       } else {
         throw new Error("Token non reçu");
