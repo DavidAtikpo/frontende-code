@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { getApiUrl } from '@/utils/api';
+import { API_CONFIG } from '@/utils/config';
 
-const BASE_URL = getApiUrl();
+const { BASE_URL } = API_CONFIG;
 
 const setCookie = (name: string, value: string, days: number = 7) => {
   const expires = new Date(Date.now() + days * 864e5).toUTCString();
