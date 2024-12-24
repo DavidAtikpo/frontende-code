@@ -38,14 +38,22 @@ export default function AdminLoginPage() {
       if (!response.ok) {
         throw new Error(data.message || "Erreur de connexion");
       }
-      console.log(data);
 
-      if (data.accessToken) {
+      if (data.success && data.accessToken && data.admin) {
+        // Sauvegarder le token
         setCookie('token', data.accessToken);
-        setCookie('role', 'admin', 'profilePhotoUrl');
+        
+        // Sauvegarder les informations de l'admin
+        setCookie('role', data.admin.role);
+        setCookie('userId', data.admin.id);
+        setCookie('email', data.admin.email);
+        
+        // Optionnel : sauvegarder le refresh token
+        setCookie('refreshToken', data.refreshToken);
+
         router.push('/admin/dashboard');
       } else {
-        throw new Error("Token non reçu");
+        throw new Error("Informations de connexion incomplètes");
       }
     } catch (err) {
       const error = err as Error;
