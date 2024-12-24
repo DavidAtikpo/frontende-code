@@ -41,6 +41,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     const checkAuth = async () => {
       const adminToken = getCookie('token');
       const userRole = localStorage.getItem('role');
+      
 
       if (!adminToken || userRole !== 'admin') {
         router.replace('/adminLogin');
@@ -257,7 +258,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
               <Menu className="h-6 w-6" />
             </button>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700 hidden md:inline">Admin</span>
+              <span className="text-sm text-gray-700 hidden md:inline">{localStorage.getItem('name')}</span>
               <div className="h-8 w-8 rounded-full bg-gray-200"></div>
             </div>
           </div>
