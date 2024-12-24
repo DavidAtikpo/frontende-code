@@ -91,53 +91,85 @@ export function ComplianceForm({
     }
 
     try {
-      // Préparer les données de base
+      // Vérifier que tous les documents requis sont présents
+      if (!data.documents.idCard?.file || 
+          !data.documents.proofOfAddress?.file || 
+          !data.documents.taxCertificate?.file || 
+          !data.documents.photos.length) {
+        throw new Error("Tous les documents requis doivent être fournis");
+      }
+
+      // Vérifier les informations personnelles
+      if (!data.personalInfo.fullName || 
+          !data.personalInfo.address || 
+          !data.personalInfo.phone || 
+          !data.personalInfo.email || 
+          !data.personalInfo.taxNumber) {
+        throw new Error("Toutes les informations personnelles sont requises");
+      }
+
+      // Vérifier les informations commerciales
+      if (!data.businessInfo.category || 
+          !data.businessInfo.description || 
+          !data.businessInfo.returnPolicy || 
+          !data.businessInfo.bankDetails.accountNumber) {
+        throw new Error("Toutes les informations commerciales sont requises");
+      }
+
       const baseData = {
         type: data.type,
-        personalInfo: data.personalInfo,
+        personalInfo: {
+          fullName: data.personalInfo.fullName,
+          address: data.personalInfo.address,
+          phone: data.personalInfo.phone,
+          email: data.personalInfo.email,
+          taxNumber: data.personalInfo.taxNumber,
+          idNumber: data.personalInfo.idNumber,
+          idType: data.personalInfo.idType
+        },
         businessInfo: {
-          ...data.businessInfo,
+          category: data.businessInfo.category,
+          description: data.businessInfo.description,
+          returnPolicy: data.businessInfo.returnPolicy,
+          bankDetails: {
+            accountNumber: data.businessInfo.bankDetails.accountNumber
+          },
           products: data.businessInfo.products.map(product => ({
             name: product.name,
             description: product.description,
             price: product.price
           }))
         },
-        compliance: data.compliance,
-        validation: { status: "pending" }
+        compliance: {
+          termsAccepted: data.compliance.termsAccepted,
+          qualityStandardsAccepted: data.compliance.qualityStandardsAccepted,
+          antiCounterfeitingAccepted: data.compliance.antiCounterfeitingAccepted
+        }
       };
 
-      // Ajouter les données JSON
       formData.append('data', JSON.stringify(baseData));
 
-      // Ajouter les fichiers requis
-      if (data.documents.idCard?.file) {
-        formData.append('idCard', data.documents.idCard.file);
-      }
-      if (data.documents.proofOfAddress?.file) {
-        formData.append('proofOfAddress', data.documents.proofOfAddress.file);
-      }
-      if (data.documents.taxCertificate?.file) {
-        formData.append('taxCertificate', data.documents.taxCertificate.file);
-      }
-      if (data.documents.photos) {
-        data.documents.photos.forEach((photo, index) => {
-          if (photo.file) {
-            formData.append(`photos`, photo.file);
-          }
-        });
-      }
-      if (data.contract.signedDocument?.file) {
-        formData.append('signedDocument', data.contract.signedDocument.file);
-      }
+      // Ajouter les fichiers
+      formData.append('idCard', data.documents.idCard.file);
+      formData.append('proofOfAddress', data.documents.proofOfAddress.file);
+      formData.append('taxCertificate', data.documents.taxCertificate.file);
+      
+      data.documents.photos.forEach((photo, index) => {
+        if (photo.file) {
+          formData.append('photos', photo.file);
+        }
+      });
 
-      // Ajouter la vidéo si disponible
-      if (data.videoVerification.recordingBlob) {
-        formData.append('verificationVideo', 
-          new File([data.videoVerification.recordingBlob], 'verification.webm', 
-          { type: 'video/webm' })
-        );
-      }
+      // Log des données envoyées
+      console.log('Données envoyées:', {
+        baseData,
+        files: {
+          idCard: data.documents.idCard.file?.name,
+          proofOfAddress: data.documents.proofOfAddress.file?.name,
+          taxCertificate: data.documents.taxCertificate.file?.name,
+          photos: data.documents.photos.map(p => p.file?.name)
+        }
+      });
 
       const response = await fetch(`${BASE_URL}/api/seller/register`, {
         method: "POST",
@@ -147,15 +179,17 @@ export function ComplianceForm({
         body: formData,
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erreur lors de l'inscription");
+        console.error('Erreur détaillée:', responseData);
+        throw new Error(responseData.message || responseData.error || "Erreur lors de l'inscription");
       }
 
       onNext();
     } catch (err) {
-      const error = err as ComplianceError;
-      console.error("Erreur de conformité:", error.message);
+      const error = err as Error;
+      console.error("Erreur complète:", error);
       setErrors((prev) => ({ ...prev, submit: error.message }));
     } finally {
       setIsSubmitting(false);
