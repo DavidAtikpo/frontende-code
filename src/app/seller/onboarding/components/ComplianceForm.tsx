@@ -102,16 +102,25 @@ export function ComplianceForm({
       // Vérification détaillée des documents
       const missingDocuments = [];
       
-      if (!data.documents.idCard?.file) {
+      // Log pour debug
+      console.log('Documents à vérifier:', {
+        idCard: data.documents.idCard,
+        proofOfAddress: data.documents.proofOfAddress,
+        taxCertificate: data.documents.taxCertificate,
+        photos: data.documents.photos
+      });
+
+      // Vérification simplifiée
+      if (!data.documents.idCard) {
         missingDocuments.push("Pièce d'identité");
       }
-      if (!data.documents.proofOfAddress?.file) {
+      if (!data.documents.proofOfAddress) {
         missingDocuments.push("Justificatif de domicile");
       }
-      if (!data.documents.taxCertificate?.file) {
+      if (!data.documents.taxCertificate) {
         missingDocuments.push("Attestation fiscale");
       }
-      if (!data.documents.photos.length || !data.documents.photos.every(photo => photo.file)) {
+      if (!data.documents.photos || data.documents.photos.length === 0) {
         missingDocuments.push("Photos d'identité");
       }
 
