@@ -91,12 +91,32 @@ export function ComplianceForm({
     }
 
     try {
-      // Vérifier que tous les documents requis sont présents
-      if (!data.documents.idCard?.file || 
-          !data.documents.proofOfAddress?.file || 
-          !data.documents.taxCertificate?.file || 
-          !data.documents.photos.length) {
-        throw new Error("Tous les documents requis doivent être fournis");
+      // Log de vérification des documents
+      console.log('Vérification des documents:', {
+        idCard: data.documents.idCard,
+        proofOfAddress: data.documents.proofOfAddress,
+        taxCertificate: data.documents.taxCertificate,
+        photos: data.documents.photos
+      });
+
+      // Vérification détaillée des documents
+      const missingDocuments = [];
+      
+      if (!data.documents.idCard?.file) {
+        missingDocuments.push("Pièce d'identité");
+      }
+      if (!data.documents.proofOfAddress?.file) {
+        missingDocuments.push("Justificatif de domicile");
+      }
+      if (!data.documents.taxCertificate?.file) {
+        missingDocuments.push("Attestation fiscale");
+      }
+      if (!data.documents.photos.length || !data.documents.photos.every(photo => photo.file)) {
+        missingDocuments.push("Photos d'identité");
+      }
+
+      if (missingDocuments.length > 0) {
+        throw new Error(`Documents manquants : ${missingDocuments.join(', ')}`);
       }
 
       // Vérifier les informations personnelles
@@ -160,16 +180,15 @@ export function ComplianceForm({
         }
       });
 
-      // Log des données envoyées
-      console.log('Données envoyées:', {
-        baseData,
-        files: {
-          idCard: data.documents.idCard.file?.name,
-          proofOfAddress: data.documents.proofOfAddress.file?.name,
-          taxCertificate: data.documents.taxCertificate.file?.name,
-          photos: data.documents.photos.map(p => p.file?.name)
+      // Log avant l'envoi
+      console.log('FormData contenu:');
+      for (const [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(key, ':', value.name, '(', value.size, 'bytes )');
+        } else {
+          console.log(key, ':', value);
         }
-      });
+      }
 
       const response = await fetch(`${BASE_URL}/api/seller/register`, {
         method: "POST",
