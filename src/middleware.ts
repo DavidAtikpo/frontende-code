@@ -10,10 +10,26 @@ export function middleware(request: NextRequest) {
     }
 
     const adminToken = request.cookies.get('token');
+    const userRole = request.cookies.get('role');
 
     // Rediriger vers la page de login si pas de token ou pas admin
-    if (!adminToken || localStorage.getItem('userData.role') !== 'admin') {
+    if (!adminToken || userRole?.value !== 'admin') {
       return NextResponse.redirect(new URL('/adminLogin', request.url));
+    }
+  }
+
+  // Vérifier si la route commence par /seller
+  if (request.nextUrl.pathname.startsWith('/seller')) {
+    // Exclure la page de login vendeur
+    if (request.nextUrl.pathname === '/seller/login') {
+      return NextResponse.next();
+    }
+
+    const sellerToken = request.cookies.get('token');
+    const userRole = request.cookies.get('role');
+
+    if (!sellerToken || userRole?.value !== 'seller') {
+      return NextResponse.redirect(new URL('/seller/login', request.url));
     }
   }
 
@@ -24,6 +40,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/admin/:path*',
-    '/((?!adminLogin|api|_next/static|_next/image|favicon.ico).*)',
+    '/seller/:path*',
+    '/((?!adminLogin|seller/login|api|_next/static|_next/image|favicon.ico).*)',
   ],
 }; 

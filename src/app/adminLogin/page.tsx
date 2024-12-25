@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { API_CONFIG } from "@/utils/config";
-import { setCookie } from "cookies-next";
+import { cookieService } from '@/services/cookieService';
 
 const { BASE_URL } = API_CONFIG;
 
@@ -40,18 +40,15 @@ export default function AdminLoginPage() {
       }
 
       if (data.success && data.accessToken && data.admin) {
-        // Sauvegarder le token
-        setCookie('token', data.accessToken);
+        // Sauvegarder dans les cookies
+        cookieService.setAuthData(data.accessToken, data.admin.role, data.refreshToken);
         
-        // Sauvegarder les informations de l'admin
+        // Sauvegarder les autres informations dans localStorage
         localStorage.setItem('userData', JSON.stringify({
           id: data.admin.id,
           name: data.admin.name,
-          email: data.admin.email,
-          role: data.admin.role
+          email: data.admin.email
         }));
-        // Optionnel : sauvegarder le refresh token
-        setCookie('refreshToken', data.refreshToken);
 
         router.push('/admin/dashboard');
       } else {
