@@ -65,10 +65,9 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const adminToken = getCookie('token');
-    const userRole = document.cookie.split(';').find(c => c.trim().startsWith('userRole='));
-    const isAdmin = userRole?.includes('admin');
+    const userRole = getCookie('role');
 
-    if (!adminToken || !isAdmin) {
+    if (!adminToken || userRole !== 'admin') {
       router.replace('/adminLogin');
       return;
     }

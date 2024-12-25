@@ -67,9 +67,9 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   //   return () => window.removeEventListener('resize', handleResize);
   // }, [router]);
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
+  // if (isLoading) {
+  //   return <LoadingSpinner />;
+  // }
 
   const menuItems = [
     { 
@@ -77,12 +77,6 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       label: "Dashboard", 
       href: "/admin/dashboard",
       description: "Statistiques générales et KPIs"
-    },
-    { 
-      icon: List, 
-      label: "Produits", 
-      href: "/admin/products",
-      description: "Gestion des produits et modération"
     },
     { 
       icon: Users, 
