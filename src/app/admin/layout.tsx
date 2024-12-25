@@ -33,43 +33,48 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [adminName, setAdminName] = useState<string>("");
 
   const isActive = (href: string) => 
     typeof window !== 'undefined' && window.location.pathname === href;
 
-  // useEffect(() => {
-  //   const checkAuth = async () => {
-  //     const adminToken = getCookie('token');
-  //     const userRole = getCookie('role');
+  useEffect(() => {
+    const checkAuth = async () => {
+      const adminToken = getCookie('token');
+      const userRole = getCookie('role');
 
-      
+      if (!adminToken || userRole !== 'admin') {
+        router.replace('/adminLogin');
+      } else {
+        setIsLoading(false);
+      }
+    };
 
-  //     if (!adminToken || userRole !== 'admin') {
-  //       router.replace('/adminLogin');
-  //     } else {
-  //       setIsLoading(false);
-  //     }
-  //   };
+    // Récupérer le nom de l'admin depuis localStorage
+    if (typeof window !== 'undefined') {
+      const name = localStorage.getItem('name');
+      setAdminName(name || "");
+    }
 
-  //   checkAuth();
+    checkAuth();
 
-  //   // Gérer le redimensionnement
-  //   const handleResize = () => {
-  //     if (window.innerWidth < 768) {
-  //       setIsSidebarOpen(false);
-  //     } else {
-  //       setIsSidebarOpen(true);
-  //     }
-  //   };
+    // Gérer le redimensionnement
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
 
-  //   handleResize();
-  //   window.addEventListener('resize', handleResize);
-  //   return () => window.removeEventListener('resize', handleResize);
-  // }, [router]);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [router]);
 
-  // if (isLoading) {
-  //   return <LoadingSpinner />;
-  // }
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
 
   const menuItems = [
     { 
@@ -253,7 +258,9 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
               <Menu className="h-6 w-6" />
             </button>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700 hidden md:inline">{localStorage.getItem('name')}</span>
+              <span className="text-sm text-gray-700 hidden md:inline">
+                {adminName}
+              </span>
               <div className="h-8 w-8 rounded-full bg-gray-200"></div>
             </div>
           </div>
