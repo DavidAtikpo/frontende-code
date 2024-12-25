@@ -37,36 +37,35 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const isActive = (href: string) => 
     typeof window !== 'undefined' && window.location.pathname === href;
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const adminToken = getCookie('token');
-      const userRole = getCookie('role');
-      console.log(userRole);
-      console.log(adminToken);
+  // useEffect(() => {
+  //   const checkAuth = async () => {
+  //     const adminToken = getCookie('token');
+  //     const userRole = getCookie('role');
+
       
 
-      if (!adminToken || userRole !== 'admin') {
-        router.replace('/adminLogin');
-      } else {
-        setIsLoading(false);
-      }
-    };
+  //     if (!adminToken || userRole !== 'admin') {
+  //       router.replace('/adminLogin');
+  //     } else {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    checkAuth();
+  //   checkAuth();
 
-    // Gérer le redimensionnement
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setIsSidebarOpen(false);
-      } else {
-        setIsSidebarOpen(true);
-      }
-    };
+  //   // Gérer le redimensionnement
+  //   const handleResize = () => {
+  //     if (window.innerWidth < 768) {
+  //       setIsSidebarOpen(false);
+  //     } else {
+  //       setIsSidebarOpen(true);
+  //     }
+  //   };
 
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [router]);
+  //   handleResize();
+  //   window.addEventListener('resize', handleResize);
+  //   return () => window.removeEventListener('resize', handleResize);
+  // }, [router]);
 
   if (isLoading) {
     return <LoadingSpinner />;
