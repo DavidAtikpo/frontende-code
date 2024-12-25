@@ -40,7 +40,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       const adminToken = getCookie('token');
-      const userRole = localStorage.getItem('userData.role');
+      const userRole = getCookie('role');
       
 
       if (!adminToken || userRole !== 'admin') {
