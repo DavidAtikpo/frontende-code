@@ -41,6 +41,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     const checkAuth = async () => {
       const adminToken = getCookie('token');
       const userRole = getCookie('role');
+      console.log(userRole);
+      console.log(adminToken);
       
 
       if (!adminToken || userRole !== 'admin') {
