@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +46,7 @@ interface SiteSettings {
 }
 
 export default function SiteSettings() {
+  const router = useRouter();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -53,17 +55,81 @@ export default function SiteSettings() {
     fetchSettings();
   }, []);
 
-  const fetchSettings = async () => {
+  const refreshToken = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/admin/site-settings`, {
+      const refreshTokenValue = getCookie('refreshToken');
+      const response = await fetch(`${BASE_URL}/api/admin/refresh-token`, {
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${getCookie('token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken: refreshTokenValue }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        document.cookie = `token=${data.accessToken}; path=/`;
+        return data.accessToken;
+      } else {
+        throw new Error('Échec du rafraîchissement du token');
+      }
+    } catch (error) {
+      console.error('Erreur refresh token:', error);
+      router.push('/adminLogin');
+      return null;
+    }
+  };
+
+  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+    try {
+      const token = getCookie('token');
+      
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'Authorization': `Bearer ${token}`,
         },
         credentials: 'include'
       });
+
+      if (response.status === 401) {
+        // Token expiré, essayer de le rafraîchir
+        const newToken = await refreshToken();
+        if (!newToken) return null;
+
+        // Réessayer avec le nouveau token
+        return fetch(url, {
+          ...options,
+          headers: {
+            ...options.headers,
+            'Authorization': `Bearer ${newToken}`,
+          },
+          credentials: 'include'
+        });
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Erreur fetchWithAuth:', error);
+      return null;
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      setLoading(true);
+      const response = await fetchWithAuth(`${BASE_URL}/api/admin/site-settings`);
+      
+      if (!response) {
+        throw new Error('Erreur d\'authentification');
+      }
+
       const data = await response.json();
       if (data.success) {
         setSettings(data.data);
+      } else {
+        throw new Error(data.message || 'Erreur lors de la récupération des paramètres');
       }
     } catch (error) {
       console.error('Erreur:', error);
@@ -75,19 +141,25 @@ export default function SiteSettings() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/admin/site-settings`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getCookie('token')}`,
-        },
-        body: JSON.stringify(settings),
-        credentials: 'include'
-      });
+      const response = await fetchWithAuth(
+        `${BASE_URL}/api/admin/site-settings`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(settings),
+        }
+      );
+
+      if (!response) {
+        throw new Error('Erreur d\'authentification');
+      }
 
       if (response.ok) {
-        // Recharger les paramètres
         await fetchSettings();
+      } else {
+        throw new Error('Erreur lors de la sauvegarde des paramètres');
       }
     } catch (error) {
       console.error('Erreur:', error);

@@ -33,7 +33,6 @@ interface LogMetadata {
   path?: string;
   method?: string;
   params?: Record<string, unknown>;
-  // Ajoutez d'autres champs spécifiques si nécessaire
 }
 
 interface SystemLog {
@@ -55,6 +54,7 @@ interface SystemLog {
 export default function SystemLogs() {
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(),
@@ -76,11 +76,19 @@ export default function SystemLogs() {
         credentials: 'include'
       });
       const data = await response.json();
-      if (data.success) {
+      
+      if (data?.success && Array.isArray(data?.data?.logs)) {
         setLogs(data.data.logs);
+        setError(null);
+      } else {
+        console.warn('Format de données invalide:', data);
+        setLogs([]);
+        setError('Format de données invalide');
       }
     } catch (error) {
       console.error('Erreur:', error);
+      setLogs([]);
+      setError('Impossible de charger les logs');
     } finally {
       setLoading(false);
     }
@@ -112,6 +120,51 @@ export default function SystemLogs() {
   if (loading) {
     return <LoadingSpinner />;
   }
+
+  const renderTableContent = () => {
+    if (error) {
+      return (
+        <TableRow>
+          <TableCell colSpan={7} className="text-center py-4 text-red-500">
+            {error}
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    if (!Array.isArray(logs) || logs.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={7} className="text-center py-4">
+            Aucun log disponible
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    return logs.map((log) => (
+      <TableRow key={log.id}>
+        <TableCell>
+          <div className="flex items-center gap-2">
+            {getSeverityIcon(log.severity)}
+            {log.severity}
+          </div>
+        </TableCell>
+        <TableCell>{log.type}</TableCell>
+        <TableCell>{log.action}</TableCell>
+        <TableCell className="max-w-md truncate">
+          {log.description}
+        </TableCell>
+        <TableCell>
+          {log.user?.name || 'Système'}
+        </TableCell>
+        <TableCell>{log.ipAddress}</TableCell>
+        <TableCell>
+          {new Date(log.createdAt).toLocaleString()}
+        </TableCell>
+      </TableRow>
+    ));
+  };
 
   return (
     <div className="p-6">
@@ -156,31 +209,10 @@ export default function SystemLogs() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {logs.map((log) => (
-              <TableRow key={log.id}>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {getSeverityIcon(log.severity)}
-                    {log.severity}
-                  </div>
-                </TableCell>
-                <TableCell>{log.type}</TableCell>
-                <TableCell>{log.action}</TableCell>
-                <TableCell className="max-w-md truncate">
-                  {log.description}
-                </TableCell>
-                <TableCell>
-                  {log.user?.name || 'Système'}
-                </TableCell>
-                <TableCell>{log.ipAddress}</TableCell>
-                <TableCell>
-                  {new Date(log.createdAt).toLocaleString()}
-                </TableCell>
-              </TableRow>
-            ))}
+            {renderTableContent()}
           </TableBody>
         </Table>
       </Card>
     </div>
   );
-} 
+}

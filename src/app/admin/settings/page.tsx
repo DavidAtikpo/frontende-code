@@ -42,7 +42,7 @@ export default function AdminSettings() {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/admin/settings`);
+      const response = await fetch(`${BASE_URL}/api/admin/site-settings`);
       const data = await response.json();
       if (data.success) {
         const grouped = data.data.reduce((acc: GroupedSettings, setting: SettingsData) => {
@@ -64,7 +64,7 @@ export default function AdminSettings() {
     setSaving(true);
     try {
       const flatSettings = Object.values(settings).flat();
-      const response = await fetch(`${BASE_URL}/api/admin/settings`, {
+      const response = await fetch(`${BASE_URL}/api/admin/site-settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -38,17 +38,24 @@ export default function AdminDashboard() {
 
   const fetchDashboardStats = useCallback(async () => {
     try {
-   
+      const token = getCookie('token');
+      console.log('token', token);
 
       const response = await fetch(`${BASE_URL}/api/admin/dashboard/stats`, {
         headers: {
-          'Authorization': `Bearer ${getCookie('token')}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         credentials: 'include'
       });
 
+      console.log('response', response);
+
       if (!response.ok) {
+        if (response.status === 401) {
+          router.push('/adminLogin');
+          return;
+        }
         throw new Error("Erreur lors du chargement des statistiques");
       }
 
@@ -61,29 +68,29 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
-    const adminToken = getCookie('token');
+    const token = getCookie('token');
     const userRole = getCookie('role');
 
-    if (!adminToken || userRole !== 'admin') {
+    if (!token || userRole !== 'admin') {
       router.replace('/adminLogin');
       return;
     }
 
     fetchDashboardStats();
-  }, [router, fetchDashboardStats]);
+  }, [fetchDashboardStats, router]);
 
   if (loading) {
-    return <div className="p-6">Chargement...</div>;
+    return <div>Chargement...</div>;
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Tableau de bord administrateur</h1>
+    <div className="space-y-6">
+      <h2 className="text-3xl font-bold">Tableau de bord</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Utilisateurs */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
