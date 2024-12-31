@@ -44,7 +44,7 @@ interface UserProfile {
 
 export default function UserProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {

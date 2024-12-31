@@ -128,9 +128,9 @@ export default function Customers() {
         isLoading={loading}
         currentPage={1}
         totalPages={1}
-        onPageChange={(page) => {
-          // Gérer le changement de page
-        }}
+        // onPageChange={(page) => {
+        //   // Gérer le changement de page
+        // }}
       />
     </div>
   );

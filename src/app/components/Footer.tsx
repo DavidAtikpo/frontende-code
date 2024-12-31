@@ -9,7 +9,9 @@ import {
   FaMapMarkerAlt,
   FaPhone,
   FaEnvelope,
-  FaClock
+  FaClock,
+  FaTiktok,
+  FaYoutube
 } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
@@ -61,7 +63,7 @@ const Footer = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <FaMapMarkerAlt className="text-blue-500" />
-                <span>123 Rue du Commerce, Dakar</span>
+                <span>123 Rue du Commerce, Contonou</span>
               </div>
               <div className="flex items-center gap-3">
                 <FaPhone className="text-blue-500" />
@@ -149,7 +151,7 @@ const Footer = () => {
 
             <h4 className="text-xl font-bold text-white mb-4">Suivez-nous</h4>
             <div className="flex gap-4">
-              {[FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn].map((Icon, index) => (
+              {[FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn, FaYoutube, FaTiktok].map((Icon, index) => (
                 <Link 
                   key={index}
                   href="#"
@@ -176,10 +178,10 @@ const Footer = () => {
               © {new Date().getFullYear()} DUBON eCommerce. Tous droits réservés.
             </p>
             <div className="flex items-center gap-6">
-              <Link href="/privacy" className="text-sm text-gray-500 hover:text-blue-500 transition-colors">
+              <Link href="/privacy-policy" className="text-sm text-gray-500 hover:text-blue-500 transition-colors">
                 Politique de confidentialité
               </Link>
-              <Link href="/terms" className="text-sm text-gray-500 hover:text-blue-500 transition-colors">
+              <Link href="/terms-of-service" className="text-sm text-gray-500 hover:text-blue-500 transition-colors">
                 Conditions d&apos;utilisation
               </Link>
             </div>

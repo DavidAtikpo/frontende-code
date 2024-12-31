@@ -29,6 +29,13 @@ interface WishlistItem {
   finalPrice: number;
 }
 
+interface FilterValues {
+  category: string;
+  availability: string;
+  priceRange: string;
+  [key: string]: string;  // Pour les autres propriétés dynamiques
+}
+
 const CategoryPage = () => {
   const { category } = useParams();
   const [products, setProducts] = useState<Product[]>([]);

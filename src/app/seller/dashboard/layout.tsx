@@ -2,22 +2,37 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, 
   Package, 
   ShoppingCart, 
   Users, 
-  Settings, 
- 
+  Settings,
   X,
   Store,
   BarChart,
-  CreditCard
+  CreditCard,
+  Bell,
+  HelpCircle,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Hamburger } from "@/components/ui/hamburger";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
+import { API_CONFIG } from "@/utils/config";
+
+const { BASE_URL } = API_CONFIG;
+
 
 const sidebarLinks = [
   {
@@ -63,8 +78,11 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [notifications, setNotifications] = useState(0);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -80,6 +98,11 @@ export default function DashboardLayout({
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/login');
   };
 
   return (
@@ -98,9 +121,61 @@ export default function DashboardLayout({
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" className="hidden sm:flex">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="hidden sm:flex"
+              onClick={() => router.push(`/store/${user?.storeId}`)}
+            >
               Voir ma boutique
             </Button>
+
+            {/* Notifications */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5" />
+                  {notifications > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-xs text-white flex items-center justify-center">
+                      {notifications}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                {/* Contenu des notifications */}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Profil utilisateur */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Avatar>
+                    <AvatarImage src={user?.avatar} />
+                    <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => router.push('/seller/profile')}>
+                  Mon profil
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/seller/settings')}>
+                  Paramètres
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/seller/help')}>
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  Aide
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Déconnexion
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button 
               variant="ghost" 
               size="icon"

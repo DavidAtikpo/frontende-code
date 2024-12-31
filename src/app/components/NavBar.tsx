@@ -161,7 +161,7 @@ const NavigationBar = () => {
           {[
             { href: '/service', label: 'Services' },
             { href: '/evenement', label: 'Événementiels' },
-            { href: '/formation', label: 'Formations' },
+            { href: '/trainings', label: 'Formations' },
             { href: '/restaurant', label: 'E-Restaurant' },
             { href: '/autres', label: 'Autres' },
           ].map((link) => (
@@ -192,8 +192,8 @@ const NavigationBar = () => {
         <div className="md:hidden bg-white shadow-lg py-6 px-6 space-y-6 animate-fadeIn">
           {[
             { href: '/service', label: 'Services' },
-            { href: '/evenement', label: 'Événementiels' },
-            { href: '/formation', label: 'Formations' },
+            { href: '/events', label: 'Événementiels' },
+            { href: '/trainings', label: 'Formations' },
             { href: '/restaurant', label: 'E-Restaurant' },
             { href: '/autres', label: 'Autres' },
           ].map((link) => (

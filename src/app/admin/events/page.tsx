@@ -1,215 +1,230 @@
-// "use client";
-
-// import { useState, useEffect } from "react";
-// import Link from "next/link";
-// import { Plus, Calendar, MapPin, Users } from "lucide-react";
-// import { Button } from "@/components/ui/button";
-// // import { Input } from "@/components/ui/input";
-// import { Card } from "@/components/ui/card";
-
-// const BASE_URL = "http://localhost:5000/api";
-
-// interface Event {
-//   id: string;
-//   title: string;
-//   description: string;
-//   date: string;
-//   location: string;
-//   maxParticipants: number;
-//   currentParticipants: number;
-//   image: string;
-//   status: "À venir" | "En cours" | "Terminé";
-// }
-
-// export default function EventsPage() {
-//   const [events, setEvents] = useState<Event[]>([]);
-//   // const [searchTerm, setSearchTerm] = useState("");
-//   const [ setIsLoading] = useState(true);
-//   const [ setError] = useState("");
-
-//   useEffect(() => {
-//     const fetchEvents = async () => {
-//       try {
-//         const response = await fetch(`${BASE_URL}/events`, {
-//           headers: {
-//             Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-//           },
-//         });
-
-//         if (!response.ok) {
-//           throw new Error("Erreur lors du chargement des événements");
-//         }
-
-//         const data = await response.json();
-//         setEvents(data);
-//       } catch (err: any) {
-//         setError(err.message);
-//       } finally {
-//         setIsLoading(false);
-//       }
-//     };
-
-//     fetchEvents();
-//   }, []);
-
-//   return (
-//     <div className="space-y-6">
-//       <div className="flex justify-between items-center">
-//         <h1 className="text-2xl font-bold">Événements</h1>
-//         <Link href="/admin/events/add">
-//           <Button className="bg-[#1D4ED8] hover:bg-[#1e40af]">
-//             <Plus className="h-4 w-4 mr-2" />
-//             Ajouter un événement
-//           </Button>
-//         </Link>
-//       </div>
-
-//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-//         {events.map((event) => (
-//           <Card key={event.id} className="overflow-hidden">
-//             <img 
-//               src={event.image} 
-//               alt={event.title}
-//               className="w-full h-48 object-cover"
-//             />
-//             <div className="p-4">
-//               <h3 className="font-semibold text-lg mb-2">{event.title}</h3>
-//               <div className="space-y-2 text-sm text-gray-600">
-//                 <div className="flex items-center">
-//                   <Calendar className="h-4 w-4 mr-2" />
-//                   {new Date(event.date).toLocaleDateString()}
-//                 </div>
-//                 <div className="flex items-center">
-//                   <MapPin className="h-4 w-4 mr-2" />
-//                   {event.location}
-//                 </div>
-//                 <div className="flex items-center">
-//                   <Users className="h-4 w-4 mr-2" />
-//                   {event.currentParticipants}/{event.maxParticipants} participants
-//                 </div>
-//               </div>
-//               <div className="mt-4 flex justify-end space-x-2">
-//                 <Link href={`/admin/events/${event.id}`}>
-//                   <Button variant="outline" size="sm">
-//                     Voir plus
-//                   </Button>
-//                 </Link>
-//               </div>
-//             </div>
-//           </Card>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// } 
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { Plus, Calendar, MapPin, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { useEffect, useState, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import { API_CONFIG } from '@/utils/config';
 import { getCookie } from "cookies-next";
-import { API_CONFIG } from "@/utils/config";
+import { DataTable } from "@/components/ui/data-table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, MapPin, Users } from 'lucide-react';
+
 const { BASE_URL } = API_CONFIG;
 
 interface Event {
   id: string;
   title: string;
-  description: string;
+  type: string;
   date: string;
   location: string;
-  maxParticipants: number;
-  currentParticipants: number;
-  image: string;
-  status: "À venir" | "En cours" | "Terminé";
+  capacity: number;
+  price: number;
+  status: 'draft' | 'published' | 'cancelled';
+  seller: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  bookings: number;
+  createdAt: string;
 }
 
-export default function EventsPage() {
+type Row = {
+  original: Event;
+};
+
+export default function AdminEvents() {
+  const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const columns = [
+    {
+      accessorKey: "title",
+      header: "Titre",
+      cell: ({ row }: { row: Row }) => (
+        <div>
+          <p className="font-medium">{row.original.title}</p>
+          <p className="text-sm text-gray-500">{row.original.type}</p>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "seller",
+      header: "Organisateur",
+      cell: ({ row }: { row: Row }) => (
+        <div>
+          <p>{row.original.seller.name}</p>
+          <p className="text-sm text-gray-500">{row.original.seller.email}</p>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "date",
+      header: "Date",
+      cell: ({ row }: { row: Row }) => (
+        <div className="flex items-center">
+          <Calendar className="mr-2 h-4 w-4" />
+          {new Date(row.original.date).toLocaleDateString()}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "location",
+      header: "Lieu",
+      cell: ({ row }: { row: Row }) => (
+        <div className="flex items-center">
+          <MapPin className="mr-2 h-4 w-4" />
+          {row.original.location}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "capacity",
+      header: "Capacité",
+      cell: ({ row }: { row: Row }) => (
+        <div className="flex items-center">
+          <Users className="mr-2 h-4 w-4" />
+          {row.original.bookings}/{row.original.capacity}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "price",
+      header: "Prix",
+      cell: ({ row }: { row: Row }) => (
+        <div className="font-medium">
+          {row.original.price.toLocaleString()} FCFA
+        </div>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Statut",
+      cell: ({ row }: { row: Row }) => {
+        const status = row.original.status;
+        const colors = {
+          draft: "bg-gray-100 text-gray-800",
+          published: "bg-green-100 text-green-800",
+          cancelled: "bg-red-100 text-red-800",
+        };
+        return (
+          <Badge className={colors[status]}>
+            {status}
+          </Badge>
+        );
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }: { row: Row }) => (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push(`/admin/events/${row.original.id}`)}
+          >
+            Détails
+          </Button>
+          {row.original.status === 'draft' && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => handleApprove(row.original.id)}
+            >
+              Approuver
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const fetchEvents = useCallback(async () => {
+    try {
+      const token = getCookie('token');
+      const response = await fetch(`${BASE_URL}/api/admin/events`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          router.push('/adminLogin');
+          return;
+        }
+        throw new Error("Erreur lors du chargement des événements");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setEvents(data.data);
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
+  const handleApprove = async (eventId: string) => {
+    try {
+      const token = getCookie('token');
+      const response = await fetch(`${BASE_URL}/api/admin/events/${eventId}/approve`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        fetchEvents();
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+    }
+  };
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await fetch(`${BASE_URL}/events`, {
-          headers: {
-            Authorization: `Bearer ${getCookie('token')}`,
-          },
-        });
+    const token = getCookie('token');
+    const userRole = getCookie('role');
 
-        if (!response.ok) {
-          throw new Error("Erreur lors du chargement des événements");
-        }
-
-        const data: Event[] = await response.json();
-        setEvents(data);
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (!token || userRole !== 'admin') {
+      router.replace('/adminLogin');
+      return;
+    }
 
     fetchEvents();
-  }, []); // Suppression des setters des dépendances
+  }, [fetchEvents, router]);
 
-  if (isLoading) return <p>Chargement des événements...</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
+  if (loading) {
+    return <div>Chargement...</div>;
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Événements</h1>
-        <Link href="/admin/events/add">
-          <Button className="bg-[#1D4ED8] hover:bg-[#1e40af]">
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter un événement
-          </Button>
-        </Link>
+        <h2 className="text-3xl font-bold">Gestion des événements</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {events.map((event) => (
-          <Card key={event.id} className="overflow-hidden">
-            <Image
-              src={event.image}
-              alt={event.title}
-              width={800}
-              height={300}
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-4">
-              <h3 className="font-semibold text-lg mb-2">{event.title}</h3>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  {new Date(event.date).toLocaleDateString()}
-                </div>
-                <div className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  {event.location}
-                </div>
-                <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-2" />
-                  {event.currentParticipants}/{event.maxParticipants} participants
-                </div>
-              </div>
-              <div className="mt-4 flex justify-end space-x-2">
-                <Link href={`/admin/events/${event.id}`}>
-                  <Button variant="outline" size="sm">
-                    Voir plus
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Liste des événements</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            columns={columns}
+            data={events}
+            searchKey="title"
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

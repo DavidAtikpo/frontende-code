@@ -7,7 +7,6 @@ import Image from "next/image";
 import {
   LayoutDashboard,
   Package,
-  List,
   Users,
   ShoppingCart,
   

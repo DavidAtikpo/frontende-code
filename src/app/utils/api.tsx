@@ -1,4 +1,30 @@
-const BASE_URL = "http://localhost:5000/api";
+const BASE_URL = "https://dubon-server.onrender.com";
+
+export const fetchServices = async () => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/services`);
+    if (!response.ok) {
+      throw new Error('Erreur lors de la récupération des services');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Erreur API:', error);
+    throw error;
+  }
+};
+
+export const fetchServiceDetails = async (serviceId: string) => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/services/${serviceId}`);
+    if (!response.ok) {
+      throw new Error('Erreur lors de la récupération des détails du service');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Erreur API:', error);
+    throw error;
+  }
+};
 
 // Route pour avoir tous les produits
 export const fetchProducts = async () => {
