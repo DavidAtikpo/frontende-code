@@ -160,7 +160,7 @@ const NavigationBar = () => {
         <ul className="hidden md:flex items-center space-x-8">
           {[
             { href: '/service', label: 'Services' },
-            { href: '/evenement', label: 'Événementiels' },
+            { href: '/events', label: 'Événementiels' },
             { href: '/trainings', label: 'Formations' },
             { href: '/restaurant', label: 'E-Restaurant' },
             { href: '/autres', label: 'Autres' },
