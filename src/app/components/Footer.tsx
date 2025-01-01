@@ -17,6 +17,39 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+const socialLinks = [
+  { 
+    Icon: FaFacebookF, 
+    href: "https://www.facebook.com/profile.php?id=61551357505057",
+    label: "Facebook"
+  },
+  { 
+    Icon: FaTwitter, 
+    href: "https://twitter.com/dubonservices",
+    label: "Twitter"
+  },
+  { 
+    Icon: FaInstagram, 
+    href: "https://instagram.com/dubonservices",
+    label: "Instagram"
+  },
+  { 
+    Icon: FaLinkedinIn, 
+    href: "https://linkedin.com/company/dubonservices",
+    label: "LinkedIn"
+  },
+  { 
+    Icon: FaYoutube, 
+    href: "https://youtube.com/@dubonservices",
+    label: "YouTube"
+  },
+  { 
+    Icon: FaTiktok, 
+    href: "https://www.tiktok.com/@dubonservicesevent",
+    label: "TikTok"
+  }
+];
+
 const Footer = () => {
   const containerVariants = {
     hidden: { opacity: 0, y: 50 },
@@ -109,10 +142,7 @@ const Footer = () => {
             <h4 className="text-xl font-bold text-white mb-6">Liens Rapides</h4>
             <ul className="space-y-4">
               {[
-                { name: "Formations", link: "/formations" },
-                { name: "Mon Panier", link: "/cart" },
-                { name: "Ma Liste d'envies", link: "/wishlist" },
-                { name: "Suivi de commande", link: "/track-order" },
+                { name: "Documentation", link: "/docs/guide" },
                 { name: "Aide & Support", link: "/help" },
                 { name: "À propos", link: "/about" },
               ].map((item, index) => (
@@ -151,10 +181,13 @@ const Footer = () => {
 
             <h4 className="text-xl font-bold text-white mb-4">Suivez-nous</h4>
             <div className="flex gap-4">
-              {[FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn, FaYoutube, FaTiktok].map((Icon, index) => (
+              {socialLinks.map(({ Icon, href, label }) => (
                 <Link 
-                  key={index}
-                  href="#"
+                  key={label}
+                  href={href}
+                  aria-label={label}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="bg-gray-800 p-3 rounded-lg hover:bg-blue-600 hover:text-white transition-all transform hover:scale-110"
                 >
                   <Icon className="text-xl" />
