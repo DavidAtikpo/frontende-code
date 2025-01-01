@@ -6,8 +6,8 @@ import {
   FaTwitter, 
   FaInstagram, 
   FaLinkedinIn,
-  FaMapMarkerAlt,
-  FaPhone,
+  // FaMapMarkerAlt,
+  // FaPhone,
   FaEnvelope,
   FaClock,
   FaTiktok,
@@ -61,14 +61,14 @@ const Footer = () => {
               DUBON, votre partenaire de confiance pour des produits alimentaires de qualité.
             </p>
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
+              {/* <div className="flex items-center gap-3">
                 <FaMapMarkerAlt className="text-blue-500" />
                 <span>123 Rue du Commerce, Contonou</span>
-              </div>
-              <div className="flex items-center gap-3">
+              </div> */}
+              {/* <div className="flex items-center gap-3">
                 <FaPhone className="text-blue-500" />
                 <span>+221 77 123 45 67</span>
-              </div>
+              </div> */}
               <div className="flex items-center gap-3">
                 <FaEnvelope className="text-blue-500" />
                 <span>contact@dubon.com</span>
@@ -181,7 +181,7 @@ const Footer = () => {
               <Link href="/privacy-policy" className="text-sm text-gray-500 hover:text-blue-500 transition-colors">
                 Politique de confidentialité
               </Link>
-              <Link href="/terms-of-service" className="text-sm text-gray-500 hover:text-blue-500 transition-colors">
+              <Link href="/terms" className="text-sm text-gray-500 hover:text-blue-500 transition-colors">
                 Conditions d&apos;utilisation
               </Link>
             </div>

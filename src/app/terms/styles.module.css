@@ -1,0 +1,27 @@
+.termsContainer {
+  @apply max-w-4xl mx-auto px-4 py-8;
+}
+
+.section {
+  @apply mb-12;
+}
+
+.sectionTitle {
+  @apply text-2xl font-bold mb-4;
+}
+
+.subsectionTitle {
+  @apply text-xl font-semibold mb-3;
+}
+
+.content {
+  @apply prose max-w-none;
+}
+
+.tableOfContents {
+  @apply bg-gray-50 p-6 rounded-lg mb-8;
+}
+
+.tocLink {
+  @apply block text-blue-600 hover:underline;
+} 

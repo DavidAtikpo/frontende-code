@@ -167,7 +167,7 @@ export default function RegisterPage() {
                 </Link>{" "}
                 et la{" "}
                 <Link
-                  href="/privacy"
+                  href="/privacy-policy"
                   className="text-[#1D4ED8] hover:underline"
                 >
                   politique de confidentialité

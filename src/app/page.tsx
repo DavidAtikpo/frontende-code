@@ -78,7 +78,7 @@ export default function Home() {
       {/* Section Produits */}
       <section className="bg-gray-50 py-12">
         <div className="container mx-auto px-4">
-                    <HomeProducts />
+           <HomeProducts />
         </div>
       </section>
 
@@ -102,8 +102,6 @@ export default function Home() {
           <WhyChooseUsSection />
         </div>
       </section>
-
-
       </div>
   );
 }
