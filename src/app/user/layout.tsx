@@ -66,7 +66,7 @@ const navigation = [
   },
   {
     name: "Devenir Vendeur",
-    href: "/seller/",
+    href: "/seller/become",
     icon: UserPlus
   }
 ];

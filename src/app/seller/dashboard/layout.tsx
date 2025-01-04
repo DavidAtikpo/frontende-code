@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, 
@@ -83,6 +84,12 @@ export default function DashboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [notifications, setNotifications] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [userInfo, setUserInfo] = useState<{
+    name: string;
+    email: string;
+    profilePhotoURL: string | null;
+  }>({ name: '', email: '', profilePhotoURL: null });
 
   useEffect(() => {
     const checkMobile = () => {
@@ -96,6 +103,39 @@ export default function DashboardLayout({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("userData");
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        const firstName = user.name?.split(' ')[0] || '';
+        
+        // Construire l'URL de la photo de profil de manière sécurisée
+        let photoURL = null;
+        if (user.profilePhotoUrl) {
+          // Si l'URL commence déjà par http, on la garde telle quelle
+          if (user.profilePhotoUrl.startsWith('http')) {
+            photoURL = user.profilePhotoUrl;
+          } else {
+            // Sinon, on ajoute le BASE_URL
+            photoURL = `${API_CONFIG.BASE_URL}${user.profilePhotoUrl}`;
+          }
+        }
+
+        setUserInfo({
+          name: user.name || '',
+          email: user.email || '',
+          profilePhotoURL: photoURL
+        });
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Erreur parsing userData:', error);
+      }
+    }
+    setIsAuthenticated(!!token);
+  }, []);
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -104,6 +144,8 @@ export default function DashboardLayout({
     await logout();
     router.push('/login');
   };
+
+
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -152,12 +194,25 @@ export default function DashboardLayout({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Avatar>
-                    <AvatarImage src={user?.avatar} />
-                    <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+                    {userInfo.profilePhotoURL ? (
+                      <AvatarImage 
+                        src={userInfo.profilePhotoURL} 
+                        alt={userInfo.name}
+                      />
+                    ) : (
+                      <AvatarFallback>
+                        {userInfo.name.charAt(0)}
+                      </AvatarFallback>
+                    )}
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium">{userInfo.name}</p>
+                  <p className="text-xs text-muted-foreground">{userInfo.email}</p>
+                </div>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.push('/seller/profile')}>
                   Mon profil
                 </DropdownMenuItem>

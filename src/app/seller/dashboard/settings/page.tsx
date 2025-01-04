@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { link } from "fs";
 
 interface _SettingsData {
   notifications: {
@@ -103,8 +104,7 @@ export default function SellerSettings() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <label>Photo de profil</label>
-            <Input type="file" name="photo" accept="image/*" />
+            <button>Profile</button>
           </div>
           
           <div className="space-y-2">
