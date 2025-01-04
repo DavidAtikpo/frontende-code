@@ -15,6 +15,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Plus, Filter, Download, Edit, Trash } from "lucide-react";
 import { getApiUrl } from '@/utils/api';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const BASE_URL = `${getApiUrl()}/api`;
 
@@ -120,10 +121,12 @@ export default function ProductsPage() {
             <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau produit
-          </Button>
+          <Link href="/seller/dashboard/products/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Nouveau produit
+            </Button>
+          </Link>
         </div>
       </div>
 
