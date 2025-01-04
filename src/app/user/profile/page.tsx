@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, ChangeEvent } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,18 +17,17 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { getCookie } from 'cookies-next';
+import { Loader2, Pencil } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Image from "next/image";
 
 const { BASE_URL } = API_CONFIG;
 
 interface UserProfile {
   name: string;
   email: string;
-  profile: {
-    bio: string;
-    phoneNumber: string;
-    displayName: string;
-    avatarUrl: string;
-  };
+  avatarUrl: string;
+  phoneNumber: string;
   preferences: {
     language: string;
     currency: string;
@@ -44,8 +43,22 @@ interface UserProfile {
 
 export default function UserProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPhotoUploading, setIsPhotoUploading] = useState(false);
   const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<UserProfile | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -58,26 +71,198 @@ export default function UserProfile() {
         });
         
         if (response.ok) {
-          const data = await response.json();
+          const { data } = await response.json();
+          
+          // Récupérer l'URL de la photo depuis le localStorage
+          const userData = localStorage.getItem('userData');
+          if (userData) {
+            const user = JSON.parse(userData);
+            data.avatarUrl = user.profilePhotoUrl || data.avatarUrl;
+          }
+          
           setProfile(data);
+          setFormData(data);
         }
       } catch (error) {
         console.error('Erreur:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger le profil",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchProfile();
   }, []);
 
-  const handlePreferenceUpdate = async (key: string, value: string | boolean | Record<string, boolean>) => {
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => prev ? {
+      ...prev,
+      [field]: value
+    } : null);
+  };
+
+  const handleSubmit = async () => {
+    if (!formData) return;
+    setIsSubmitting(true);
     try {
       const token = getCookie('token');
-      
-      const response = await fetch(`${BASE_URL}/api/user/preferences`, {
+      const response = await fetch(`${BASE_URL}/api/user/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        setProfile(formData);
+        setIsEditing(false);
+        toast({
+          title: "Succès",
+          description: "Profil mis à jour avec succès"
+        });
+      } else {
+        throw new Error('Erreur lors de la mise à jour');
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le profil",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePhotoSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
+
+    const file = e.target.files[0];
+    setSelectedFile(file);
+    const previewUrl = URL.createObjectURL(file);
+    setPreviewImage(previewUrl);
+    setShowPreviewDialog(true);
+  };
+
+  const handlePhotoUpload = async () => {
+    if (!selectedFile) return;
+
+    setIsPhotoUploading(true);
+    const formData = new FormData();
+    formData.append('profilePhoto', selectedFile);
+
+    try {
+      const response = await fetch(`${BASE_URL}/api/user/profile`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${getCookie('token')}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        const { data } = await response.json();
+        const fullAvatarUrl = `${BASE_URL}${data.avatarUrl}`;
+        setProfile(prev => prev ? { ...prev, avatarUrl: data.avatarUrl } : null);
+        
+        // Mettre à jour le localStorage avec l'URL complète
+        const userData = localStorage.getItem('userData');
+        if (userData) {
+          const parsedUserData = JSON.parse(userData);
+          const updatedUserData = {
+            ...parsedUserData,
+            profilePhotoUrl: fullAvatarUrl
+          };
+          localStorage.setItem('userData', JSON.stringify(updatedUserData));
+        }
+
+        toast({
+          title: "Succès",
+          description: "Photo de profil mise à jour"
+        });
+        setShowPreviewDialog(false);
+      } else {
+        throw new Error('Erreur lors du téléchargement');
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour la photo",
+        variant: "destructive"
+      });
+    } finally {
+      setIsPhotoUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      setPreviewImage(null);
+      setSelectedFile(null);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Erreur",
+        description: "Les mots de passe ne correspondent pas",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`${BASE_URL}/api/user/password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getCookie('token')}`
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Succès",
+          description: "Mot de passe mis à jour avec succès"
+        });
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        setShowPasswordForm(false);
+      } else {
+        const data = await response.json();
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible de mettre à jour le mot de passe",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePreferenceUpdate = async (key: string, value: string | boolean | Record<string, boolean>) => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/user/preferences`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getCookie('token')}`
         },
         body: JSON.stringify({ [key]: value })
       });
@@ -91,22 +276,25 @@ export default function UserProfile() {
           }
         } : null);
         toast({
-          title: "Préférences mises à jour",
-          description: "Vos préférences ont été enregistrées avec succès."
+          title: "Succès",
+          description: "Préférences mises à jour"
         });
       }
     } catch (error) {
-      console.error("Erreur lors de la mise à jour des préférences:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre à jour les préférences.",
+        description: "Impossible de mettre à jour les préférences",
         variant: "destructive"
       });
     }
   };
 
   if (isLoading) {
-    return <div>Chargement...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   return (
@@ -120,24 +308,60 @@ export default function UserProfile() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={profile?.profile.avatarUrl} />
-                <AvatarFallback>
-                  {profile?.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <Button variant="outline">Changer la photo</Button>
+              <div className="relative">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage 
+                    src={profile?.avatarUrl ? `${BASE_URL}${profile.avatarUrl}` : undefined}
+                    alt={profile?.name || 'Avatar'}
+                    className="object-cover"
+                  />
+                  <AvatarFallback>
+                    {profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handlePhotoSelect}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute bottom-0 right-0 h-6 w-6 rounded-full"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <span className="sr-only">Changer la photo</span>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">{profile?.name}</h2>
+                <p className="text-sm text-gray-500">{profile?.email}</p>
+              </div>
             </div>
 
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Nom</Label>
-                <Input id="name" value={profile?.name} />
+                <Input 
+                  id="name" 
+                  value={formData?.name || ''} 
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  disabled={!isEditing}
+                />
               </div>
 
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={profile?.email} />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={formData?.email || ''} 
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  disabled={!isEditing}
+                />
               </div>
 
               <div className="grid gap-2">
@@ -145,17 +369,30 @@ export default function UserProfile() {
                 <Input 
                   id="phone" 
                   type="tel" 
-                  value={profile?.profile.phoneNumber} 
+                  value={formData?.phoneNumber || ''} 
+                  onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                  disabled={!isEditing}
                 />
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="bio">Bio</Label>
-                <textarea 
-                  id="bio"
-                  className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={profile?.profile.bio}
-                />
+              <div className="flex justify-end gap-4">
+                {isEditing ? (
+                  <>
+                    <Button variant="outline" onClick={() => {
+                      setIsEditing(false);
+                      setFormData(profile);
+                    }}>
+                      Annuler
+                    </Button>
+                    <Button onClick={handleSubmit}>
+                      Enregistrer
+                    </Button>
+                  </>
+                ) : (
+                  <Button onClick={() => setIsEditing(true)}>
+                    Modifier
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
@@ -286,12 +523,43 @@ export default function UserProfile() {
             <CardTitle>Sécurité</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label>Mot de passe</Label>
-              <div className="flex items-center gap-4">
-                <Input type="password" value="••••••••" disabled />
-                <Button variant="outline">Changer</Button>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label>Mot de passe actuel</Label>
+                <Input
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData(prev => ({
+                    ...prev,
+                    currentPassword: e.target.value
+                  }))}
+                />
               </div>
+              <div className="grid gap-2">
+                <Label>Nouveau mot de passe</Label>
+                <Input
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData(prev => ({
+                    ...prev,
+                    newPassword: e.target.value
+                  }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Confirmer le mot de passe</Label>
+                <Input
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData(prev => ({
+                    ...prev,
+                    confirmPassword: e.target.value
+                  }))}
+                />
+              </div>
+              <Button onClick={handlePasswordChange}>
+                Mettre à jour le mot de passe
+              </Button>
             </div>
             
             <div className="grid gap-2">
@@ -325,6 +593,50 @@ export default function UserProfile() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Prévisualisation de la photo</DialogTitle>
+          </DialogHeader>
+          {previewImage && (
+            <div className="relative w-full aspect-square">
+              <Image
+                src={previewImage}
+                alt="Prévisualisation"
+                width={300}
+                height={300}
+                className="object-cover rounded-lg"
+              />
+            </div>
+          )}
+          <div className="flex justify-end gap-4 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowPreviewDialog(false);
+                setPreviewImage(null);
+                setSelectedFile(null);
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = '';
+                }
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handlePhotoUpload}
+              disabled={isPhotoUploading}
+            >
+              {isPhotoUploading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Enregistrer"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

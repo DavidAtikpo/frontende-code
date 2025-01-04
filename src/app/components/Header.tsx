@@ -49,31 +49,6 @@ const Header = () => {
   const wishlistRef = useClickOutside(() => setIsWishlistOpen(false));
   const profileRef = useClickOutside(() => setIsOpen(false));
 
-  const fetchUserInfo = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/user/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUserInfo(data);
-      }
-    } catch (error) {
-      console.error("Erreur lors de la récupération du profil:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchUserInfo();
-    }
-  }, [isAuthenticated]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -84,6 +59,37 @@ const Header = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("userData");
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        const firstName = user.name?.split(' ')[0] || '';
+        
+        // Construire l'URL de la photo de profil de manière sécurisée
+        let photoURL = null;
+        if (user.profilePhotoUrl) {
+          // Si l'URL commence déjà par http, on la garde telle quelle
+          if (user.profilePhotoUrl.startsWith('http')) {
+            photoURL = user.profilePhotoUrl;
+          } else {
+            // Sinon, on ajoute le BASE_URL
+            photoURL = `${API_CONFIG.BASE_URL}${user.profilePhotoUrl}`;
+          }
+        }
+
+        console.log('Photo URL:', photoURL); // Pour le débogage
+        console.log('User Data:', user); // Pour le débogage
+
+        setUserInfo({
+          name: user.name || '',
+          email: user.email || '',
+          profilePhotoURL: photoURL
+        });
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Erreur parsing userData:', error);
+      }
+    }
     setIsAuthenticated(!!token);
   }, []);
 
@@ -303,15 +309,26 @@ const Header = () => {
                 aria-label="Profil"
               >
                 {userInfo.profilePhotoURL ? (
-                  <Image
-                    src={userInfo.profilePhotoURL}
-                    alt="Photo de profil"
-                    width={24}
-                    height={24}
-                    className="w-6 h-6 rounded-full object-cover"
-                  />
+                  <div className="flex items-center gap-2">
+                    <Image
+                      src={userInfo.profilePhotoURL}
+                      alt="Photo de profil"
+                      width={24}
+                      height={24}
+                      className="w-6 h-6 rounded-full object-cover"
+                      priority={true}
+                      // @ts-ignore
+                      loader={() => userInfo.profilePhotoURL || ''}
+                    />
+                    <span className="text-sm">{userInfo.name}</span>
+                  </div>
                 ) : (
-                  <FaUser size={16} />
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium">
+                      {userInfo.name ? userInfo.name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <span className="text-sm">{userInfo.name || 'Utilisateur'}</span>
+                  </div>
                 )}
               </button>
               {isOpen && (
@@ -327,6 +344,9 @@ const Header = () => {
                             width={40}
                             height={40}
                             className="w-10 h-10 rounded-full object-cover"
+                            priority={true}
+                            // @ts-ignore
+                            loader={() => userInfo.profilePhotoURL || ''}
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">

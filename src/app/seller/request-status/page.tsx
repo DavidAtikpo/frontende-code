@@ -12,6 +12,11 @@ interface SellerRequest {
   status: 'pending' | 'approved' | 'rejected';
   businessType: string;
   businessName: string;
+  ufiNumber: string;
+  documentPdf: string;
+  cardType: string;
+  cardNumber: string;
+  categories: string[];
   rejectionReason?: string;
   createdAt: string;
 }
@@ -99,6 +104,44 @@ const RequestStatus = () => {
           <div>
             <h3 className="font-semibold">Nom de l'entreprise</h3>
             <p>{request.businessName}</p>
+          </div>
+          <div>
+            <h3 className="font-semibold">Numéro UFI</h3>
+            <p>{request.ufiNumber}</p>
+          </div>
+          <div>
+            <h3 className="font-semibold">Document d'identification</h3>
+            {request.documentPdf && (
+              <a 
+                href={request.documentPdf}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                Voir le document
+              </a>
+            )}
+          </div>
+          <div>
+            <h3 className="font-semibold">Type de carte</h3>
+            <p>{request.cardType}</p>
+          </div>
+          <div>
+            <h3 className="font-semibold">Numéro de carte</h3>
+            <p>{request.cardNumber}</p>
+          </div>
+          <div>
+            <h3 className="font-semibold">Catégories</h3>
+            <div className="flex flex-wrap gap-2">
+              {request.categories.map((category, index) => (
+                <span 
+                  key={index}
+                  className="px-3 py-1 bg-gray-100 rounded-full text-sm"
+                >
+                  {category}
+                </span>
+              ))}
+            </div>
           </div>
           <div>
             <h3 className="font-semibold">Date de soumission</h3>

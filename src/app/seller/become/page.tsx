@@ -1,312 +1,465 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { API_CONFIG } from '@/utils/config';
 
 const { BASE_URL } = API_CONFIG;
 
-interface SellerRequestForm {
-  businessType: 'products' | 'restaurant' | 'training' | 'events' | 'services';
-  businessName: string;
-  businessAddress: string;
-  idCard: FileList;
-  addressProof: FileList;
-  businessDocument: FileList;
-  videoPresentation: File | null;
-  signedContract: File | null;
+// Types d'entreprise et leurs catégories associées
+const businessTypes = {
+  retail: "Commerce de détail",
+  wholesale: "Commerce de gros",
+  manufacturer: "Fabricant",
+  service: "Prestataire de services",
+  distributor: "Distributeur"
+};
+
+const employeeRanges = [
+  "1-5",
+  "6-25",
+  "26-100",
+  "101-500",
+  "500+"
+];
+
+const revenueRanges = [
+  "< 50,000 €",
+  "50,000 € - 200,000 €",
+  "200,000 € - 1M €",
+  "> 1M €"
+];
+
+interface SellerFormData {
+  // Informations personnelles
+  fullName: string;
+  email: string;
+  phone: string;
+  
+  // Informations entreprise
+  companyName: string;
+  registrationNumber: string; // SIRET/SIREN
+  vatNumber: string;         // Numéro TVA
+  businessType: string;
+  yearEstablished: string;
+  employeeCount: string;
+  annualRevenue: string;
+  
+  // Documents légaux
+  identityDocument: File | null;
+  businessLicense: File | null;
+  taxDocument: File | null;
+  
+  // Capacités
+  mainProducts: string[];
+  categories: string[];
+  exportCapability: boolean;
+  
+  // Adresse
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
 }
 
-const STORAGE_KEY = 'seller_request_form';
-
-const BecomeSeller = () => {
+const BecomeSellerPage = () => {
   const router = useRouter();
-  const { register, handleSubmit, setValue, watch } = useForm<SellerRequestForm>();
-  const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [recording, setRecording] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
-  const [language, _setLanguage] = useState('fr'); // ou 'en'
+  const [formData, setFormData] = useState<SellerFormData>({
+    fullName: '',
+    email: '',
+    phone: '',
+    companyName: '',
+    registrationNumber: '',
+    vatNumber: '',
+    businessType: '',
+    yearEstablished: '',
+    employeeCount: '',
+    annualRevenue: '',
+    identityDocument: null,
+    businessLicense: null,
+    taxDocument: null,
+    mainProducts: [],
+    categories: [],
+    exportCapability: false,
+    address: '',
+    city: '',
+    postalCode: '',
+    country: ''
+  });
+  
+  const [loading, setLoading] = useState(false);
+  const [availableCategories, setAvailableCategories] = useState([]);
 
-  // Charger les données sauvegardées au démarrage
   useEffect(() => {
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      setCurrentStep(parsedData.currentStep || 1);
-      Object.keys(parsedData.formData || {}).forEach(key => {
-        setValue(key as keyof SellerRequestForm, parsedData.formData[key]);
-      });
-    }
-  }, [setValue]);
-
-  // Sauvegarder les données à chaque changement
-  const saveToLocalStorage = (data: Partial<SellerRequestForm>) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      currentStep,
-      formData: data
-    }));
-  };
-
-  // Gérer l'enregistrement vidéo
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/api/categories`);
+        setAvailableCategories(response.data.categories);
+      } catch (error) {
+        console.error('Erreur chargement catégories:', error);
+        toast.error('Erreur lors du chargement des catégories');
       }
+    };
+    fetchCategories();
+  }, []);
 
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorderRef.current.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'video/webm' });
-        setVideoBlob(blob);
-        const videoFile = new File([blob], 'presentation.webm', { type: 'video/webm' });
-        setValue('videoPresentation', videoFile);
-        saveToLocalStorage(watch());
-      };
-
-      chunksRef.current = [];
-      mediaRecorderRef.current.start();
-      setRecording(true);
-    } catch (error) {
-      console.error('Erreur lors de l\'accès à la caméra:', error);
-      toast.error('Impossible d\'accéder à la caméra');
+  const handleFileChange = (field: keyof SellerFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData(prev => ({
+        ...prev,
+        [field]: file
+      }));
     }
   };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      const tracks = (videoRef.current?.srcObject as MediaStream)?.getTracks();
-      tracks?.forEach(track => track.stop());
-      setRecording(false);
-    }
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-  // Télécharger et afficher le contrat
-  const downloadContract = () => {
-    const contractPath = `/contracts/${language}/seller_contract.pdf`;
-    window.open(contractPath, '_blank');
-  };
-
-  const onSubmit = async (data: SellerRequestForm) => {
     try {
-      setLoading(true);
-      const formData = new FormData();
+      const formDataToSend = new FormData();
       
-      Object.entries(data).forEach(([key, value]) => {
-        if (value instanceof FileList && value[0]) {
-          formData.append(key, value[0]);
-        } else if (value instanceof File) {
-          formData.append(key, value);
+      // Ajouter tous les champs au FormData
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value instanceof File) {
+          formDataToSend.append(key, value);
+        } else if (Array.isArray(value)) {
+          formDataToSend.append(key, JSON.stringify(value));
+        } else if (typeof value === 'boolean') {
+          formDataToSend.append(key, value.toString());
         } else if (value) {
-          formData.append(key, value.toString());
+          formDataToSend.append(key, value);
         }
       });
 
-      const response = await axios.post(
-        `${BASE_URL}/api/seller-request/submit`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
+      const response = await axios.post(`${BASE_URL}/api/seller-request`, formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
         }
-      );
+      });
 
       if (response.data.success) {
-        localStorage.removeItem(STORAGE_KEY); // Supprimer les données sauvegardées
         toast.success('Demande soumise avec succès');
         router.push('/seller/request-status');
       }
     } catch (error) {
-      toast.error('Erreur lors de la soumission de la demande');
-      console.error(error);
+      console.error('Erreur soumission:', error);
+      toast.error('Erreur lors de la soumission');
     } finally {
       setLoading(false);
     }
   };
 
-  // Ajouter l'étape de la vidéo et du contrat
-  return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Devenir Vendeur sur Dubon</h1>
-      
-      <div className="mb-8">
-        <div className="flex justify-between mb-4">
-          {[1, 2, 3].map((step) => (
-            <div
-              key={step}
-              className={`w-1/3 text-center ${
-                currentStep === step ? 'text-blue-600' : 'text-gray-400'
-              }`}
-            >
-              <div className="mb-2">Étape {step}</div>
-              <div className="h-2 bg-gray-200 rounded">
-                <div
-                  className={`h-full rounded ${
-                    currentStep >= step ? 'bg-blue-600' : ''
-                  }`}
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Informations personnelles</h2>
+            <div className="grid gap-4">
+              <div>
+                <label className="block font-medium mb-1">Nom complet</label>
+                <input
+                  type="text"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                  className="w-full p-2 border rounded"
+                  required
                 />
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {currentStep === 1 && (
-          <div className="space-y-4">
-            <div>
-              <label className="block mb-2">Type d'activité</label>
-              <select
-                {...register('businessType', { required: true })}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">Sélectionner une activité</option>
-                <option value="products">Vente de produits</option>
-                <option value="restaurant">Restaurant</option>
-                <option value="training">Formation</option>
-                <option value="events">Événementiel</option>
-                <option value="services">Services</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block mb-2">Nom de l'entreprise</label>
-              <input
-                {...register('businessName', { required: true })}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2">Adresse professionnelle</label>
-              <input
-                {...register('businessAddress', { required: true })}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-          </div>
-        )}
-
-        {currentStep === 2 && (
-          <div className="space-y-4">
-            <div>
-              <label className="block mb-2">Pièce d'identité</label>
-              <input
-                type="file"
-                {...register('idCard', { required: true })}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2">Justificatif de domicile</label>
-              <input
-                type="file"
-                {...register('addressProof', { required: true })}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2">Document professionnel (optionnel)</label>
-              <input
-                type="file"
-                {...register('businessDocument')}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-          </div>
-        )}
-
-        {currentStep === 3 && (
-          <div className="space-y-6">
-            <div className="border rounded p-4">
-              <h3 className="font-bold mb-4">Enregistrement vidéo de présentation</h3>
-              <video ref={videoRef} autoPlay muted className="w-full mb-4" />
-              {!videoBlob ? (
-                <button
-                  type="button"
-                  onClick={recording ? stopRecording : startRecording}
-                  className={`px-4 py-2 rounded ${
-                    recording ? 'bg-red-600' : 'bg-blue-600'
-                  } text-white`}
-                >
-                  {recording ? 'Arrêter l\'enregistrement' : 'Commencer l\'enregistrement'}
-                </button>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-green-600">✓ Vidéo enregistrée</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setVideoBlob(null);
-                      setValue('videoPresentation', null);
-                    }}
-                    className="px-4 py-2 bg-gray-600 text-white rounded"
-                  >
-                    Recommencer
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="border rounded p-4">
-              <h3 className="font-bold mb-4">Contrat de vendeur</h3>
-              <div className="space-y-4">
-                <button
-                  type="button"
-                  onClick={downloadContract}
-                  className="px-4 py-2 bg-blue-600 text-white rounded"
-                >
-                  Télécharger le contrat
-                </button>
+              <div>
+                <label className="block font-medium mb-1">Email professionnel</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block font-medium mb-1">Téléphone</label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block font-medium mb-1">Adresse</label>
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block mb-2">Contrat signé (PDF)</label>
+                  <label className="block font-medium mb-1">Ville</label>
                   <input
-                    type="file"
-                    accept=".pdf"
-                    {...register('signedContract', { required: true })}
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) {
-                        setValue('signedContract', e.target.files[0]);
-                        saveToLocalStorage(watch());
-                      }
-                    }}
+                    type="text"
+                    value={formData.city}
+                    onChange={(e) => setFormData({...formData, city: e.target.value})}
                     className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Code postal</label>
+                  <input
+                    type="text"
+                    value={formData.postalCode}
+                    onChange={(e) => setFormData({...formData, postalCode: e.target.value})}
+                    className="w-full p-2 border rounded"
+                    required
                   />
                 </div>
               </div>
             </div>
           </div>
-        )}
+        );
+      
+      case 2:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Informations entreprise</h2>
+            <div className="grid gap-4">
+              <div>
+                <label className="block font-medium mb-1">Nom de l'entreprise</label>
+                <input
+                  type="text"
+                  value={formData.companyName}
+                  onChange={(e) => setFormData({...formData, companyName: e.target.value})}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block font-medium mb-1">Numéro SIRET/SIREN</label>
+                <input
+                  type="text"
+                  value={formData.registrationNumber}
+                  onChange={(e) => setFormData({...formData, registrationNumber: e.target.value})}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block font-medium mb-1">Numéro de TVA</label>
+                <input
+                  type="text"
+                  value={formData.vatNumber}
+                  onChange={(e) => setFormData({...formData, vatNumber: e.target.value})}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block font-medium mb-1">Type d'activité</label>
+                <select
+                  value={formData.businessType}
+                  onChange={(e) => setFormData({...formData, businessType: e.target.value})}
+                  className="w-full p-2 border rounded"
+                  required
+                >
+                  <option value="">Sélectionner un type</option>
+                  {Object.entries(businessTypes).map(([key, value]) => (
+                    <option key={key} value={key}>{value}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-medium mb-1">Année de création</label>
+                  <input
+                    type="number"
+                    value={formData.yearEstablished}
+                    onChange={(e) => setFormData({...formData, yearEstablished: e.target.value})}
+                    className="w-full p-2 border rounded"
+                    min="1900"
+                    max={new Date().getFullYear()}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Nombre d'employés</label>
+                  <select
+                    value={formData.employeeCount}
+                    onChange={(e) => setFormData({...formData, employeeCount: e.target.value})}
+                    className="w-full p-2 border rounded"
+                    required
+                  >
+                    <option value="">Sélectionner</option>
+                    {employeeRanges.map(range => (
+                      <option key={range} value={range}>{range}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Documents légaux</h2>
+            <div className="grid gap-6">
+              <div>
+                <label className="block font-medium mb-1">
+                  Pièce d'identité (Carte d'identité, Passeport)
+                </label>
+                <input
+                  type="file"
+                  onChange={handleFileChange('identityDocument')}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="w-full p-2 border rounded"
+                  required
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Format accepté : PDF, JPG, PNG (Max 5MB)
+                </p>
+              </div>
+              
+              <div>
+                <label className="block font-medium mb-1">
+                   Document d'enregistrement
+                </label>
+                <input
+                  type="file"
+                  onChange={handleFileChange('businessLicense')}
+                  accept=".pdf"
+                  className="w-full p-2 border rounded"
+                  required
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Format accepté : PDF uniquement (Max 5MB)
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-medium mb-1">
+                  Attestation fiscale
+                </label>
+                <input
+                  type="file"
+                  onChange={handleFileChange('taxDocument')}
+                  accept=".pdf"
+                  className="w-full p-2 border rounded"
+                  required
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Format accepté : PDF uniquement (Max 5MB)
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 4:
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Capacités et produits</h2>
+            <div className="grid gap-4">
+              <div>
+                <label className="block font-medium mb-1">Catégories de produits</label>
+                <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto p-2 border rounded">
+                  {availableCategories.map((category: any) => (
+                    <label key={category.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.categories.includes(category.id)}
+                        onChange={(e) => {
+                          const newCategories = e.target.checked
+                            ? [...formData.categories, category.id]
+                            : formData.categories.filter(id => id !== category.id);
+                          setFormData({...formData, categories: newCategories});
+                        }}
+                        className="rounded"
+                      />
+                      <span>{category.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-medium mb-1">Chiffre d'affaires annuel</label>
+                <select
+                  value={formData.annualRevenue}
+                  onChange={(e) => setFormData({...formData, annualRevenue: e.target.value})}
+                  className="w-full p-2 border rounded"
+                  required
+                >
+                  <option value="">Sélectionner</option>
+                  {revenueRanges.map(range => (
+                    <option key={range} value={range}>{range}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.exportCapability}
+                    onChange={(e) => setFormData({...formData, exportCapability: e.target.checked})}
+                    className="rounded"
+                  />
+                  <span>Capacité d'exportation internationale</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto p-6">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold mb-4">Devenir vendeur</h1>
+        <div className="flex justify-between mb-8">
+          {[1, 2, 3, 4].map((step) => (
+            <div
+              key={step}
+              className={`flex items-center ${
+                step <= currentStep ? 'text-blue-600' : 'text-gray-400'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 
+                ${step <= currentStep ? 'border-blue-600 bg-blue-50' : 'border-gray-300'}`}
+              >
+                {step}
+              </div>
+              {step < 4 && <div className={`w-full h-1 ${step < currentStep ? 'bg-blue-600' : 'bg-gray-300'}`} />}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {renderStep()}
 
         <div className="flex justify-between mt-8">
           {currentStep > 1 && (
             <button
               type="button"
               onClick={() => setCurrentStep(prev => prev - 1)}
-              className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-100"
+              className="px-4 py-2 border rounded hover:bg-gray-50"
             >
               Précédent
             </button>
           )}
           
-          {currentStep < 3 ? (
+          {currentStep < 4 ? (
             <button
               type="button"
               onClick={() => setCurrentStep(prev => prev + 1)}
@@ -318,9 +471,9 @@ const BecomeSeller = () => {
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? 'Envoi...' : 'Soumettre la demande'}
+              {loading ? 'Envoi en cours...' : 'Soumettre la demande'}
             </button>
           )}
         </div>
@@ -329,4 +482,4 @@ const BecomeSeller = () => {
   );
 };
 
-export default BecomeSeller; 
+export default BecomeSellerPage; 

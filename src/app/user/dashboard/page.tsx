@@ -49,8 +49,21 @@ interface DashboardData {
   };
 }
 
+const defaultDashboardData: DashboardData = {
+  recentOrders: [],
+  recentReviews: [],
+  recentActivities: [],
+  favoriteProducts: [],
+  stats: {
+    totalOrders: 0,
+    favoriteCount: 0,
+    addressCount: 0,
+    reviewCount: 0
+  }
+};
+
 export default function DashboardPage() {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData>(defaultDashboardData);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchDashboardData = async () => {
@@ -61,9 +74,10 @@ export default function DashboardPage() {
         }
       });
       const result = await response.json();
-      setDashboardData(result.dashboard);
+      setDashboardData(result.dashboard || defaultDashboardData);
     } catch (error) {
       console.error("Erreur lors du chargement des données:", error);
+      setDashboardData(defaultDashboardData);
     } finally {
       setIsLoading(false);
     }

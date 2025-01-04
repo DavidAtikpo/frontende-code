@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { MapPin, Plus, Trash2, Star, StarOff } from "lucide-react";
+import { MapPin, Plus, Trash2, Star, StarOff, Pencil } from "lucide-react";
 import { API_CONFIG } from "@/utils/config";
 import { getCookie } from "cookies-next";
 
@@ -14,11 +14,21 @@ const { BASE_URL } = API_CONFIG;
 
 interface Address {
   id: string;
-  street: string;
+  type: 'shipping' | 'billing' | 'both' | 'store';
+  isDefault: boolean;
+  label: string;
+  firstName: string;
+  lastName: string;
+  company?: string;
+  address1: string;
+  address2?: string;
   city: string;
+  state?: string;
   postalCode: string;
   country: string;
-  isDefault: boolean;
+  phone: string;
+  email?: string;
+  instructions?: string;
 }
 
 export default function AddressesPage() {
@@ -26,17 +36,28 @@ export default function AddressesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
 
   const [newAddress, setNewAddress] = useState({
-    street: "",
-    city: "",
-    postalCode: "",
-    country: "",
+    type: 'both' as 'shipping' | 'billing' | 'both' | 'store',
+    label: '',
+    firstName: '',
+    lastName: '',
+    company: '',
+    address1: '',
+    address2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: '',
+    phone: '',
+    email: '',
+    instructions: ''
   });
 
   const fetchAddresses = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_URL}/api/user/address`, {
+      const response = await fetch(`${BASE_URL}/api/user/addresses`, {
         headers: {
           Authorization: `Bearer ${getCookie('token')}`
         }
@@ -57,11 +78,38 @@ export default function AddressesPage() {
     fetchAddresses();
   }, [fetchAddresses]);
 
+  const handleEdit = (address: Address) => {
+    setEditingAddress(address);
+    setShowAddForm(true);
+    setNewAddress({
+      type: address.type,
+      label: address.label,
+      firstName: address.firstName,
+      lastName: address.lastName,
+      company: address.company || '',
+      address1: address.address1,
+      address2: address.address2 || '',
+      city: address.city,
+      state: address.state || '',
+      postalCode: address.postalCode,
+      country: address.country,
+      phone: address.phone,
+      email: address.email || '',
+      instructions: address.instructions || ''
+    });
+  };
+
   const handleAddAddress = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${BASE_URL}/api/user/address`, {
-        method: 'POST',
+      const url = editingAddress 
+        ? `${BASE_URL}/api/user/address/${editingAddress.id}`
+        : `${BASE_URL}/api/user/address`;
+      
+      const method = editingAddress ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${getCookie('token')}`
@@ -72,15 +120,37 @@ export default function AddressesPage() {
       if (response.ok) {
         toast({
           title: "Succès",
-          description: "Nouvelle adresse ajoutée avec succès."
+          description: editingAddress 
+            ? "Adresse modifiée avec succès"
+            : "Nouvelle adresse ajoutée avec succès"
         });
         setShowAddForm(false);
-        setNewAddress({ street: "", city: "", postalCode: "", country: "" });
+        setEditingAddress(null);
+        setNewAddress({
+          type: 'both' as 'shipping' | 'billing' | 'both' | 'store',
+          label: '',
+          firstName: '',
+          lastName: '',
+          company: '',
+          address1: '',
+          address2: '',
+          city: '',
+          state: '',
+          postalCode: '',
+          country: '',
+          phone: '',
+          email: '',
+          instructions: ''
+        });
         fetchAddresses();
       }
-    } catch (error: unknown) {
-      void error;
-      console.error('Erreur lors de l\'ajout de l\'adresse');
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'enregistrement",
+        variant: "destructive"
+      });
+      console.error('Erreur:', error);
     }
   };
 
@@ -107,6 +177,8 @@ export default function AddressesPage() {
   };
 
   const handleDelete = async (addressId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette adresse ?')) return;
+
     try {
       const response = await fetch(`${BASE_URL}/api/user/address/${addressId}`, {
         method: 'DELETE',
@@ -118,13 +190,17 @@ export default function AddressesPage() {
       if (response.ok) {
         toast({
           title: "Succès",
-          description: "Adresse supprimée avec succès."
+          description: "Adresse supprimée avec succès"
         });
         fetchAddresses();
       }
-    } catch (error: unknown) {
-      void error;
-      console.error('Erreur lors de la suppression de l\'adresse');
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer l'adresse",
+        variant: "destructive"
+      });
+      console.error('Erreur:', error);
     }
   };
 
@@ -145,19 +221,61 @@ export default function AddressesPage() {
       {showAddForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Nouvelle adresse</CardTitle>
+            <CardTitle>
+              {editingAddress ? 'Modifier l\'adresse' : 'Nouvelle adresse'}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAddAddress} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="firstName">Prénom</Label>
+                  <Input
+                    id="firstName"
+                    value={newAddress.firstName}
+                    onChange={(e) => setNewAddress({...newAddress, firstName: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="lastName">Nom</Label>
+                  <Input
+                    id="lastName"
+                    value={newAddress.lastName}
+                    onChange={(e) => setNewAddress({...newAddress, lastName: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+
               <div className="grid gap-2">
-                <Label htmlFor="street">Rue</Label>
+                <Label htmlFor="company">Entreprise (optionnel)</Label>
                 <Input
-                  id="street"
-                  value={newAddress.street}
-                  onChange={(e) => setNewAddress({...newAddress, street: e.target.value})}
+                  id="company"
+                  value={newAddress.company}
+                  onChange={(e) => setNewAddress({...newAddress, company: e.target.value})}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="address1">Adresse</Label>
+                <Input
+                  id="address1"
+                  value={newAddress.address1}
+                  onChange={(e) => setNewAddress({...newAddress, address1: e.target.value})}
                   required
                 />
               </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="address2">Complément d'adresse (optionnel)</Label>
+                <Input
+                  id="address2"
+                  value={newAddress.address2}
+                  onChange={(e) => setNewAddress({...newAddress, address2: e.target.value})}
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="city">Ville</Label>
@@ -169,6 +287,17 @@ export default function AddressesPage() {
                   />
                 </div>
                 <div className="grid gap-2">
+                  <Label htmlFor="state">État/Région</Label>
+                  <Input
+                    id="state"
+                    value={newAddress.state}
+                    onChange={(e) => setNewAddress({...newAddress, state: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
                   <Label htmlFor="postalCode">Code postal</Label>
                   <Input
                     id="postalCode"
@@ -177,21 +306,62 @@ export default function AddressesPage() {
                     required
                   />
                 </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="country">Pays</Label>
+                  <Input
+                    id="country"
+                    value={newAddress.country}
+                    onChange={(e) => setNewAddress({...newAddress, country: e.target.value})}
+                    required
+                  />
+                </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="phone">Téléphone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={newAddress.phone}
+                    onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={newAddress.email}
+                    onChange={(e) => setNewAddress({...newAddress, email: e.target.value})}
+                  />
+                </div>
+              </div>
+
               <div className="grid gap-2">
-                <Label htmlFor="country">Pays</Label>
-                <Input
-                  id="country"
-                  value={newAddress.country}
-                  onChange={(e) => setNewAddress({...newAddress, country: e.target.value})}
-                  required
+                <Label htmlFor="instructions">Instructions de livraison (optionnel)</Label>
+                <textarea
+                  id="instructions"
+                  className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={newAddress.instructions}
+                  onChange={(e) => setNewAddress({...newAddress, instructions: e.target.value})}
                 />
               </div>
+
               <div className="flex justify-end gap-4">
-                <Button variant="outline" onClick={() => setShowAddForm(false)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setEditingAddress(null);
+                  }}
+                >
                   Annuler
                 </Button>
-                <Button type="submit">Ajouter</Button>
+                <Button type="submit">
+                  {editingAddress ? 'Modifier' : 'Ajouter'}
+                </Button>
               </div>
             </form>
           </CardContent>
@@ -206,14 +376,30 @@ export default function AddressesPage() {
                 <div className="flex items-start gap-4">
                   <MapPin className="h-5 w-5 mt-1 text-muted-foreground" />
                   <div>
-                    <p className="font-medium">{address.street}</p>
+                    <p className="font-medium">
+                      {address.firstName} {address.lastName}
+                    </p>
+                    <p className="text-sm">{address.address1}</p>
+                    {address.address2 && (
+                      <p className="text-sm text-muted-foreground">
+                        {address.address2}
+                      </p>
+                    )}
                     <p className="text-sm text-muted-foreground">
                       {address.city}, {address.postalCode}
                     </p>
                     <p className="text-sm text-muted-foreground">{address.country}</p>
+                    <p className="text-sm text-muted-foreground">{address.phone}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEdit(address)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"

@@ -22,7 +22,7 @@ const AboutPage = () => {
       title: 'Notre Histoire',
       icon: <FaHistory />,
       content: `
-        Fondée en [année], Dubon Services Event est née d'une vision simple mais ambitieuse : créer une plateforme qui connecte les meilleurs services et produits locaux avec les consommateurs.
+        Fondée en [année], Dubon Service Event est née d'une vision simple mais ambitieuse : créer une plateforme qui connecte les meilleurs services et produits locaux avec les consommateurs.
 
         Notre parcours a commencé avec une équipe passionnée, déterminée à révolutionner l'expérience du commerce en ligne en Afrique. Au fil des années, nous avons grandi, innové et constamment amélioré nos services pour mieux servir notre communauté.
       `
@@ -32,7 +32,7 @@ const AboutPage = () => {
       title: 'Notre Mission',
       icon: <FaBullseye />,
       content: `
-        Chez DuBon, notre mission est de :
+        Chez Dubon Service Event , notre mission est de :
         • Faciliter l'accès aux services et produits de qualité
         • Soutenir les entrepreneurs et commerçants locaux
         • Créer des opportunités économiques durables
@@ -83,12 +83,12 @@ const AboutPage = () => {
 
   const teamMembers = [
     {
-      name: "John Doe",
+      name: "",
       role: "CEO & Fondateur",
       image: ""
     },
     {
-      name: "Jane Smith",
+      name: "",
       role: "Directrice des Opérations",
       image: ""
     },
@@ -116,7 +116,7 @@ const AboutPage = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-3xl font-bold text-center mb-12 text-gray-800"
         >
-          À Propos de Dubon Services Event
+          À Propos de Dubon Service Event
         </motion.h1>
 
         {/* Sections principales */}

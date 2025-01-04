@@ -39,8 +39,18 @@ export default function LoginPage() {
 
       const data = await response.json();
       if (data.success) {
+        localStorage.setItem('token', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        
         setCookie('token', data.accessToken, {
           maxAge: 3600,
+          path: '/',
+          secure: true,
+          sameSite: 'strict'
+        });
+        
+        setCookie('refreshToken', data.refreshToken, {
+          maxAge: 604800,
           path: '/',
           secure: true,
           sameSite: 'strict'
@@ -50,10 +60,17 @@ export default function LoginPage() {
           id: data.user.id,
           name: data.user.name,
           email: data.user.email,
-          role: data.user.role
+          role: data.user.role,
+          profilePhotoUrl: data.user.avatar || null
         }));
 
-        router.push('/user/dashboard');
+        if (data.user.role === 'admin') {
+          router.push('/admin/dashboard');
+        } else if (data.user.role === 'seller') {
+          router.push('/seller/dashboard');
+        } else {
+          router.push('/user/dashboard');
+        }
       } else {
         setError(data.message || "Échec de la connexion");
       }

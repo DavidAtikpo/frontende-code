@@ -71,8 +71,9 @@ const UserGuidePage = () => {
         
         • Carte bancaire
         • FedaPay
-        • Mobile Money (MTN, Orange)
+        • Mobile Money (MTN, Moov)
         • Paiement à la livraison
+        • Paiement à la comande
         
         Tous les paiements sont sécurisés et cryptés.
       `

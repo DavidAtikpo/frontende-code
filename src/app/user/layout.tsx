@@ -28,11 +28,7 @@ const navigation = [
     href: "/user/dashboard",
     icon: LayoutDashboard
   },
-{
-  name: "Products",
-  href: "/products",
-  icon: Store
-},
+
   {
     name: "Profil",
     href: "/user/profile",
@@ -70,7 +66,7 @@ const navigation = [
   },
   {
     name: "Devenir Vendeur",
-    href: "/seller/onboarding",
+    href: "/seller/",
     icon: UserPlus
   }
 ];
