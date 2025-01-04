@@ -47,7 +47,9 @@ export function ImageUpload({ value, onChange, maxFiles = 5 }: ImageUploadProps)
               src={url}
               alt="Image"
               className="object-cover rounded-lg"
-              fill
+              width={96}
+              height={96}
+              style={{ width: '100%', height: '100%' }}
             />
             <button
               type="button"

@@ -43,6 +43,7 @@ const Header = () => {
   }>({ name: '', email: '', profilePhotoURL: null });
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const [_firstName, setFirstName] = useState("");
 
   // Refs pour les menus déroulants
   const cartRef = useClickOutside(() => setIsCartOpen(false));
@@ -317,7 +318,7 @@ const Header = () => {
                       height={24}
                       className="w-6 h-6 rounded-full object-cover"
                       priority={true}
-                      // @ts-ignore
+                      // @ts-expect-error - Ignorer l'erreur de type pour le menu déroulant
                       loader={() => userInfo.profilePhotoURL || ''}
                     />
                     <span className="text-sm">{userInfo.name}</span>
@@ -345,7 +346,7 @@ const Header = () => {
                             height={40}
                             className="w-10 h-10 rounded-full object-cover"
                             priority={true}
-                            // @ts-ignore
+                            // @ts-expect-error - Ignorer l'erreur de type pour le menu déroulant
                             loader={() => userInfo.profilePhotoURL || ''}
                           />
                         ) : (

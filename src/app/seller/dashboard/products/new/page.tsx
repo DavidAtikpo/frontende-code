@@ -62,10 +62,10 @@ export default function NewProduct() {
     sku: "",
     quantity: 0,
     images: [],
-    variants: [],
     tags: [],
+    features: [],
     specifications: [],
-    shippingInfo: {}
+    availability: "in_stock"
   });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
