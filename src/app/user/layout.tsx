@@ -118,16 +118,17 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
 
       {/* Sidebar */}
       <aside className={`
-        fixed  inset-y-0 left-0 z-40 w-64 bg-white border-r transform 
+        fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform 
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 transition-transform duration-200 ease-in-out
+        mt-[80px]
       `}>
-        <div className="h-full flex flex-col top-20">
-          <div className="flex-1 py-6 overflow-y-auto">
-            <div className="px-4 mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Mon compte</h2>
+        <div className="h-full flex flex-col">
+          <div className="flex-1 py-4 overflow-y-auto">
+            <div className="px-4 mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Mon compte</h2>
             </div>
-            <nav className="space-y-1 px-2">
+            <nav className="space-y-0.5 px-2">
               {navigation.map((item) => {
                 const isActive = pathname === item.href;
                 return (
@@ -135,14 +136,14 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                     key={item.name}
                     href={item.href}
                     className={`
-                      group flex items-center px-2 py-2 text-sm font-medium rounded-md
+                      group flex items-center px-2 py-1.5 text-sm font-medium rounded-md
                       ${isActive 
                         ? 'bg-blue-50 text-blue-600' 
                         : 'text-gray-600 hover:bg-gray-50'}
                     `}
                   >
                     <item.icon className={`
-                      mr-3 h-5 w-5
+                      mr-3 h-4 w-4
                       ${isActive ? 'text-blue-600' : 'text-gray-400'}
                     `} />
                     {item.name}
@@ -151,13 +152,13 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
               })}
             </nav>
           </div>
-          <div className="p-4 border-t">
+          <div className="p-3 border-t">
             <Button
               variant="ghost"
-              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 py-1.5"
               onClick={handleLogout}
             >
-              <LogOut className="h-5 w-5 mr-3" />
+              <LogOut className="h-4 w-4 mr-3" />
               Déconnexion
             </Button>
           </div>

@@ -363,7 +363,7 @@ const Header = () => {
                       {/* Menu du profil */}
                       <ul className="space-y-2">
                         <li>
-                          <Link href="/profile" className="block hover:underline">
+                          <Link href="/user/profile" className="block hover:underline">
                             Mon Profil
                           </Link>
                         </li>

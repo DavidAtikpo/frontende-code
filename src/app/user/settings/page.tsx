@@ -2,141 +2,208 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
 import { API_CONFIG } from "@/utils/config";
-const { BASE_URL } = API_CONFIG;
 import { getCookie } from "cookies-next";
 
-interface UserInfo {
+interface UserSettings {
   name: string;
   email: string;
   address: string;
   phone: string;
+  preferences: {
+    language: string;
+    currency: string;
+    theme: string;
+    notifications: {
+      email: boolean;
+      push: boolean;
+      sms: boolean;
+    };
+    newsletter: boolean;
+  };
 }
 
 export default function UserSettings() {
-  const router = useRouter();
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
-    fetchUserInfo();
+    fetchSettings();
   }, []);
 
-  const fetchUserInfo = async () => {
+  const fetchSettings = async () => {
     try {
       const token = getCookie('token');
-      const response = await fetch(`${BASE_URL}/api/user/info`, {
+      const response = await fetch(`${BASE_URL}/api/user/settings`, {
         headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
+          Authorization: `Bearer ${token}`
+        }
       });
 
       if (response.ok) {
         const data = await response.json();
-        setUserInfo(data.user);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || "Erreur lors du chargement des informations");
+        setSettings(data.settings);
       }
     } catch (error) {
-      console.error('Erreur:', error);
-      setError("Erreur lors du chargement des informations");
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les paramètres",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
+  const handlePreferenceUpdate = async (key: string, value: any) => {
+    if (!settings) return;
+
     try {
       const token = getCookie('token');
-      const response = await fetch(`${BASE_URL}/api/user/update`, {
+      const response = await fetch(`${BASE_URL}/api/user/preferences`, {
         method: 'PUT',
         headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
         },
-        credentials: 'include',
-        body: JSON.stringify(userInfo)
+        body: JSON.stringify({ [key]: value })
       });
 
       if (response.ok) {
-        router.push('/user/dashboard');
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || "Erreur lors de la mise à jour");
+        setSettings(prev => prev ? {
+          ...prev,
+          preferences: {
+            ...prev.preferences,
+            [key]: value
+          }
+        } : null);
+        toast({
+          title: "Succès",
+          description: "Préférences mises à jour"
+        });
       }
     } catch (error) {
-      console.error('Erreur:', error);
-      setError("Erreur lors de la mise à jour");
-    } finally {
-      setSaving(false);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour les préférences",
+        variant: "destructive"
+      });
     }
   };
 
-  if (loading) return <div>Chargement...</div>;
-  if (!userInfo) return <div>Erreur de chargement</div>;
+  if (loading) return null;
 
   return (
-    <div className="container mx-auto p-6">
-      <Card className="max-w-2xl mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-6">Paramètres du compte</h1>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Nom</label>
-            <Input
-              value={userInfo.name}
-              onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
+    <div className="container mx-auto p-6 space-y-6">
+  
+      {/* Préférences */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Préférences</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label>Langue</Label>
+              <Select
+                value={settings?.preferences.language}
+                onValueChange={(value) => handlePreferenceUpdate('language', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une langue" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Devise</Label>
+              <Select
+                value={settings?.preferences.currency}
+                onValueChange={(value) => handlePreferenceUpdate('currency', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une devise" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="XOF">FCFA (XOF)</SelectItem>
+                  <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="font-medium">Notifications</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Notifications par email</Label>
+                <Switch
+                  checked={settings?.preferences.notifications.email}
+                  onCheckedChange={(checked) => 
+                    handlePreferenceUpdate('notifications', {
+                      ...settings?.preferences.notifications,
+                      email: checked
+                    })
+                  }
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label>Notifications push</Label>
+                <Switch
+                  checked={settings?.preferences.notifications.push}
+                  onCheckedChange={(checked) => 
+                    handlePreferenceUpdate('notifications', {
+                      ...settings?.preferences.notifications,
+                      push: checked
+                    })
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label>Notifications SMS</Label>
+                <Switch
+                  checked={settings?.preferences.notifications.sms}
+                  onCheckedChange={(checked) => 
+                    handlePreferenceUpdate('notifications', {
+                      ...settings?.preferences.notifications,
+                      sms: checked
+                    })
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label>Newsletter</Label>
+              <p className="text-sm text-muted-foreground">
+                Recevez nos dernières actualités et offres
+              </p>
+            </div>
+            <Switch
+              checked={settings?.preferences.newsletter}
+              onCheckedChange={(checked) => 
+                handlePreferenceUpdate('newsletter', checked)
+              }
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
-            <Input value={userInfo.email} disabled />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Téléphone</label>
-            <Input
-              value={userInfo.phone}
-              onChange={(e) => setUserInfo({ ...userInfo, phone: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Adresse</label>
-            <Input
-              value={userInfo.address}
-              onChange={(e) => setUserInfo({ ...userInfo, address: e.target.value })}
-            />
-          </div>
-
-          {error && (
-            <div className="text-red-500 text-sm">{error}</div>
-          )}
-
-          <div className="flex justify-end space-x-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push('/user/dashboard')}
-            >
-              Annuler
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? "Enregistrement..." : "Enregistrer"}
-            </Button>
-          </div>
-        </form>
+        </CardContent>
       </Card>
     </div>
   );

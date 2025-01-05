@@ -38,6 +38,11 @@ export default function FavoritesPage() {
   const fetchFavorites = async () => {
     try {
       const token = getCookie('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
       const response = await fetch(`${BASE_URL}/api/user/favorites`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -46,7 +51,7 @@ export default function FavoritesPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setFavorites(data.favorites);
+        setFavorites(data.favorites || []);
       }
     } catch (error) {
       console.error('Erreur chargement favoris:', error);
@@ -55,6 +60,7 @@ export default function FavoritesPage() {
         description: "Impossible de charger vos favoris",
         variant: "destructive"
       });
+      setFavorites([]);
     } finally {
       setLoading(false);
     }

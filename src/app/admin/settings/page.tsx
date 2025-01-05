@@ -7,7 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Save, RefreshCcw } from 'lucide-react';
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/components/ui/use-toast";
+import { 
+  Settings, Mail, Globe, Shield, Bell, Database,
+  Save, RefreshCcw, Server, Users, CreditCard 
+} from 'lucide-react';
 import { API_CONFIG } from "@/utils/config";
 const { BASE_URL } = API_CONFIG;
 import { getCookie } from "cookies-next";
@@ -17,24 +23,174 @@ interface SettingsData {
   key: string;
   name: string;
   value: string | number | boolean;
-  type: string;
+  type: 'text' | 'number' | 'boolean' | 'select' | 'textarea' | 'email' | 'password';
   category: string;
   description?: string;
-}
-
-interface _SettingValue {
-  key: string;
-  value: string | number | boolean;
+  options?: { label: string; value: string }[];
 }
 
 interface GroupedSettings {
   [key: string]: SettingsData[];
 }
 
+const SETTING_CATEGORIES = {
+  general: { icon: Settings, label: 'Général' },
+  email: { icon: Mail, label: 'Email' },
+  security: { icon: Shield, label: 'Sécurité' },
+  notifications: { icon: Bell, label: 'Notifications' },
+  system: { icon: Server, label: 'Système' },
+  users: { icon: Users, label: 'Utilisateurs' },
+  payment: { icon: CreditCard, label: 'Paiement' }
+};
+
+const defaultSettings: GroupedSettings = {
+  general: [
+    {
+      id: '1',
+      key: 'siteName',
+      name: 'Nom du site',
+      value: '',
+      type: 'text',
+      category: 'general',
+      description: 'Le nom qui apparaîtra dans le titre du site'
+    },
+    {
+      id: '2',
+      key: 'siteDescription',
+      name: 'Description du site',
+      value: '',
+      type: 'textarea',
+      category: 'general',
+      description: 'Description courte du site pour le SEO'
+    },
+    {
+      id: '3',
+      key: 'maintenanceMode',
+      name: 'Mode maintenance',
+      value: false,
+      type: 'boolean',
+      category: 'general',
+      description: 'Activer le mode maintenance du site'
+    }
+  ],
+  email: [
+    {
+      id: '4',
+      key: 'smtpHost',
+      name: 'Serveur SMTP',
+      value: '',
+      type: 'text',
+      category: 'email',
+      description: 'Adresse du serveur SMTP'
+    },
+    {
+      id: '5',
+      key: 'smtpPort',
+      name: 'Port SMTP',
+      value: 587,
+      type: 'number',
+      category: 'email'
+    },
+    {
+      id: '6',
+      key: 'smtpUser',
+      name: 'Utilisateur SMTP',
+      value: '',
+      type: 'text',
+      category: 'email'
+    },
+    {
+      id: '7',
+      key: 'smtpPassword',
+      name: 'Mot de passe SMTP',
+      value: '',
+      type: 'password',
+      category: 'email'
+    }
+  ],
+  security: [
+    {
+      id: '8',
+      key: 'maxLoginAttempts',
+      name: 'Tentatives de connexion max',
+      value: 5,
+      type: 'number',
+      category: 'security',
+      description: 'Nombre maximum de tentatives de connexion avant blocage'
+    },
+    {
+      id: '9',
+      key: 'passwordPolicy',
+      name: 'Politique de mot de passe',
+      value: 'medium',
+      type: 'select',
+      category: 'security',
+      options: [
+        { label: 'Basique', value: 'basic' },
+        { label: 'Moyen', value: 'medium' },
+        { label: 'Fort', value: 'strong' }
+      ]
+    },
+    {
+      id: '10',
+      key: 'twoFactorAuth',
+      name: 'Authentification à deux facteurs',
+      value: false,
+      type: 'boolean',
+      category: 'security',
+      description: 'Activer l\'authentification à deux facteurs pour tous les utilisateurs'
+    }
+  ],
+  notifications: [
+    {
+      id: '11',
+      key: 'emailNotifications',
+      name: 'Notifications par email',
+      value: true,
+      type: 'boolean',
+      category: 'notifications'
+    },
+    {
+      id: '12',
+      key: 'adminEmail',
+      name: 'Email administrateur',
+      value: '',
+      type: 'email',
+      category: 'notifications',
+      description: 'Email qui recevra les notifications administrateur'
+    }
+  ],
+  system: [
+    {
+      id: '13',
+      key: 'debugMode',
+      name: 'Mode debug',
+      value: false,
+      type: 'boolean',
+      category: 'system'
+    },
+    {
+      id: '14',
+      key: 'logLevel',
+      name: 'Niveau de log',
+      value: 'error',
+      type: 'select',
+      category: 'system',
+      options: [
+        { label: 'Error', value: 'error' },
+        { label: 'Warning', value: 'warning' },
+        { label: 'Info', value: 'info' },
+        { label: 'Debug', value: 'debug' }
+      ]
+    }
+  ]
+};
+
 export default function AdminSettings() {
   const [settings, setSettings] = useState<GroupedSettings>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('general');
 
   useEffect(() => {
     fetchSettings();
@@ -94,16 +250,83 @@ export default function AdminSettings() {
     }));
   };
 
+  const renderSettingInput = (setting: SettingsData, category: string) => {
+    switch (setting.type) {
+      case 'boolean':
+        return (
+          <Switch
+            id={setting.key}
+            checked={setting.value as boolean}
+            onCheckedChange={(checked) => 
+              updateSettingValue(category, setting.key, checked)
+            }
+          />
+        );
+      case 'number':
+        return (
+          <Input
+            id={setting.key}
+            type="number"
+            value={setting.value as number}
+            onChange={(e) => 
+              updateSettingValue(category, setting.key, Number(e.target.value))
+            }
+          />
+        );
+      case 'textarea':
+        return (
+          <Textarea
+            id={setting.key}
+            value={setting.value as string}
+            onChange={(e) => 
+              updateSettingValue(category, setting.key, e.target.value)
+            }
+            rows={4}
+          />
+        );
+      case 'select':
+        return (
+          <Select
+            value={setting.value as string}
+            onValueChange={(value) => 
+              updateSettingValue(category, setting.key, value)
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner..." />
+            </SelectTrigger>
+            <SelectContent>
+              {setting.options?.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      default:
+        return (
+          <Input
+            id={setting.key}
+            value={setting.value as string}
+            onChange={(e) => 
+              updateSettingValue(category, setting.key, e.target.value)
+            }
+          />
+        );
+    }
+  };
+
   if (loading) {
     return <div className="p-6">Chargement...</div>;
   }
 
   return (
-    <div className="p-6">
+    <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Paramètres système</h1>
+        <h1 className="text-2xl font-bold">Paramètres du système</h1>
         <Button 
-          onClick={handleUpdateSettings}
+          onClick={handleUpdateSettings} 
           disabled={saving}
         >
           {saving ? (
@@ -115,59 +338,41 @@ export default function AdminSettings() {
         </Button>
       </div>
 
-      <Tabs defaultValue={Object.keys(settings)[0]}>
-        <TabsList className="mb-4">
-          {Object.keys(settings).map(category => (
-            <TabsTrigger key={category} value={category}>
-              {category}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-7 gap-4 mb-6">
+          {Object.entries(SETTING_CATEGORIES).map(([key, { icon: Icon, label }]) => (
+            <TabsTrigger key={key} value={key} className="flex items-center gap-2">
+              <Icon className="h-4 w-4" />
+              {label}
             </TabsTrigger>
           ))}
         </TabsList>
 
         {Object.entries(settings).map(([category, categorySettings]) => (
           <TabsContent key={category} value={category}>
-            <Card className="p-6">
-              <div className="grid gap-6">
-                {categorySettings.map(setting => (
-                  <div key={setting.key} className="space-y-2">
-                    <Label htmlFor={setting.key}>
-                      {setting.key}
-                      {setting.description && (
-                        <span className="text-sm text-gray-500 ml-2">
-                          {setting.description}
-                        </span>
-                      )}
-                    </Label>
-                    
-                    {typeof setting.value === 'boolean' ? (
-                      <Switch
-                        id={setting.key}
-                        checked={setting.value}
-                        onCheckedChange={(checked) => 
-                          updateSettingValue(category, setting.key, checked)
-                        }
-                      />
-                    ) : typeof setting.value === 'number' ? (
-                      <Input
-                        id={setting.key}
-                        type="number"
-                        value={setting.value}
-                        onChange={(e) => 
-                          updateSettingValue(category, setting.key, Number(e.target.value))
-                        }
-                      />
-                    ) : (
-                      <Input
-                        id={setting.key}
-                        value={setting.value}
-                        onChange={(e) => 
-                          updateSettingValue(category, setting.key, e.target.value)
-                        }
-                      />
-                    )}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  {SETTING_CATEGORIES[category as keyof typeof SETTING_CATEGORIES]?.icon && 
+                    React.createElement(SETTING_CATEGORIES[category as keyof typeof SETTING_CATEGORIES].icon, { className: "h-5 w-5" })}
+                  {SETTING_CATEGORIES[category as keyof typeof SETTING_CATEGORIES]?.label}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {categorySettings.map((setting) => (
+                  <div key={setting.key} className="grid gap-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <Label htmlFor={setting.key}>{setting.name}</Label>
+                        {setting.description && (
+                          <p className="text-sm text-gray-500">{setting.description}</p>
+                        )}
+                      </div>
+                      {renderSettingInput(setting, category)}
+                    </div>
                   </div>
                 ))}
-              </div>
+              </CardContent>
             </Card>
           </TabsContent>
         ))}

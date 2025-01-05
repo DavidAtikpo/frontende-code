@@ -1,20 +1,21 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { FaStar, FaHeart, FaShoppingCart, FaEye, FaFilter, FaSearch, FaHome, FaChevronRight } from "react-icons/fa";
+import { FaStar, FaHeart, FaShoppingCart, FaEye, FaFilter, FaSearch } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useCartContext } from "../context/CartContext";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import LoadingSpinner from "../components/LoadingSpinner";
-import Link from "next/link";
-import { getCookie } from 'cookies-next';
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { API_CONFIG } from '@/utils/config';
+import { getCookie } from 'cookies-next';
 
 const { BASE_URL } = API_CONFIG;
 
-// Interface pour les produits
 interface Product {
   _id: string;
   title: string;
@@ -24,98 +25,78 @@ interface Product {
   rating: number;
   discount?: number;
   badge?: string;
+  description?: string;
+  stock?: number;
 }
 
-const ShopPage = () => {
+export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [search, setSearch] = useState("");
-  const [filterCategory, setFilterCategory] = useState<string | null>(null);
-  const [filterRating, setFilterRating] = useState<number | null>(null);
-  const [sortBy, setSortBy] = useState("popular");
-  const { state, dispatch } = useCartContext();
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [priceRange, setPriceRange] = useState("");
   const router = useRouter();
+  const { dispatch } = useCartContext();
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch(`${BASE_URL}/api/product/get-all`);
-        const data = await response.json();
-        setProducts(data);
-        setFilteredProducts(data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des produits :", error);
-        setLoading(false);
-      }
-    };
+    setIsClient(true);
+  }, []);
 
+  useEffect(() => {
     fetchProducts();
   }, []);
 
-  const handleAddToCart = (product: Product) => {
-    const finalPrice = product.discount
-      ? product.price * (1 - product.discount / 100)
-      : product.price;
-
-    dispatch({
-      type: "ADD_TO_CART",
-      payload: { ...product, quantity: 1, finalPrice },
-    });
-  };
-
-  const handleToggleWishlist = (product: Product) => {
-    const isInWishlist = state.wishlist.find((item) => item._id === product._id);
-    if (isInWishlist) {
-      dispatch({ type: "REMOVE_FROM_WISHLIST", payload: product._id });
-    } else {
-      const wishlistItem = {
-        _id: product._id,
-        title: product.title,
-        images: product.images,
-        finalPrice: product.price,
-      };
-
-      dispatch({
-        type: "ADD_TO_WISHLIST",
-        payload: wishlistItem,
-      });
-    }
-  };
-
-  const handleViewProduct = (productId: string) => {
-    router.push(`/product/${productId}`);
-  };
-
   useEffect(() => {
-    let filtered = [...products];
-
-    if (filterCategory) {
-      filtered = filtered.filter((product) => product.category === filterCategory);
+    if (products.length > 0) {
+      const filtered = products.filter(product => {
+        const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = !selectedCategory || product.category === selectedCategory;
+        const matchesPriceRange = !priceRange || filterByPriceRange(product.price, priceRange);
+        return matchesSearch && matchesCategory && matchesPriceRange;
+      });
+      setFilteredProducts(filtered);
     }
+  }, [searchTerm, selectedCategory, priceRange, products]);
 
-    if (filterRating) {
-      filtered = filtered.filter((product) => product.rating >= filterRating);
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/product/get-all`);
+      if (!response.ok) throw new Error('Erreur lors du chargement des produits');
+      const data = await response.json();
+      const productsArray = Array.isArray(data) ? data : data.products || [];
+      setProducts(productsArray);
+      setFilteredProducts(productsArray);
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les produits",
+        variant: "destructive"
+      });
+      setProducts([]);
+      setFilteredProducts([]);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (search) {
-      filtered = filtered.filter((product) =>
-        product.title.toLowerCase().includes(search.toLowerCase())
-      );
+  const filterByPriceRange = (price: number, range: string) => {
+    switch (range) {
+      case "0-10000":
+        return price <= 10000;
+      case "10000-50000":
+        return price > 10000 && price <= 50000;
+      case "50000+":
+        return price > 50000;
+      default:
+        return true;
     }
+  };
 
-    if (sortBy === "low-price") {
-      filtered.sort((a, b) => a.price - b.price);
-    } else if (sortBy === "high-price") {
-      filtered.sort((a, b) => b.price - a.price);
-    }
-
-    setFilteredProducts(filtered);
-  }, [filterCategory, filterRating, search, sortBy, products]);
-
-  const handleDirectCheckout = async (product: Product) => {
+  const handleAddToWishlist = async (productId: string) => {
     try {
       const token = getCookie('token');
       if (!token) {
@@ -123,280 +104,158 @@ const ShopPage = () => {
         return;
       }
 
-      const finalPrice = product.discount
-        ? product.price * (1 - product.discount / 100)
-        : product.price;
-
-      const cartItem = {
-        ...product,
-        quantity: 1,
-        finalPrice
-      };
-
-      const cartResponse = await fetch(`${BASE_URL}/api/user/cart`, {
+      const response = await fetch(`${BASE_URL}/api/user/wishlist`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ productId: product._id, quantity: 1 })
+        body: JSON.stringify({ productId })
       });
 
-      if (cartResponse.ok) {
-        dispatch({ type: "ADD_TO_CART", payload: cartItem });
-        
-        // Vérifier l'adresse de livraison
-        const userResponse = await fetch(`${BASE_URL}/api/user/profile`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+      if (response.ok) {
+        toast({
+          title: "Succès",
+          description: "Produit ajouté aux favoris"
         });
-        
-        const userData = await userResponse.json();
-        
-        if (userData.shippingAddress) {
-          // Si l'adresse existe, aller directement au paiement
-          router.push('/checkout/payment');
-        } else {
-          // Sinon, aller à la page d'adresse de livraison
-          router.push('/checkout/shipping-address');
-        }
       }
     } catch (error) {
-      console.error('Erreur checkout:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de procéder au paiement",
+        description: "Impossible d'ajouter aux favoris",
         variant: "destructive"
       });
     }
   };
 
+  if (!isClient) {
+    return null;
+  }
+
   if (loading) {
     return (
-      <div className="min-h-[400px] flex items-center justify-center">
-        <LoadingSpinner />
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      {/* Breadcrumb */}
-      <motion.nav 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center space-x-2 text-sm text-gray-600 mb-8 bg-white px-4 py-3 rounded-lg shadow-sm"
-      >
-        <Link 
-          href="/" 
-          className="flex items-center hover:text-blue-600 transition-colors"
-        >
-          <FaHome className="mr-1" />
-          Accueil
-        </Link>
-        <FaChevronRight className="text-gray-400 text-xs" />
-        <span className="text-blue-600 font-medium">Boutique</span>
-      </motion.nav>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-1 lg:grid-cols-4 gap-8"
-      >
-        {/* Filtres */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-1 bg-white p-6 rounded-2xl shadow-lg"
-        >
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <FaFilter className="text-blue-600" />
-                Filtres
-              </h3>
-              
-              {/* Barre de recherche */}
-              <div className="relative mb-6">
-                <input
-                  type="text"
-                  placeholder="Rechercher..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              </div>
-
-              {/* Catégories */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-gray-700">Catégories</h4>
-                {["Produits frais", "Produits Congeles", "Épicerie", "Agro-Alimentaires"].map(
-                  (category) => (
-                    <motion.label
-                      key={category}
-                      whileHover={{ x: 5 }}
-                      className="flex items-center space-x-3 cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        name="category"
-                        value={category}
-                        onChange={() => setFilterCategory(category)}
-                        checked={filterCategory === category}
-                        className="form-radio text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-gray-600 hover:text-blue-600 transition-colors">
-                        {category}
-                      </span>
-                    </motion.label>
-                  )
-                )}
-              </div>
-
-              {/* Prix */}
-              <div className="mt-8">
-                <h4 className="font-semibold text-gray-700 mb-4">Prix</h4>
-                <select
-                  onChange={(e) => setSortBy(e.target.value)}
-                  value={sortBy}
-                  className="w-full p-2 border rounded-xl focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="popular">Plus populaire</option>
-                  <option value="low-price">Prix croissant</option>
-                  <option value="high-price">Prix décroissant</option>
-                </select>
-              </div>
-
-              {/* Évaluations */}
-              <div className="mt-8">
-                <h4 className="font-semibold text-gray-700 mb-4">Évaluations</h4>
-                {[5, 4, 3, 2, 1].map((rating) => (
-                  <motion.label
-                    key={rating}
-                    whileHover={{ x: 5 }}
-                    className="flex items-center space-x-3 cursor-pointer mb-2"
-                  >
-                    <input
-                      type="radio"
-                      name="rating"
-                      value={rating}
-                      onChange={() => setFilterRating(rating)}
-                      checked={filterRating === rating}
-                      className="form-radio text-blue-600 focus:ring-blue-500"
-                    />
-                    <div className="flex items-center">
-                      {[...Array(rating)].map((_, i) => (
-                        <FaStar key={i} className="text-yellow-400 w-4 h-4" />
-                      ))}
-                      {[...Array(5 - rating)].map((_, i) => (
-                        <FaStar key={i + rating} className="text-gray-300 w-4 h-4" />
-                      ))}
-                    </div>
-                  </motion.label>
-                ))}
-              </div>
-            </div>
+    <div className="container mx-auto p-6">
+      <div className="mb-8 space-y-4">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full md:w-96">
+            <Input
+              type="text"
+              placeholder="Rechercher un produit..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           </div>
-        </motion.div>
+          <div className="flex flex-col md:flex-row gap-4">
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="Catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les catégories</SelectItem>
+                <SelectItem value="electronics">Électronique</SelectItem>
+                <SelectItem value="clothing">Vêtements</SelectItem>
+                <SelectItem value="books">Livres</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={priceRange} onValueChange={setPriceRange}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="Prix" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les prix</SelectItem>
+                <SelectItem value="0-10000">0 - 10,000 FCFA</SelectItem>
+                <SelectItem value="10000-50000">10,000 - 50,000 FCFA</SelectItem>
+                <SelectItem value="50000-plus">50,000+ FCFA</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
 
-        {/* Produits */}
-        <div className="lg:col-span-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProducts.map((product, index) => (
-              <motion.div
-                key={product._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden group"
-              >
-                <div className="relative aspect-square">
+      {filteredProducts.length === 0 ? (
+        <Card className="p-6 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <FaShoppingCart className="h-12 w-12 text-gray-300" />
+            <h3 className="text-lg font-semibold">Aucun produit trouvé</h3>
+            <p className="text-muted-foreground">
+              Nous n'avons pas trouvé de produits correspondant à vos critères.
+            </p>
+          </div>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredProducts.map((product) => (
+            <motion.div
+              key={product._id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className="group relative overflow-hidden">
+                <div className="aspect-square relative overflow-hidden">
                   <Image
-                    src={product.images[0] || "/placeholder.jpg"}
+                    src={product.images[0]}
                     alt={product.title}
-                    width={500}
-                    height={500}
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    fill
+                    className="object-cover transition-transform group-hover:scale-105"
                   />
-                  
-                  {/* Badges */}
-                  {product.badge && (
-                    <span className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      {product.badge}
-                    </span>
-                  )}
-
-                  {/* Actions Overlay */}
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleToggleWishlist(product)}
-                      className="bg-white p-3 rounded-full hover:bg-gray-100"
-                    >
-                      <FaHeart className={`${
-                        state.wishlist.find((item) => item._id === product._id)
-                          ? "text-red-500"
-                          : "text-gray-600"
-                      }`} />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleAddToCart(product)}
-                      className="bg-white p-3 rounded-full hover:bg-gray-100"
-                    >
-                      <FaShoppingCart className="text-blue-600" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleViewProduct(product._id)}
-                      className="bg-white p-3 rounded-full hover:bg-gray-100"
-                    >
-                      <FaEye className="text-blue-600" />
-                    </motion.button>
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute bottom-4 left-4 right-4 flex justify-between">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => router.push(`/product/${product._id}`)}
+                      >
+                        <FaEye className="h-4 w-4 mr-2" />
+                        Voir
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleAddToWishlist(product._id)}
+                      >
+                        <FaHeart className="h-4 w-4 mr-2" />
+                        Favoris
+                      </Button>
+                    </div>
                   </div>
                 </div>
-
                 <div className="p-4">
-                  <div className="flex items-center gap-1 mb-2">
+                  <h3 className="font-semibold truncate">{product.title}</h3>
+                  <div className="flex items-center mt-1">
                     {[...Array(5)].map((_, i) => (
                       <FaStar
                         key={i}
-                        className={`${
-                          i < product.rating ? "text-yellow-400" : "text-gray-300"
-                        } w-4 h-4`}
+                        className={`h-4 w-4 ${
+                          i < product.rating ? 'text-yellow-400' : 'text-gray-300'
+                        }`}
                       />
                     ))}
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-1 truncate">
-                    {product.title}
-                  </h3>
-                  <p className="text-sm text-gray-500 mb-2">{product.category}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-blue-600">
-                      {product.price} CFA
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="font-bold text-lg">
+                      {product.price.toLocaleString()} FCFA
                     </span>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleDirectCheckout(product)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      Acheter
-                    </motion.button>
+                    <Button size="sm">
+                      <FaShoppingCart className="h-4 w-4 mr-2" />
+                      Ajouter
+                    </Button>
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
+              </Card>
+            </motion.div>
+          ))}
         </div>
-      </motion.div>
+      )}
     </div>
   );
-};
-
-export default ShopPage;
+}
