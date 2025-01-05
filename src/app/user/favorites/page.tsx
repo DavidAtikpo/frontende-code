@@ -128,7 +128,8 @@ export default function FavoritesPage() {
                 <Image
                   src={Array.isArray(product.images) ? product.images[0] : product.images}
                   alt={product.title}
-                  fill
+                  width={500}
+                  height={500}
                   className="object-cover transition-transform group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">

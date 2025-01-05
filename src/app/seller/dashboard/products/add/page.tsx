@@ -87,10 +87,14 @@ export default function AddProductPage() {
       });
 
       router.push('/seller/dashboard/products');
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Impossible d'ajouter le produit";
+      
       toast({
         title: "Erreur",
-        description: error.message || "Impossible d'ajouter le produit",
+        description: errorMessage,
         variant: "destructive",
       });
       console.error(error);

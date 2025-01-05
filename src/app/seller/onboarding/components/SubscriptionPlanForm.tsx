@@ -61,12 +61,18 @@ export function SubscriptionPlanForm({ data, onUpdate, onNext, onBack }: Subscri
   }, [onUpdate]);
 
   const handlePlanSelect = (planId: 'monthly' | 'yearly' | 'premium') => {
+    const planMapping: Record<string, "premium" | "basic" | "standard"> = {
+      monthly: "basic",
+      yearly: "standard",
+      premium: "premium"
+    };
+
     const selectedPlan = plans.find(p => p.id === planId);
     if (selectedPlan) {
       const updatedData = {
         ...data,
         subscription: {
-          plan: planId,
+          plan: planMapping[planId],
           price: selectedPlan.price
         }
       };
