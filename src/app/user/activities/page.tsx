@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button";
 import { API_CONFIG } from "@/utils/config";
 const { BASE_URL } = API_CONFIG;
 import { getCookie } from "cookies-next";
+import { useToast } from "@/components/ui/use-toast";
+import { Clock } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Activity {
   id: string;
@@ -38,36 +41,62 @@ interface ActivityDetails {
 
 export default function UserActivities() {
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    total: 0,
-    page: 1,
-    pages: 1
-  });
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchActivities = async (page = 1) => {
-    try {
-      const response = await fetch(
-        `${BASE_URL}/api/user/activity?page=${page}`,
-        {
-          headers: {
-            Authorization: `Bearer ${getCookie('token')}`
-          }
-        }
-      );
-      const data = await response.json();
-      setActivities(data.activities);
-      setPagination(data.pagination);
-    } catch (error) {
-      console.error("Erreur lors du chargement des activités:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     fetchActivities();
   }, []);
+
+  const fetchActivities = async () => {
+    try {
+      const token = getCookie('token');
+      const response = await fetch(`${BASE_URL}/api/user/activities`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setActivities(data.activities);
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les activités",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return null;
+
+  if (!activities || activities.length === 0) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <Card className="p-6 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <Clock className="h-12 w-12 text-gray-300" />
+            <h3 className="text-lg font-semibold">Aucune activité</h3>
+            <p className="text-muted-foreground">
+              Vous n'avez pas encore d'activités enregistrées.
+              Elles apparaîtront ici une fois que vous commencerez à utiliser la plateforme.
+            </p>
+            <Button 
+              variant="outline"
+              onClick={() => router.push('/products')}
+            >
+              Découvrir des produits
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleString();
@@ -84,10 +113,6 @@ export default function UserActivities() {
     };
     return types[type] || type;
   };
-
-  if (isLoading) {
-    return <div>Chargement...</div>;
-  }
 
   return (
     <div className="space-y-6 p-6">

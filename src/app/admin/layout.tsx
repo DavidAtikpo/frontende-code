@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -20,7 +20,8 @@ import {
   CreditCard,
   BarChart,
   Database,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Megaphone
 } from "lucide-react";
 import LogoutButton from "@/components/auth/LogoutButton";
 import { LoadingSpinner } from "@/components/ui/loading";
@@ -29,13 +30,13 @@ import { getCookie } from "cookies-next";
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [adminName, setAdminName] = useState<string>("");
 
-  const isActive = (href: string) => 
-    typeof window !== 'undefined' && window.location.pathname === href;
+  const isActive = (href: string) => pathname === href;
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -173,10 +174,16 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       description: "Analyse des données"
     },
     { 
-      icon: Settings, 
-      label: "Paramètres", 
-      href: "/admin/settings",
-      description: "Configuration du système"
+      icon: Megaphone,
+      label: "Marketing", 
+      href: "/admin/marketing",
+      description: "Campagnes marketing et communications"
+    },
+    { 
+      icon: Megaphone,
+      label: "Publicités", 
+      href: "/admin/advertising",
+      description: "Gestion des publicités et campagnes"
     },
     { 
       icon: Settings, 
@@ -189,6 +196,12 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       label: "Catégories", 
       href: "/admin/categories",
       description: "Gestion des catégories"
+    },
+    { 
+      icon: Settings, 
+      label: "Paramètres", 
+      href: "/admin/settings",
+      description: "Configuration du système"
     },
   ];
 

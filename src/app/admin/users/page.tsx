@@ -282,7 +282,8 @@ export default function AdminUsers() {
           <DataTable
             columns={columns}
             data={users}
-            searchKey="name"
+            searchKey="user"
+            loading={loading}
           />
         </CardContent>
       </Card>
