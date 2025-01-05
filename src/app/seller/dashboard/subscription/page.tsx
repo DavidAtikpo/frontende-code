@@ -66,12 +66,20 @@ export default function SubscriptionPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
   const handleSubscribe = async () => {
-    if (!selectedPlan) return;
+    if (!selectedPlan) {
+      toast.error('Veuillez sélectionner un plan.');
+      return;
+    }
     
     try {
       setLoading(true);
       const token = getCookie('token');
       
+      if (!token) {
+        toast.error('Vous devez être connecté pour vous abonner.');
+        return;
+      }
+
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/seller/subscription/initiate`, {
         method: 'POST',
         headers: {
