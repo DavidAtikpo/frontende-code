@@ -121,7 +121,7 @@ export default function ProductsPage() {
             <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Link href="/seller/dashboard/products/new">
+          <Link href="/seller/dashboard/products/add">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
               Nouveau produit

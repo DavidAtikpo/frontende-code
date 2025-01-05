@@ -57,18 +57,12 @@ export interface SellerFormData {
     photos: DocumentFile[];
   };
   businessInfo: {
-    products: Array<{
-      name: string;
-      description: string;
-      price: number;
-      images: DocumentFile[];
-    }>;
-    bankDetails: {
-      accountNumber: string;
-    };
+    shopName: string;
     category: string;
     description: string;
-    returnPolicy: string;
+    shopImage: File | null;
+    paymentType: string;
+    paymentDetails: string;
   };
   compliance: {
     termsAccepted: boolean;
@@ -89,7 +83,7 @@ export interface SellerFormData {
     message?: string;
   };
   subscription?: {
-    plan: 'monthly' | 'yearly' | 'premium';
+    plan: 'basic' | 'standard' | 'premium';
     price: number;
     startDate?: string;
     endDate?: string;
@@ -100,6 +94,7 @@ export interface SellerFormData {
     amount: number;
     transactionId?: string;
   };
+  businessType: string;
 }
 
 // Type des étapes

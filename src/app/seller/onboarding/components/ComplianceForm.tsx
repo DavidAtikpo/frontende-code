@@ -80,71 +80,31 @@ export function ComplianceForm({
     e.preventDefault();
     if (!validateForm()) return;
     setIsSubmitting(true);
-
-    const formData = new FormData();
-    const token = getCookie('token');
-
-    if (!token) {
-      setErrors((prev) => ({ ...prev, submit: "Veuillez vous connecter" }));
-      setIsSubmitting(false);
-      return;
-    }
+    console.log("Début de la soumission...");
 
     try {
-      // Log de vérification des documents
-      console.log('Vérification des documents:', {
-        idCard: data.documents.idCard,
-        proofOfAddress: data.documents.proofOfAddress,
-        taxCertificate: data.documents.taxCertificate,
-        photos: data.documents.photos
-      });
+      const formData = new FormData();
+      const token = getCookie('token');
 
-      // Vérification détaillée des documents
+      if (!token) {
+        throw new Error("Veuillez vous connecter");
+      }
+
+      // Vérification des documents
       const missingDocuments = [];
-      
-      // Log pour debug
-      console.log('Documents à vérifier:', {
-        idCard: data.documents.idCard,
-        proofOfAddress: data.documents.proofOfAddress,
-        taxCertificate: data.documents.taxCertificate,
-        photos: data.documents.photos
-      });
-
-      // Vérification simplifiée
-      if (!data.documents.idCard) {
-        missingDocuments.push("Pièce d'identité");
-      }
-      if (!data.documents.proofOfAddress) {
-        missingDocuments.push("Justificatif de domicile");
-      }
-      if (!data.documents.taxCertificate) {
-        missingDocuments.push("Attestation fiscale");
-      }
-      if (!data.documents.photos || data.documents.photos.length === 0) {
-        missingDocuments.push("Photos d'identité");
+      if (!data.documents.idCard?.file) missingDocuments.push("Pièce d'identité");
+      if (!data.documents.proofOfAddress?.file) missingDocuments.push("Justificatif de domicile");
+      if (!data.documents.taxCertificate?.file) missingDocuments.push("Attestation fiscale");
+      if (!data.documents.photos?.[0]?.file) missingDocuments.push("Photo d'identité");
+      if (!data.videoVerification.recordingBlob) {
+        missingDocuments.push("Vidéo de vérification");
       }
 
       if (missingDocuments.length > 0) {
         throw new Error(`Documents manquants : ${missingDocuments.join(', ')}`);
       }
 
-      // Vérifier les informations personnelles
-      if (!data.personalInfo.fullName || 
-          !data.personalInfo.address || 
-          !data.personalInfo.phone || 
-          !data.personalInfo.email || 
-          !data.personalInfo.taxNumber) {
-        throw new Error("Toutes les informations personnelles sont requises");
-      }
-
-      // Vérifier les informations commerciales
-      if (!data.businessInfo.category || 
-          !data.businessInfo.description || 
-          !data.businessInfo.returnPolicy || 
-          !data.businessInfo.bankDetails.accountNumber) {
-        throw new Error("Toutes les informations commerciales sont requises");
-      }
-
+      // Préparation des données de base
       const baseData = {
         type: data.type,
         personalInfo: {
@@ -157,17 +117,11 @@ export function ComplianceForm({
           idType: data.personalInfo.idType
         },
         businessInfo: {
+          shopName: data.businessInfo.shopName,
           category: data.businessInfo.category,
           description: data.businessInfo.description,
-          returnPolicy: data.businessInfo.returnPolicy,
-          bankDetails: {
-            accountNumber: data.businessInfo.bankDetails.accountNumber
-          },
-          products: data.businessInfo.products.map(product => ({
-            name: product.name,
-            description: product.description,
-            price: product.price
-          }))
+          paymentType: data.businessInfo.paymentType,
+          paymentDetails: data.businessInfo.paymentDetails
         },
         compliance: {
           termsAccepted: data.compliance.termsAccepted,
@@ -176,62 +130,70 @@ export function ComplianceForm({
         }
       };
 
+      // Ajout des données JSON
       formData.append('data', JSON.stringify(baseData));
 
-      // Ajouter les fichiers
-      if (data.documents.idCard instanceof File) {
-        formData.append('idCard', data.documents.idCard);
-      } else if (data.documents.idCard?.file instanceof File) {
+      // Ajout des fichiers
+      if (data.documents.idCard?.file instanceof File) {
         formData.append('idCard', data.documents.idCard.file);
       }
-
-      if (data.documents.proofOfAddress instanceof File) {
-        formData.append('proofOfAddress', data.documents.proofOfAddress);
-      } else if (data.documents.proofOfAddress?.file instanceof File) {
+      if (data.documents.proofOfAddress?.file instanceof File) {
         formData.append('proofOfAddress', data.documents.proofOfAddress.file);
       }
-
-      if (data.documents.taxCertificate instanceof File) {
-        formData.append('taxCertificate', data.documents.taxCertificate);
-      } else if (data.documents.taxCertificate?.file instanceof File) {
+      if (data.documents.taxCertificate?.file instanceof File) {
         formData.append('taxCertificate', data.documents.taxCertificate.file);
       }
-
-      if (data.documents.photos?.length > 0) {
-        data.documents.photos.forEach((photo) => {
-          if (photo instanceof File) {
-            formData.append('photos', photo);
-          } else if (photo.file instanceof File) {
-            formData.append('photos', photo.file);
-          }
-        });
+      if (data.documents.photos?.[0]?.file instanceof File) {
+        formData.append('photos', data.documents.photos[0].file);
+      }
+      if (data.businessInfo.shopImage instanceof File) {
+        formData.append('shopImage', data.businessInfo.shopImage);
+      }
+      if (data.contract.signedDocument?.file instanceof File) {
+        formData.append('signedDocument', data.contract.signedDocument.file);
       }
 
-      // Log avant l'envoi
-      console.log('FormData contenu:');
-      for (const [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          console.log(key, ':', value.name, '(', value.size, 'bytes )');
-        } else {
-          console.log(key, ':', value);
+      // Ajout de la vidéo
+      const videoBlob = data.videoVerification.recordingBlob;
+      if (videoBlob) {
+        try {
+          formData.append('verificationVideo', new Blob([videoBlob], { type: 'video/webm' }), 'verification.webm');
+        } catch (error) {
+          console.error('Erreur lors de l\'ajout de la vidéo:', error);
         }
       }
 
+      // Log pour debug
+      console.log('Données envoyées:', JSON.parse(formData.get('data') as string));
+      console.log('Documents à envoyer:', {
+        idCard: data.documents.idCard?.file,
+        proofOfAddress: data.documents.proofOfAddress?.file,
+        taxCertificate: data.documents.taxCertificate?.file,
+        photos: data.documents.photos?.[0]?.file,
+        shopImage: data.businessInfo.shopImage,
+        signedDocument: data.contract.signedDocument?.file,
+        verificationVideo: data.videoVerification.recordingBlob ? 'Vidéo présente' : 'Pas de vidéo'
+      });
+
+      console.log("Envoi de la requête...");
       const response = await fetch(`${BASE_URL}/api/seller/register`, {
         method: "POST",
         headers: {
           'Authorization': `Bearer ${token}`
         },
-        body: formData,
+        body: formData
       });
 
+      console.log("Réponse reçue, status:", response.status);
       const responseData = await response.json();
+      console.log("Données de réponse:", responseData);
 
       if (!response.ok) {
         console.error('Erreur détaillée:', responseData);
         throw new Error(responseData.message || responseData.error || "Erreur lors de l'inscription");
       }
 
+      console.log("Inscription réussie!");
       onNext();
     } catch (err) {
       const error = err as Error;
@@ -239,6 +201,7 @@ export function ComplianceForm({
       setErrors((prev) => ({ ...prev, submit: error.message }));
     } finally {
       setIsSubmitting(false);
+      console.log("Fin de la soumission");
     }
   };
 

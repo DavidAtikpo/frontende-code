@@ -36,8 +36,8 @@ export function DocumentUploadForm({ data, onUpdate, onNext, onBack }: DocumentU
   const requiredDocuments = {
     individual: {
       idCard: "Pièce d'identité",
-      proofOfAddress: "Justificatif de domicile",
-      photos: "Photos d'identité (2)",
+      proofOfAddress: "Justificatif de domicile (facture SBE/SONABEL, certificat de résidence, contrat de bail ou de location)",
+      photos: "Photo d'identité",
       taxCertificate: "Attestation fiscale (IFU)",
     },
     company: {
@@ -82,7 +82,17 @@ export function DocumentUploadForm({ data, onUpdate, onNext, onBack }: DocumentU
       ...data,
       documents: {
         ...data.documents,
-        [field]: field === "photos" ? Array.from(files) : files[0],
+        [field]: field === "photos" 
+          ? Array.from(files).map(file => ({
+              name: file.name,
+              file: file,
+              url: URL.createObjectURL(file)
+            }))
+          : {
+              name: files[0].name,
+              file: files[0],
+              url: URL.createObjectURL(files[0])
+            },
       },
     };
     onUpdate(updatedData);
@@ -118,8 +128,8 @@ export function DocumentUploadForm({ data, onUpdate, onNext, onBack }: DocumentU
 
     Object.entries(required).forEach(([key, label]) => {
       if (key === "photos") {
-        if (!docs.photos || docs.photos.length !== 2) {
-          newErrors[key] = `${label} sont requises`;
+        if (!docs.photos || docs.photos.length !== 1) {
+          newErrors[key] = `${label} est requise`;
         }
       } else if (!docs[key as keyof typeof docs]) {
         newErrors[key] = `${label} est requis`;
@@ -127,7 +137,7 @@ export function DocumentUploadForm({ data, onUpdate, onNext, onBack }: DocumentU
     });
 
     if (docs.photos && docs.photos.some(photo => photo.file && photo.file.size > 5 * 1024 * 1024)) {
-      newErrors.photos = "Chaque photo doit être inférieure à 5 Mo";
+      newErrors.photos = "La photo doit être inférieure à 5 Mo";
     }
 
     setErrors(newErrors);
@@ -157,7 +167,13 @@ export function DocumentUploadForm({ data, onUpdate, onNext, onBack }: DocumentU
                   type="file"
                   className="hidden"
                   onChange={(e) => handleFileChange(key, e.target.files)}
-                  accept={key === "photos" ? "image/*" : ".pdf,.jpg,.jpeg,.png"}
+                  accept={
+                    key === "photos" 
+                      ? "image/*" 
+                      : key === "proofOfAddress"
+                      ? ".pdf,.jpg,.jpeg,.png"
+                      : ".pdf,.jpg,.jpeg,.png"
+                  }
                   multiple={key === "photos"}
                 />
                 <Button
@@ -167,7 +183,7 @@ export function DocumentUploadForm({ data, onUpdate, onNext, onBack }: DocumentU
                   onClick={() => document.getElementById(key)?.click()}
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  {key === "photos" ? "Sélectionner 2 photos" : "Choisir un fichier"}
+                  {key === "photos" ? "Sélectionner une photo" : "Choisir un fichier"}
                 </Button>
                 {errors[key] && (
                   <p className="text-sm text-red-500 mt-1">{errors[key]}</p>

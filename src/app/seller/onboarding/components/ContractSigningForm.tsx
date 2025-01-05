@@ -15,13 +15,19 @@ interface ContractSigningFormProps {
   onBack: () => void;
 }
 
+interface StoredDocument {
+  name: string;
+  url?: string;
+  file?: File;
+}
+
 export function ContractSigningForm({ data, onUpdate, onNext, onBack }: ContractSigningFormProps) {
   const [error, setError] = useState<string>("");
 
 
   const handleDownloadContract = () => {
     // Le fichier doit être dans le dossier public
-    const contractUrl = "/contracts/fr/seller-agreement.pdf";
+    const contractUrl = "/contracts/fr/seller_contract.pdf";
     window.open(contractUrl, '_blank'); // Ouvre dans un nouvel onglet
     
     // Ou pour forcer le téléchargement :
@@ -38,7 +44,10 @@ export function ContractSigningForm({ data, onUpdate, onNext, onBack }: Contract
       ...updatedData,
       contract: {
         signed: updatedData.contract.signed,
-        signedDocument: updatedData.contract.signedDocument?.name
+        signedDocument: updatedData.contract.signedDocument ? {
+          name: updatedData.contract.signedDocument.name,
+          url: updatedData.contract.signedDocument.file ? URL.createObjectURL(updatedData.contract.signedDocument.file) : undefined
+        } : null
       }
     };
     localStorage.setItem('sellerFormData', JSON.stringify(dataToSave));
@@ -51,7 +60,11 @@ export function ContractSigningForm({ data, onUpdate, onNext, onBack }: Contract
         ...data,
         contract: {
           signed: true,
-          signedDocument: file,
+          signedDocument: {
+            name: file.name,
+            file: file,
+            url: URL.createObjectURL(file)
+          },
         },
       };
       onUpdate(updatedData);

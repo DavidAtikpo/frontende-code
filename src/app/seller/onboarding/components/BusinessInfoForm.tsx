@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, X } from "lucide-react";
+import { Upload, X } from "lucide-react";
 import { SellerFormData } from "../page";
-
+import Image from "next/image";
 
 interface BusinessInfoFormProps {
   data: SellerFormData;
@@ -17,6 +17,8 @@ interface BusinessInfoFormProps {
   onBack: () => void;
 }
 
+const businessTypes = ["Retail", "Wholesale", "Service", "Manufacturing"];
+
 export function BusinessInfoForm({
   data,
   onUpdate,
@@ -24,16 +26,11 @@ export function BusinessInfoForm({
   onBack,
 }: BusinessInfoFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    description: "",
-    price: "",
-    images: [] as File[],
-  });
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const categories = ["Électronique", "Mode", "Maison", "Beauté", "Alimentation", "Services"];
+  const categories = ["Électromenage", "Mode", "Beauté", "Alimentation"];
+  const paymentTypes = ["Compte bancaire", "Mobile Money"];
 
-  // Fonction pour sauvegarder dans localStorage
   const saveToLocalStorage = (updatedData: SellerFormData) => {
     localStorage.setItem('sellerFormData', JSON.stringify(updatedData));
   };
@@ -50,87 +47,59 @@ export function BusinessInfoForm({
     saveToLocalStorage(updatedData);
   };
 
-  const handleBankDetailsChange = (field: string, value: string) => {
+  const handleBusinessTypeChange = (value: string) => {
     const updatedData = {
       ...data,
-      businessInfo: {
-        ...data.businessInfo,
-        bankDetails: {
-          ...data.businessInfo.bankDetails,
-          [field]: value,
-        },
-      },
-    };
-    onUpdate(updatedData);
-    saveToLocalStorage(updatedData);
-  };
-
-  const handleAddProduct = () => {
-    if (!newProduct.name || !newProduct.description || !newProduct.price) {
-      setErrors({ product: "Tous les champs du produit sont requis" });
-      return;
-    }
-
-    const updatedData = {
-      ...data,
-      businessInfo: {
-        ...data.businessInfo,
-        products: [
-          ...data.businessInfo.products,
-          {
-            name: newProduct.name,
-            description: newProduct.description,
-            price: parseFloat(newProduct.price),
-            images: newProduct.images,
-          },
-        ],
-      },
-    };
-    onUpdate(updatedData);
-    saveToLocalStorage(updatedData);
-
-    setNewProduct({
-      name: "",
-      description: "",
-      price: "",
-      images: [],
-    });
-    setErrors({});
-  };
-
-  const handleRemoveProduct = (index: number) => {
-    const newProducts = [...data.businessInfo.products];
-    newProducts.splice(index, 1);
-    const updatedData = {
-      ...data,
-      businessInfo: {
-        ...data.businessInfo,
-        products: newProducts,
-      },
+      businessType: value,
     };
     onUpdate(updatedData);
     saveToLocalStorage(updatedData);
   };
 
   const handleImageUpload = (files: FileList | null) => {
-    if (!files) return;
-    setNewProduct({
-      ...newProduct,
-      images: Array.from(files),
-    });
+    if (!files || !files[0]) return;
+    
+    const file = files[0];
+    setImagePreview(URL.createObjectURL(file));
+    
+    const updatedData = {
+      ...data,
+      businessInfo: {
+        ...data.businessInfo,
+        shopImage: file
+      },
+    };
+    onUpdate(updatedData);
+    saveToLocalStorage(updatedData);
+  };
+
+  const removeImage = () => {
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setImagePreview(null);
+    
+    const updatedData = {
+      ...data,
+      businessInfo: {
+        ...data.businessInfo,
+        shopImage: null
+      },
+    };
+    onUpdate(updatedData);
+    saveToLocalStorage(updatedData);
   };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     const info = data.businessInfo;
 
+    if (!info.shopName) newErrors.shopName = "Le nom de la boutique est requis";
     if (!info.category) newErrors.category = "La catégorie est requise";
     if (!info.description) newErrors.description = "La description est requise";
-    if (!info.products.length) newErrors.products = "Ajoutez au moins un produit";
-    if (!info.bankDetails.accountNumber) 
-      newErrors.accountNumber = "Le numéro de compte est requis";
-    if (!info.returnPolicy) 
-      newErrors.returnPolicy = "La politique de retour est requise";
+    if (!info.shopImage) newErrors.shopImage = "L'image de la boutique est requise";
+    if (!info.paymentType) newErrors.paymentType = "Le type de paiement est requis";
+    if (!info.paymentDetails) newErrors.paymentDetails = "Les détails de paiement sont requis";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -139,15 +108,30 @@ export function BusinessInfoForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      saveToLocalStorage(data); // Sauvegarde finale avant de passer à l'étape suivante
+      saveToLocalStorage(data);
       onNext();
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Catégorie et Description */}
       <div className="space-y-4">
+        {/* Nom de la boutique */}
+        <div className="space-y-2">
+          <Label htmlFor="shopName">
+            Nom de la boutique/entreprise <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id="shopName"
+            value={data.businessInfo.shopName}
+            onChange={(e) => handleChange("shopName", e.target.value)}
+          />
+          {errors.shopName && (
+            <p className="text-sm text-red-500">{errors.shopName}</p>
+          )}
+        </div>
+
+        {/* Catégorie */}
         <div className="space-y-2">
           <Label htmlFor="category">
             Catégorie <span className="text-red-500">*</span>
@@ -172,9 +156,10 @@ export function BusinessInfoForm({
           )}
         </div>
 
+        {/* Description */}
         <div className="space-y-2">
           <Label htmlFor="description">
-            Description <span className="text-red-500">*</span>
+            Description de votre activité <span className="text-red-500">*</span>
           </Label>
           <Textarea
             id="description"
@@ -185,95 +170,100 @@ export function BusinessInfoForm({
             <p className="text-sm text-red-500">{errors.description}</p>
           )}
         </div>
-      </div>
 
-      {/* Produits */}
-      <div className="space-y-4">
-        <h3 className="font-medium">Produits</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {data.businessInfo.products.map((product, index) => (
-            <div key={index} className="relative p-4 bg-gray-50 rounded-lg">
-              <h4 className="font-medium">{product.name}</h4>
-              <p className="text-sm text-gray-600">{product.description}</p>
-              <p className="font-bold text-blue-600">{product.price} FCFA</p>
+        {/* Image de la boutique */}
+        <div className="space-y-2">
+          <Label htmlFor="shopImage">
+            Image de la boutique/entreprise <span className="text-red-500">*</span>
+          </Label>
+          <div className="relative">
+            <Input
+              id="shopImage"
+              type="file"
+              className="hidden"
+              onChange={(e) => handleImageUpload(e.target.files)}
+              accept="image/*"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => document.getElementById('shopImage')?.click()}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Choisir une image
+            </Button>
+            {errors.shopImage && (
+              <p className="text-sm text-red-500">{errors.shopImage}</p>
+            )}
+          </div>
+          {imagePreview && (
+            <div className="relative w-full h-40 mt-2">
+              <Image
+                src={imagePreview}
+                alt="Aperçu de la boutique"
+                className="w-full h-full object-cover rounded-lg"
+                width={100}
+                height={100}
+              />
               <Button
                 type="button"
-                size="sm"
-                variant="destructive"
+                variant="ghost"
+                size="icon"
                 className="absolute top-2 right-2"
-                onClick={() => handleRemoveProduct(index)}
+                onClick={removeImage}
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
-          ))}
-        </div>
-
-        <div className="space-y-4">
-          <Label>Ajouter un produit</Label>
-          <Input
-            placeholder="Nom du produit"
-            value={newProduct.name}
-            onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-          />
-          <Textarea
-            placeholder="Description du produit"
-            value={newProduct.description}
-            onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-          />
-          <Input
-            type="number"
-            placeholder="Prix"
-            value={newProduct.price}
-            onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-          />
-          <Input
-            type="file"
-            multiple
-            onChange={(e) => handleImageUpload(e.target.files)}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleAddProduct}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter le produit
-          </Button>
-          {errors.products && (
-            <p className="text-sm text-red-500">{errors.products}</p>
           )}
         </div>
-      </div>
 
-      {/* Détails bancaires */}
-      <div className="space-y-4">
-        <Label htmlFor="accountNumber">
-          Numéro de compte <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id="accountNumber"
-          value={data.businessInfo.bankDetails.accountNumber}
-          onChange={(e) => handleBankDetailsChange("accountNumber", e.target.value)}
-        />
-        {errors.accountNumber && (
-          <p className="text-sm text-red-500">{errors.accountNumber}</p>
-        )}
-      </div>
+        {/* Type de paiement */}
+        <div className="space-y-2">
+          <Label htmlFor="paymentType">
+            Type de paiement <span className="text-red-500">*</span>
+          </Label>
+          <Select
+            value={data.businessInfo.paymentType}
+            onValueChange={(value) => handleChange("paymentType", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionnez un type de paiement" />
+            </SelectTrigger>
+            <SelectContent>
+              {paymentTypes.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.paymentType && (
+            <p className="text-sm text-red-500">{errors.paymentType}</p>
+          )}
+        </div>
 
-      {/* Politique de retour */}
-      <div className="space-y-4">
-        <Label htmlFor="returnPolicy">
-          Politique de retour <span className="text-red-500">*</span>
-        </Label>
-        <Textarea
-          id="returnPolicy"
-          value={data.businessInfo.returnPolicy}
-          onChange={(e) => handleChange("returnPolicy", e.target.value)}
-        />
-        {errors.returnPolicy && (
-          <p className="text-sm text-red-500">{errors.returnPolicy}</p>
-        )}
+        {/* Détails de paiement */}
+        <div className="space-y-2">
+          <Label htmlFor="paymentDetails">
+            {data.businessInfo.paymentType === "Compte bancaire" 
+              ? "Numéro de compte bancaire" 
+              : "Numéro Mobile Money"} <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id="paymentDetails"
+            value={data.businessInfo.paymentDetails}
+            onChange={(e) => handleChange("paymentDetails", e.target.value)}
+            placeholder={data.businessInfo.paymentType === "Compte bancaire" 
+              ? "Ex: BF123 01001 00000000000 01" 
+              : "Ex: 76000000"}
+          />
+          {errors.paymentDetails && (
+            <p className="text-sm text-red-500">{errors.paymentDetails}</p>
+          )}
+        </div>
+
       </div>
 
       <div className="flex justify-between">

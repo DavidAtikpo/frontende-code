@@ -91,27 +91,27 @@ export default function PaymentsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Paiements</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Paiements</h1>
           <p className="text-muted-foreground">
             Gérez vos revenus et retraits
           </p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <DateRangePicker
             value={date}
             onChange={setDate}
           />
-          <Button variant="outline">
+          <Button variant="outline" className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -143,6 +143,7 @@ export default function PaymentsPage() {
               size="sm"
               onClick={handleWithdrawalRequest}
               disabled={!stats?.pendingAmount}
+              className="mt-2 w-full sm:w-auto"
             >
               <Wallet className="h-4 w-4 mr-2" />
               Demander un retrait
@@ -172,25 +173,25 @@ export default function PaymentsPage() {
           <CardTitle>Derniers retraits</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <table className="w-full">
+          <div className="overflow-x-auto rounded-md border">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="p-4 text-left">Date</th>
-                  <th className="p-4 text-left">Référence</th>
-                  <th className="p-4 text-left">Montant</th>
-                  <th className="p-4 text-left">Statut</th>
+                  <th className="p-2 sm:p-4 text-left">Date</th>
+                  <th className="p-2 sm:p-4 text-left">Référence</th>
+                  <th className="p-2 sm:p-4 text-left">Montant</th>
+                  <th className="p-2 sm:p-4 text-left">Statut</th>
                 </tr>
               </thead>
               <tbody>
                 {stats?.recentWithdrawals.map((withdrawal) => (
                   <tr key={withdrawal.id} className="border-b">
-                    <td className="p-4">
+                    <td className="p-2 sm:p-4">
                       {new Date(withdrawal.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="p-4">#{withdrawal.id.slice(0, 8)}</td>
-                    <td className="p-4">{withdrawal.amount} FCFA</td>
-                    <td className="p-4">
+                    <td className="p-2 sm:p-4">#{withdrawal.id.slice(0, 8)}</td>
+                    <td className="p-2 sm:p-4">{withdrawal.amount} FCFA</td>
+                    <td className="p-2 sm:p-4">
                       <Badge className={getStatusColor(withdrawal.status)}>
                         {withdrawal.status}
                       </Badge>

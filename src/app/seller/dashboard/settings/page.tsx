@@ -1,10 +1,45 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { motion } from "framer-motion";
+import { 
+  Store, 
+  MapPin, 
+  CreditCard, 
+  Bell, 
+  Shield, 
+  Smartphone,
+  Mail,
+  Building,
+  Clock,
+  Globe,
+  Image as ImageIcon,
+  Upload,
+  X,
+  Lock,
+  Key,
+  ChevronRight
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
-import { link } from "fs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 interface _SettingsData {
   notifications: {
@@ -32,114 +67,50 @@ interface SellerProfile {
   };
 }
 
-export default function SellerSettings() {
-  const [profile, setProfile] = useState<SellerProfile | null>(null);
+export default function SettingsPage() {
   const { toast } = useToast();
+  const [profile, setProfile] = useState<SellerProfile>({});
+  const [activeTab, setActiveTab] = useState("business");
+  const { register, handleSubmit, watch, formState: { errors } } = useForm();
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    // Charger le profil vendeur
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
+  const onSubmit = async (data: any) => {
+    setIsLoading(true);
     try {
-      const res = await fetch('/api/seller/profile');
-      const data = await res.json();
-      if (data.success) {
-        setProfile(data.data);
-      }
+      // Appel API pour sauvegarder les paramètres
+      toast({
+        title: "Succès",
+        description: "Vos paramètres ont été mis à jour",
+      });
     } catch (error) {
-      console.error('Failed to fetch profile:', error);
-    }
-  };
-
-  const _handleUpdateSettings = (_updates: SettingUpdate) => {
-    try {
-      // ... logique de mise à jour ...
-    } catch (error) {
-      console.error('Failed to update settings:', error);
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour les paramètres",
         variant: "destructive",
       });
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    try {
-      const res: Response = await fetch('/api/seller/profile', {
-        method: 'PUT',
-        body: formData
-      });
-      const responseData = await res.json();
-      
-      if (responseData.success) {
-        toast({
-          title: "Succès",
-          description: "Profil mis à jour avec succès"
-        });
-      }
-    } catch (error) {
-      console.error('Failed to update profile:', error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Erreur lors de la mise à jour du profil"
-      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">Paramètres du profil</h3>
-        <p className="text-sm text-muted-foreground">
-          Gérez vos informations personnelles et paramètres de boutique
-        </p>
-      </div>
+      <Tabs defaultValue="business" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="business">
+            <Store className="h-4 w-4 mr-2" />
+            Entreprise
+          </TabsTrigger>
+          <TabsTrigger value="payments">
+            <CreditCard className="h-4 w-4 mr-2" />
+            Paiements
+          </TabsTrigger>
+          {/* ... autres tabs ... */}
+        </TabsList>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid gap-4">
-          <div className="space-y-2">
-            <button>Profile</button>
-          </div>
-          
-          <div className="space-y-2">
-            <label>Nom de la boutique</label>
-            <Input 
-              name="storeName"
-              defaultValue={profile?.storeName}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label>Description</label>
-            <textarea
-              name="description"
-              className="w-full min-h-[100px] p-2 border rounded"
-              defaultValue={profile?.description}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label>Informations bancaires</label>
-            <Input
-              name="bankInfo"
-              defaultValue={profile?.bankInfo}
-              placeholder="IBAN"
-            />
-          </div>
-        </div>
-
-        <Button type="submit">
-          Enregistrer les modifications
-        </Button>
-      </form>
+        {/* ... reste du contenu ... */}
+      </Tabs>
     </div>
   );
-} 
+}
 

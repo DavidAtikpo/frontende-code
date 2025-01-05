@@ -122,12 +122,15 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
         <h1 className="text-3xl font-bold">Commandes</h1>
-        <div className="flex gap-4">
-          <DateRangePicker />
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <DateRangePicker className="w-full sm:w-auto" />
+          <Select 
+            value={statusFilter} 
+            onValueChange={setStatusFilter}
+          >
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Filtrer par statut" />
             </SelectTrigger>
             <SelectContent>
@@ -138,19 +141,21 @@ export default function OrdersPage() {
               <SelectItem value="cancelled">Annulées</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline">
-            <Filter className="h-4 w-4 mr-2" />
-            Filtres
-          </Button>
-          <Button>
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" className="flex-1 sm:flex-none">
+              <Filter className="h-4 w-4 mr-2" />
+              Filtres
+            </Button>
+            <Button className="flex-1 sm:flex-none">
+              <Download className="h-4 w-4 mr-2" />
+              Exporter
+            </Button>
+          </div>
         </div>
       </div>
 
       {stats && (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -196,23 +201,25 @@ export default function OrdersPage() {
 
       <Card>
         <CardContent className="p-0">
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="p-4 text-left">N° Commande</th>
-                  <th className="p-4 text-left">Client</th>
-                  <th className="p-4 text-left">Date</th>
-                  <th className="p-4 text-left">Montant</th>
-                  <th className="p-4 text-left">Statut</th>
-                  <th className="p-4 text-left">Actions</th>
+                  <th className="p-2 sm:p-4 text-left">N° Commande</th>
+                  <th className="p-2 sm:p-4 text-left">Client</th>
+                  <th className="p-2 sm:p-4 text-left hidden sm:table-cell">Date</th>
+                  <th className="p-2 sm:p-4 text-left">Montant</th>
+                  <th className="p-2 sm:p-4 text-left">Statut</th>
+                  <th className="p-2 sm:p-4 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
                     <td colSpan={6} className="p-4 text-center">
-                      Chargement...
+                      <div className="flex justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      </div>
                     </td>
                   </tr>
                 ) : orders.length === 0 ? (
@@ -224,23 +231,23 @@ export default function OrdersPage() {
                 ) : (
                   orders.map((order) => (
                     <tr key={order.id} className="border-b">
-                      <td className="p-4">{order.orderNumber}</td>
-                      <td className="p-4">{order.customerName}</td>
-                      <td className="p-4">
+                      <td className="p-2 sm:p-4">{order.orderNumber}</td>
+                      <td className="p-2 sm:p-4">{order.customerName}</td>
+                      <td className="p-2 sm:p-4 hidden sm:table-cell">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="p-4">{order.total} FCFA</td>
-                      <td className="p-4">
+                      <td className="p-2 sm:p-4">{order.total.toLocaleString()} FCFA</td>
+                      <td className="p-2 sm:p-4">
                         <Badge className={getStatusColor(order.status)}>
                           {order.status}
                         </Badge>
                       </td>
-                      <td className="p-4">
+                      <td className="p-2 sm:p-4">
                         <Select
                           value={order.status}
                           onValueChange={(value) => handleStatusUpdate(order.id, value)}
                         >
-                          <SelectTrigger className="w-[140px]">
+                          <SelectTrigger className="w-[120px] sm:w-[140px]">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>

@@ -10,6 +10,7 @@ import TopBar from './components/TopBar';
 import { usePathname } from 'next/navigation';
 import { CartProvider } from './context/CartContext';
 import { CookieConsent } from '../components/CookieConsent';
+import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -25,19 +26,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <CartProvider>
-          {shouldRenderLayout ? (
-            <>
-              <TopBanner />
-              <TopBar />
-              <Header />
-              <NavigationBar/>
-              {children}
-              <Newsletter />
-              <Footer />
-            </>
-          ) : (
-            children
-          )}
+          <SubscriptionProvider>
+            {shouldRenderLayout ? (
+              <>
+                <TopBanner />
+                <TopBar />
+                <Header />
+                <NavigationBar/>
+                {children}
+                <Newsletter />
+                <Footer />
+              </>
+            ) : (
+              children
+            )}
+          </SubscriptionProvider>
         </CartProvider>
         <CookieConsent />
       </body>

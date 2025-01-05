@@ -13,6 +13,12 @@ interface VideoVerificationFormProps {
   onBack: () => void;
 }
 
+interface StoredVideo {
+  blob: Blob;
+  url: string;
+  completed: boolean;
+}
+
 export function VideoVerificationForm({ data, onUpdate, onNext, onBack }: VideoVerificationFormProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState("");
@@ -56,7 +62,7 @@ export function VideoVerificationForm({ data, onUpdate, onNext, onBack }: VideoV
     mediaRecorder.onstop = () => {
       const blob = new Blob(chunksRef.current, { type: "video/webm" });
       const url = URL.createObjectURL(blob);
-      handleRecordingComplete(url);
+      handleRecordingComplete(blob);
     };
 
     mediaRecorder.start();
@@ -68,14 +74,21 @@ export function VideoVerificationForm({ data, onUpdate, onNext, onBack }: VideoV
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      
+      const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+      handleRecordingComplete(blob);
     }
   };
 
   const resetRecording = () => {
+    if (data.videoVerification.recordingUrl) {
+      URL.revokeObjectURL(data.videoVerification.recordingUrl);
+    }
     onUpdate({
       ...data,
       videoVerification: {
         completed: false,
+        recordingBlob: undefined,
         recordingUrl: undefined
       }
     });
@@ -90,18 +103,19 @@ export function VideoVerificationForm({ data, onUpdate, onNext, onBack }: VideoV
       ...updatedData,
       videoVerification: {
         completed: updatedData.videoVerification.completed,
-        recordingUrl: undefined
+        recordingUrl: updatedData.videoVerification.recordingUrl
       }
     };
     localStorage.setItem('sellerFormData', JSON.stringify(dataToSave));
   };
 
-  const handleRecordingComplete = (url: string) => {
+  const handleRecordingComplete = (blob: Blob) => {
     const updatedData = {
       ...data,
       videoVerification: {
         completed: true,
-        recordingUrl: url
+        recordingBlob: blob,
+        recordingUrl: URL.createObjectURL(blob)
       }
     };
     onUpdate(updatedData);
