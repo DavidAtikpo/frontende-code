@@ -9,7 +9,6 @@ import { ContractSigningForm } from "./components/ContractSigningForm";
 import { VideoVerificationForm } from "./components/VideoVerificationForm";
 import { BusinessInfoForm } from "./components/BusinessInfoForm";
 import { ComplianceForm } from "./components/ComplianceForm";
-import { ValidationStatusForm } from "./components/ValidationStatusForm";
 import { useRouter } from "next/navigation";
 import { API_CONFIG } from "@/utils/config";
 import { getCookie } from "cookies-next";
@@ -135,10 +134,6 @@ const steps: Step[] = [
   {
     title: "Conformité",
     component: ComplianceForm,
-  },
-  {
-    title: "Validation administrative",
-    component: ValidationStatusForm,
   }
 ];
 
@@ -246,6 +241,11 @@ export default function SellerOnboardingPage() {
     }
   };
 
+  const handleFinalStepCompletion = () => {
+    // Redirect to the ValidationStatusForm page
+    router.push('/seller/validation-status');
+  };
+
   // Valider que l'étape actuelle existe
   const currentStepComponent = steps[currentStep]?.component;
 
@@ -298,7 +298,7 @@ export default function SellerOnboardingPage() {
               {React.createElement(currentStepComponent, {
                 data: formData,
                 onUpdate: setFormData,
-                onNext: () => handleStepChange(currentStep + 1),
+                onNext: currentStep === steps.length - 1 ? handleFinalStepCompletion : () => handleStepChange(currentStep + 1),
                 onBack: () => handleStepChange(currentStep - 1),
                 isFirstStep: currentStep === 0,
                 isLastStep: currentStep === steps.length - 1,
