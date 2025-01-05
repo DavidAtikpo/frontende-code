@@ -38,10 +38,22 @@ export default function ProductsPage() {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_URL}/seller/products`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${BASE_URL}/products/seller/products`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
       if (!response.ok) throw new Error("Erreur lors du chargement des produits");
       const data = await response.json();
-      setProducts(data.data);
+      
+      if (data.success) {
+        setProducts(data.data);
+      } else {
+        throw new Error(data.message);
+      }
     } catch (error) {
       toast({
         title: "Erreur",

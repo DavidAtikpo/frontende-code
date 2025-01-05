@@ -26,6 +26,13 @@ interface Product {
   badge?: string;
 }
 
+// Fonction pour gérer les URLs des images
+const getImageUrl = (imagePath: string) => {
+  if (!imagePath) return "/placeholder.jpg";
+  if (imagePath.startsWith("http")) return imagePath;
+  return `${BASE_URL}/${imagePath}`;
+};
+
 const ShopPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,19 +48,33 @@ const ShopPage = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/api/product/get-all`);
+        const response = await fetch(`${BASE_URL}/api/products/get-all`);
         const data = await response.json();
-        setProducts(data);
-        setFilteredProducts(data);
+        
+        if (data.success) {
+          setProducts(data.data);
+          setFilteredProducts(data.data);
+        } else {
+          toast({
+            title: "Erreur",
+            description: data.message || "Impossible de charger les produits",
+            variant: "destructive"
+          });
+        }
         setLoading(false);
       } catch (error) {
         console.error("Erreur lors de la récupération des produits :", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les produits",
+          variant: "destructive"
+        });
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, []);
+  }, [toast]);
 
   const handleAddToCart = (product: Product) => {
     const finalPrice = product.discount
@@ -314,7 +335,7 @@ const ShopPage = () => {
               >
                 <div className="relative aspect-square">
                   <Image
-                    src={product.images[0] || "/placeholder.jpg"}
+                    src={getImageUrl(product.images[0])}
                     alt={product.title}
                     width={500}
                     height={500}

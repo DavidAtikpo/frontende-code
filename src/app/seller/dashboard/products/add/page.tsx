@@ -68,7 +68,7 @@ export default function AddProductPage() {
     formData.append('isDigital', isDigital.toString());
 
     try {
-      const response = await fetch(`${BASE_URL}/seller/products`, {
+      const response = await fetch(`${BASE_URL}/products/create`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

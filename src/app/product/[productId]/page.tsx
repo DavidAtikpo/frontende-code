@@ -7,23 +7,35 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
+import { API_CONFIG } from '@/utils/config';
 
-// const BASE_URL = "https://dubon-server.onrender.com";
-const BASE_URL = "http://localhost:5000";
+const { BASE_URL } = API_CONFIG;
+
+// Fonction pour gérer les URLs des images
+const getImageUrl = (imagePath: string) => {
+  if (!imagePath) return "/placeholder.jpg";
+  if (imagePath.startsWith("http")) return imagePath;
+  return `${BASE_URL}/${imagePath}`;
+};
+
 interface Product {
-  id: number;
+  _id: string;
   title: string;
+  name: string;
   sku: string;
-  vendor: string;
+  description: string;
   price: number;
-  oldPrice: number;
-  discount: number;
+  oldPrice?: number;
+  discount?: number;
   category: string;
   availability: string;
-  description: string;
+  images: string[];
   features?: string[];
   shippingInfo?: { type: string; details: string }[];
-  images?: string[];
+  seller?: {
+    storeName: string;
+    status: string;
+  };
 }
 
 const ProductDetailPage = () => {
@@ -40,10 +52,30 @@ const ProductDetailPage = () => {
 
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/api/product/product-detail/${productId}`);
+        const response = await fetch(`${BASE_URL}/api/products/product-detail/${productId}`);
         if (!response.ok) throw new Error("Product not found");
         const data = await response.json();
-        setProduct(data);
+        
+        if (data.success) {
+          // Adapter les données reçues au format attendu
+          const formattedProduct: Product = {
+            _id: data.data.id,
+            title: data.data.name,
+            name: data.data.name,
+            sku: data.data.sku || 'N/A',
+            description: data.data.description,
+            price: data.data.price,
+            oldPrice: data.data.compareAtPrice,
+            discount: data.data.discount,
+            category: data.data.category?.name || 'Non catégorisé',
+            availability: data.data.quantity > 0 ? 'Disponible' : 'Rupture de stock',
+            images: data.data.images || [],
+            seller: data.data.seller || { storeName: 'Vendeur inconnu', status: 'active' }
+          };
+          setProduct(formattedProduct);
+        } else {
+          throw new Error(data.message || "Erreur lors de la récupération du produit");
+        }
       } catch (error) {
         console.error("Error fetching product:", error);
       } finally {
@@ -100,8 +132,8 @@ const ProductDetailPage = () => {
         <div className="space-y-4">
           <div className="relative h-[300px] sm:h-[400px] rounded-xl overflow-hidden border">
             <Image
-              src={product.images?.[selectedImage] || "/placeholder.jpg"}
-              alt={product.title}
+              src={getImageUrl(product?.images?.[selectedImage])}
+              alt={product?.title || ''}
               width={500}
               height={500}
               className="object-contain"
@@ -109,7 +141,7 @@ const ProductDetailPage = () => {
             />
           </div>
           <div className="grid grid-cols-5 gap-2">
-            {product.images?.map((img, index) => (
+            {product?.images?.map((img, index) => (
               <button
                 key={index}
                 onClick={() => setSelectedImage(index)}
@@ -117,7 +149,7 @@ const ProductDetailPage = () => {
                   ${selectedImage === index ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-200 hover:border-gray-300'}`}
               >
                 <Image
-                  src={img}
+                  src={getImageUrl(img)}
                   alt={`${product.title} ${index + 1}`}
                   width={500}
                   height={500}
@@ -142,7 +174,7 @@ const ProductDetailPage = () => {
             </div>
             <div className="space-y-2 text-sm text-gray-600">
               <p>SKU: <span className="font-medium">{product.sku}</span></p>
-              <p>Vendeur: <span className="font-medium">{product.vendor}</span></p>
+              <p>Vendeur: <span className="font-medium">{product.seller?.storeName}</span></p>
               <p>Catégorie: <span className="text-blue-600 hover:underline cursor-pointer">{product.category}</span></p>
             </div>
           </div>
@@ -154,7 +186,7 @@ const ProductDetailPage = () => {
                 <span className="text-lg text-gray-500 line-through">{product.oldPrice} FCFA</span>
               )}
             </div>
-            {product.discount > 0 && (
+            {product.discount && product.discount > 0 && (
               <span className="inline-block bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">
                 -{product.discount}% de réduction
               </span>
