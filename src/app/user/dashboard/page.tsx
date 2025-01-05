@@ -65,6 +65,7 @@ const defaultDashboardData: DashboardData = {
 export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState<DashboardData>(defaultDashboardData);
   const [isLoading, setIsLoading] = useState(true);
+  const [validationStatus, setValidationStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
 
   const fetchDashboardData = async () => {
     try {
@@ -85,6 +86,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboardData();
+    // Fetch or determine the validation status
+    const status = localStorage.getItem('validationStatus');
+    console.log("Validation Status from localStorage:", status); // Debugging line
+    if (status) {
+      setValidationStatus(status as 'pending' | 'approved' | 'rejected');
+    }
   }, []);
 
   const handleRemoveFavorite = async (productId: string) => {
@@ -113,6 +120,11 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 p-6">
+      {validationStatus === 'pending' && (
+        <div className="mb-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
+          Votre validation est en cours. Veuillez patienter.
+        </div>
+      )}
       <h1 className="text-3xl font-bold">Tableau de bord</h1>
       
       <UserStats stats={dashboardData.stats} />
