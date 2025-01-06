@@ -5,7 +5,9 @@ import { useCartContext } from "../context/CartContext";
 import { getCookie } from 'cookies-next';
 import { API_CONFIG } from '@/utils/config';
 import { useToast } from "@/components/ui/use-toast";
-import Image from "next/image";
+import ProductImage from "@/components/ui/ProductImage";
+import Link from "next/link";
+import { motion } from "framer-motion";
 
 const { BASE_URL } = API_CONFIG;
 
@@ -122,17 +124,15 @@ const WishlistPage = () => {
                 >
                   {/* Produit */}
                   <td className="p-4 flex items-center space-x-4 sm:table-cell block">
-                    <Image
-                      src={
-                        Array.isArray(item.images)
-                          ? item.images[0] || "/default-image.jpg"
-                          : item.images || "/default-image.jpg"
-                      }
-                      alt={item.title || "Produit"}
-                      width={64}
-                      height={64}
-                      className="w-16 h-16 object-cover rounded"
-                    />
+                    <div className="relative group">
+                      <ProductImage
+                        images={item.images}
+                        alt={item.title}
+                        width={300}
+                        height={300}
+                        className="w-full h-64 object-cover rounded-lg"
+                      />
+                    </div>
                     <span className="text-sm font-medium text-gray-800 sm:hidden">
                       {item.title}
                     </span>
@@ -140,7 +140,7 @@ const WishlistPage = () => {
 
                   {/* Prix */}
                   <td className="p-4 text-blue-600 font-bold sm:table-cell block">
-                    {item.finalPrice.toFixed(2)} CFA
+                    {(typeof item.finalPrice === 'number' ? item.finalPrice : parseFloat(String(item.finalPrice)) || 0).toFixed(2)} CFA
                   </td>
 
                   {/* Stock */}

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { FaShoppingCart, FaHeart, FaUser, FaSearch } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
+import ProductImage from "@/components/ui/ProductImage";
 import { useCartContext } from "../context/CartContext";
 import { API_CONFIG } from '@/utils/config';
 import { useRouter } from 'next/navigation';
@@ -26,6 +27,23 @@ const useClickOutside = (handler: () => void) => {
   }, [handler]);
 
   return ref;
+};
+
+const { BASE_URL } = API_CONFIG;
+
+// Fonction pour gérer les URLs des images
+const getImageUrl = (imagePath: string | string[]) => {
+  if (!imagePath) return "/placeholder.jpg";
+  const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
+  if (!path) return "/placeholder.jpg";
+  if (path.startsWith("http")) return path;
+  return `${BASE_URL}/${path}`;
+};
+
+const getProfileImageUrl = (imagePath: string | null) => {
+  if (!imagePath) return "/placeholder-avatar.jpg";
+  if (imagePath.startsWith("http")) return imagePath;
+  return `${BASE_URL}${imagePath}`;
 };
 
 const Header = () => {
@@ -202,17 +220,17 @@ const Header = () => {
                   <ul className="divide-y divide-gray-200">
                     {state.cart.map((item) => (
                       <li key={item._id} className="flex items-center py-2">
-                        <Image
-                          src={Array.isArray(item.images) ? item.images[0] : item.images}
+                        <ProductImage
+                          images={item.images}
                           alt={item.title}
-                          className="w-12 h-12 object-cover rounded-md"
                           width={64}
                           height={64}
+                          className="w-12 h-12 object-cover rounded-md"
                         />
                         <div className="ml-3 flex-1">
                           <h4 className="text-sm font-bold">{item.title}</h4>
                           <p className="text-sm text-gray-500">
-                            {item.quantity} × ${item.finalPrice.toFixed(2)}
+                            {item.quantity} × {(typeof item.finalPrice === 'number' ? item.finalPrice : parseFloat(String(item.finalPrice)) || 0).toFixed(2)} CFA
                           </p>
                         </div>
                         <button
@@ -270,12 +288,12 @@ const Header = () => {
                   <ul className="divide-y divide-gray-200">
                     {state.wishlist.map((item) => (
                       <li key={item._id} className="flex items-center py-2">
-                        <Image
-                          src={Array.isArray(item.images) ? item.images[0] : item.images}
+                        <ProductImage
+                          images={item.images}
                           alt={item.title}
-                          className="w-12 h-12 object-cover rounded-md"
                           width={64}
                           height={64}
+                          className="w-12 h-12 object-cover rounded-md"
                         />
                         <div className="ml-3 flex-1">
                           <h4 className="text-sm font-bold">{item.title}</h4>
@@ -312,14 +330,12 @@ const Header = () => {
                 {userInfo.profilePhotoURL ? (
                   <div className="flex items-center gap-2">
                     <Image
-                      src={userInfo.profilePhotoURL}
+                      src={getProfileImageUrl(userInfo.profilePhotoURL)}
                       alt="Photo de profil"
                       width={24}
                       height={24}
                       className="w-6 h-6 rounded-full object-cover"
                       priority={true}
-                      // @ts-expect-error - Ignorer l'erreur de type pour le menu déroulant
-                      loader={() => userInfo.profilePhotoURL || ''}
                     />
                     <span className="text-sm">{userInfo.name}</span>
                   </div>
@@ -340,14 +356,12 @@ const Header = () => {
                       <div className="flex items-center space-x-3 mb-4 pb-4 border-b">
                         {userInfo.profilePhotoURL ? (
                           <Image
-                            src={userInfo.profilePhotoURL}
+                            src={getProfileImageUrl(userInfo.profilePhotoURL)}
                             alt="Photo de profil"
                             width={40}
                             height={40}
                             className="w-10 h-10 rounded-full object-cover"
                             priority={true}
-                            // @ts-expect-error - Ignorer l'erreur de type pour le menu déroulant
-                            loader={() => userInfo.profilePhotoURL || ''}
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">

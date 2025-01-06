@@ -6,11 +6,20 @@ import { getCookie } from 'cookies-next';
 import { API_CONFIG } from '@/utils/config';
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import ProductImage from "@/components/ui/ProductImage";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
 const { BASE_URL } = API_CONFIG;
+
+// Fonction pour gérer les URLs des images
+const getImageUrl = (imagePath: string | string[]) => {
+  if (!imagePath) return "/placeholder.jpg";
+  const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
+  if (!path) return "/placeholder.jpg";
+  if (path.startsWith("http")) return path;
+  return `${BASE_URL}/${path}`;
+};
 
 const CartPage = () => {
   const { state, dispatch } = useCartContext();
@@ -25,6 +34,11 @@ const CartPage = () => {
     const fetchCart = async () => {
       try {
         const token = getCookie('token');
+        if (!token) {
+          setIsLoading(false);
+          return;
+        }
+
         const response = await fetch(`${BASE_URL}/api/user/cart`, {
           headers: {
             Authorization: `Bearer ${token}`
@@ -34,26 +48,49 @@ const CartPage = () => {
         if (response.ok) {
           const data = await response.json();
           dispatch({ type: "SET_CART", payload: data.cart });
+        } else if (response.status === 403) {
+          toast({
+            title: "Erreur d'autorisation",
+            description: "Vous n'avez pas les permissions nécessaires pour accéder au panier",
+            variant: "destructive"
+          });
+          // Rediriger vers la page de connexion utilisateur
+          router.push('/login');
         }
       } catch (error) {
         console.error('Erreur chargement panier:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger le panier",
+          variant: "destructive"
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchCart();
-  }, [dispatch]);
+  }, [dispatch, router, toast]);
 
   // Mettre à jour la quantité
   const handleUpdateQuantity = async (productId: string, delta: number) => {
     try {
       const token = getCookie('token');
+      if (!token) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez vous connecter",
+          variant: "destructive"
+        });
+        router.push('/login');
+        return;
+      }
+
       const response = await fetch(`${BASE_URL}/api/user/cart/${productId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ delta })
       });
@@ -62,6 +99,24 @@ const CartPage = () => {
         dispatch({
           type: "UPDATE_QUANTITY",
           payload: { _id: productId, delta }
+        });
+        toast({
+          title: "Succès",
+          description: "Quantité mise à jour"
+        });
+      } else if (response.status === 403) {
+        toast({
+          title: "Erreur d'autorisation",
+          description: "Vous n'avez pas les permissions nécessaires",
+          variant: "destructive"
+        });
+        router.push('/login');
+      } else {
+        const data = await response.json();
+        toast({
+          title: "Erreur",
+          description: data.message || "Impossible de mettre à jour la quantité",
+          variant: "destructive"
         });
       }
     } catch (error) {
@@ -78,10 +133,20 @@ const CartPage = () => {
   const handleRemoveFromCart = async (productId: string) => {
     try {
       const token = getCookie('token');
+      if (!token) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez vous connecter",
+          variant: "destructive"
+        });
+        router.push('/login');
+        return;
+      }
+
       const response = await fetch(`${BASE_URL}/api/user/cart/${productId}`, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${token}`
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -90,6 +155,20 @@ const CartPage = () => {
         toast({
           title: "Succès",
           description: "Produit retiré du panier"
+        });
+      } else if (response.status === 403) {
+        toast({
+          title: "Erreur d'autorisation",
+          description: "Vous n'avez pas les permissions nécessaires",
+          variant: "destructive"
+        });
+        router.push('/login');
+      } else {
+        const data = await response.json();
+        toast({
+          title: "Erreur",
+          description: data.message || "Impossible de retirer le produit",
+          variant: "destructive"
         });
       }
     } catch (error) {
@@ -105,7 +184,10 @@ const CartPage = () => {
   const shippingCost = 0;
 
   const calculateSubtotal = () =>
-    state.cart.reduce((sum, item) => sum + (item.finalPrice || 0) * (item.quantity || 1), 0);
+    state.cart.reduce((sum, item) => {
+      const price = typeof item.finalPrice === 'number' ? item.finalPrice : parseFloat(String(item.finalPrice)) || 0;
+      return sum + price * (item.quantity || 1);
+    }, 0);
 
   const calculateTotal = () => calculateSubtotal() - discount + shippingCost;
 
@@ -169,15 +251,13 @@ const CartPage = () => {
                     <tr key={item._id} className="border-b">
                       <td className="py-4 flex items-center space-x-4">
                         <button
-                          onClick={() =>
-                            handleRemoveFromCart(item._id)
-                          }
+                          onClick={() => handleRemoveFromCart(item._id)}
                           className="text-red-600 hover:text-red-800"
                         >
                           &#x2715;
                         </button>
-                        <Image
-                          src={Array.isArray(item.images) ? item.images[0] || "/default-image.jpg" : item.images || "/default-image.jpg"}
+                        <ProductImage
+                          images={item.images}
                           alt={item.title || "Produit"}
                           width={48}
                           height={48}
@@ -185,22 +265,19 @@ const CartPage = () => {
                         />
                         <span className="text-base">{item.title}</span>
                       </td>
-                      <td className="py-4">{(item.finalPrice || 0).toFixed(2)} CFA</td>
+                      <td className="py-4">{(typeof item.finalPrice === 'number' ? item.finalPrice : parseFloat(String(item.finalPrice)) || 0).toFixed(2)} CFA</td>
                       <td className="py-4">
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() =>
-                              handleUpdateQuantity(item._id, -1)
-                            }
+                            onClick={() => handleUpdateQuantity(item._id, -1)}
                             className="px-2 py-1 text-xs border rounded hover:bg-gray-200"
+                            disabled={item.quantity <= 1}
                           >
                             -
                           </button>
                           <span>{item.quantity || 1}</span>
                           <button
-                            onClick={() =>
-                              handleUpdateQuantity(item._id, 1)
-                            }
+                            onClick={() => handleUpdateQuantity(item._id, 1)}
                             className="px-2 py-1 text-xs border rounded hover:bg-gray-200"
                           >
                             +
@@ -208,7 +285,7 @@ const CartPage = () => {
                         </div>
                       </td>
                       <td className="py-4">
-                        {((item.finalPrice || 0) * (item.quantity || 1)).toFixed(2)} CFA
+                        {((typeof item.finalPrice === 'number' ? item.finalPrice : parseFloat(String(item.finalPrice)) || 0) * (item.quantity || 1)).toFixed(2)} CFA
                       </td>
                     </tr>
                   ))}

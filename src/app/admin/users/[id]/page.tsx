@@ -5,11 +5,12 @@ import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import Image from "next/image";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import Link from "next/link";
 import { API_CONFIG } from "@/utils/config";
 const { BASE_URL } = API_CONFIG;
 import { getCookie } from "cookies-next";
+import { Badge } from "@/components/ui/badge";
 
 interface User {
   avatar?: string;
@@ -34,7 +35,7 @@ export default function UserDetailPage() {
       try {
         const adminToken = getCookie('token');
 
-        const response = await fetch(`${BASE_URL}/api/admin/users/${params.userId}`, {
+        const response = await fetch(`${BASE_URL}/api/admin/users/${params.id}`, {
           headers: {
             Authorization: `Bearer ${adminToken}`,
             'Content-Type': 'application/json'
@@ -59,10 +60,10 @@ export default function UserDetailPage() {
       }
     };
 
-    if (params.userId) {
+    if (params.id) {
       fetchUser();
     }
-  }, [params.userId]);
+  }, [params.id]);
 
   if (isLoading) {
     return (
@@ -95,12 +96,12 @@ export default function UserDetailPage() {
       <div className="grid grid-cols-3 gap-6">
         <Card className="col-span-1 p-6">
           <div className="flex flex-col items-center">
-            <Image
-              src={user.avatar || "/user-profile-svgrepo-com.svg"}
-              alt={user.name || "Utilisateur"}
-              className="h-32 w-32 rounded-full object-cover"
+            <UserAvatar
+              name={user.name || "Utilisateur"}
+              avatarUrl={user.avatar}
+              className="w-32 h-32"
             />
-            <h2 className="mt-4 text-xl font-semibold">{user.displayName || "Nom inconnu"}</h2>
+            <h2 className="mt-4 text-xl font-semibold">{user.name || "Nom inconnu"}</h2>
             <p className="text-gray-500">{user.name || "Non renseigné"}</p>
           </div>
         </Card>
@@ -139,4 +140,4 @@ export default function UserDetailPage() {
       </div>
     </div>
   );
-}
+} 

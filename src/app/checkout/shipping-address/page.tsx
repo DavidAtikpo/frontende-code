@@ -3,7 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { useCartContext } from "../../context/CartContext";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import ProductImage from "@/components/ui/ProductImage";
+import { API_CONFIG } from '@/utils/config';
+
+const { BASE_URL } = API_CONFIG;
 
 const ShippingAddressPage = () => {
   const router = useRouter();
@@ -20,8 +23,12 @@ const ShippingAddressPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const calculateSubtotal = () =>
-    state.cart.reduce((acc, item) => acc + item.finalPrice * item.quantity, 0);
+  const calculateTotal = () => {
+    return state.cart.reduce((total, item) => {
+      const price = typeof item.finalPrice === 'number' ? item.finalPrice : parseFloat(String(item.finalPrice)) || 0;
+      return total + price * (item.quantity || 1);
+    }, 0);
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -213,8 +220,8 @@ const ShippingAddressPage = () => {
         <ul className="divide-y divide-gray-200">
           {state.cart.map((item) => (
             <li key={item._id} className="py-4 flex items-center">
-              <Image
-                src={Array.isArray(item.images) ? item.images[0] : item.images}
+              <ProductImage
+                images={item.images}
                 alt={item.title}
                 width={64}
                 height={64}
@@ -223,7 +230,7 @@ const ShippingAddressPage = () => {
               <div className="flex-1">
                 <h4 className="text-sm font-bold">{item.title}</h4>
                 <p className="text-sm text-gray-500">
-                  {item.quantity} × {item.finalPrice.toFixed(2)} FCFA
+                  {item.quantity} × {(typeof item.finalPrice === 'number' ? item.finalPrice : parseFloat(String(item.finalPrice)) || 0).toFixed(2)} FCFA
                 </p>
               </div>
             </li>
@@ -232,7 +239,7 @@ const ShippingAddressPage = () => {
         <div className="mt-6">
           <div className="flex justify-between mb-2">
             <span className="text-sm text-gray-600">Sous-total</span>
-            <span className="text-sm font-bold">{calculateSubtotal().toFixed(2)} FCFA</span>
+            <span className="text-sm font-bold">{calculateTotal().toFixed(2)} FCFA</span>
           </div>
           <div className="flex justify-between mb-2">
             <span className="text-sm text-gray-600">Livraison</span>
@@ -240,7 +247,7 @@ const ShippingAddressPage = () => {
           </div>
           <div className="flex justify-between border-t pt-2">
             <span className="text-lg font-bold">Total</span>
-            <span className="text-lg font-bold">{calculateSubtotal().toFixed(2)} FCFA</span>
+            <span className="text-lg font-bold">{calculateTotal().toFixed(2)} FCFA</span>
           </div>
         </div>
       </div>

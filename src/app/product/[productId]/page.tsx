@@ -8,14 +8,17 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 import { API_CONFIG } from '@/utils/config';
+import { useRouter } from "next/navigation";
 
 const { BASE_URL } = API_CONFIG;
 
 // Fonction pour gérer les URLs des images
 const getImageUrl = (imagePath: string) => {
+  console.log('Original image path:', imagePath);
   if (!imagePath) return "/placeholder.jpg";
   if (imagePath.startsWith("http")) return imagePath;
-  return `${BASE_URL}/${imagePath}`;
+  if (imagePath.startsWith("uploads/")) return `${BASE_URL}/${imagePath}`;
+  return `${BASE_URL}/uploads/${imagePath}`;
 };
 
 interface Product {
@@ -46,6 +49,12 @@ const ProductDetailPage = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  const handleAddToCart = (product: Product) => {
+    // TODO: Implémenter la logique d'ajout au panier
+    alert("Produit ajouté au panier");
+  };
 
   useEffect(() => {
     if (!productId) return;
@@ -57,24 +66,25 @@ const ProductDetailPage = () => {
         const data = await response.json();
         
         if (data.success) {
-          // Adapter les données reçues au format attendu
+          console.log("Données reçues:", data);
           const formattedProduct: Product = {
-            _id: data.data.id,
-            title: data.data.name,
-            name: data.data.name,
+            _id: data.data.id || data.data._id,
+            title: data.data.name || data.data.title,
+            name: data.data.name || data.data.title,
             sku: data.data.sku || 'N/A',
             description: data.data.description,
             price: data.data.price,
-            oldPrice: data.data.compareAtPrice,
+            oldPrice: data.data.compareAtPrice || data.data.oldPrice,
             discount: data.data.discount,
             category: data.data.category?.name || 'Non catégorisé',
             availability: data.data.quantity > 0 ? 'Disponible' : 'Rupture de stock',
-            images: data.data.images || [],
-            seller: data.data.seller || { storeName: 'Vendeur inconnu', status: 'active' }
+            images: Array.isArray(data.data.images) ? data.data.images : [data.data.images],
+            seller: {
+              storeName: data.data.seller?.storeName || 'Vendeur inconnu',
+              status: data.data.seller?.status || 'active'
+            }
           };
           setProduct(formattedProduct);
-        } else {
-          throw new Error(data.message || "Erreur lors de la récupération du produit");
         }
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -130,16 +140,22 @@ const ProductDetailPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Images Section */}
         <div className="space-y-4">
-          <div className="relative h-[300px] sm:h-[400px] rounded-xl overflow-hidden border">
+          <div className="relative aspect-square bg-white rounded-xl overflow-hidden border">
             <Image
-              src={getImageUrl(product?.images?.[selectedImage])}
+              src={getImageUrl(product?.images?.[selectedImage] || '')}
               alt={product?.title || ''}
               width={500}
               height={500}
-              className="object-contain"
+              className="object-contain p-4"
               priority
+              onError={(e) => {
+                console.error('Erreur de chargement image:', e);
+                const target = e.target as HTMLImageElement;
+                target.src = "/placeholder.jpg";
+              }}
             />
           </div>
+          
           <div className="grid grid-cols-5 gap-2">
             {product?.images?.map((img, index) => (
               <button
@@ -154,6 +170,10 @@ const ProductDetailPage = () => {
                   width={500}
                   height={500}
                   className="object-contain p-1"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "/placeholder.jpg";
+                  }}
                 />
               </button>
             ))}
@@ -218,11 +238,26 @@ const ProductDetailPage = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+              <button 
+                onClick={() => handleAddToCart(product)}
+                className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={product.availability !== "Disponible"}
+              >
                 <FaShoppingCart />
                 <span>Ajouter au panier</span>
               </button>
-              <button className="flex items-center justify-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
+              <button   
+                onClick={() => {
+                  if (product.availability === "Disponible") {
+                    router.push(`/product/${productId}`);
+                  }
+                }}
+                disabled={product.availability !== "Disponible"}
+                className={`flex items-center justify-center space-x-2 px-6 py-3 rounded-lg transition-colors
+                  ${product.availability === "Disponible" 
+                    ? "bg-green-600 hover:bg-green-700 text-white" 
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
+              >
                 <FaCreditCard />
                 <span>Acheter maintenant</span>
               </button>
