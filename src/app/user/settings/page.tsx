@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { API_CONFIG } from "@/utils/config";
 import { getCookie } from "cookies-next";
+const { BASE_URL } = API_CONFIG;
 
 interface UserSettings {
   name: string;

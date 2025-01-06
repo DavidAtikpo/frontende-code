@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -42,9 +42,14 @@ export default function AdScheduler({ schedule, onScheduleChange }: {
                 setShowCustomSchedule(value === 'custom');
               }}
             >
-              <SelectItem value="always">Toujours afficher</SelectItem>
-              <SelectItem value="scheduled">Période définie</SelectItem>
-              <SelectItem value="custom">Planning personnalisé</SelectItem>
+              <SelectTrigger>
+                <SelectValue placeholder="Choisir la fréquence" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="always">Toujours afficher</SelectItem>
+                <SelectItem value="scheduled">Période définie</SelectItem>
+                <SelectItem value="custom">Planning personnalisé</SelectItem>
+              </SelectContent>
             </Select>
           </div>
 

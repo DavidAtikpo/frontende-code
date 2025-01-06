@@ -28,6 +28,15 @@ interface Advertisement {
   clicks: number;
 }
 
+interface ScheduleProps {
+  adId: string;
+  startDate: Date;
+  endDate: Date;
+  frequency: 'always' | 'scheduled' | 'custom';
+  customDays?: string[];
+  customHours?: string[];
+}
+
 // Définition des colonnes pour le DataTable
 const columns = [
   {
@@ -45,7 +54,7 @@ const columns = [
   {
     accessorKey: "status",
     header: "Statut",
-    cell: ({ row }) => (
+    cell: ({ row }: { row: { original: Advertisement } }) => (
       <div className={`
         px-2 py-1 rounded-full text-xs font-medium inline-block
         ${row.original.status === 'active' ? 'bg-green-100 text-green-800' : ''}
@@ -67,7 +76,7 @@ const columns = [
   {
     accessorKey: "dates",
     header: "Période",
-    cell: ({ row }) => (
+    cell: ({ row }: { row: { original: Advertisement } }) => (
       <div className="text-sm">
         <div>{format(new Date(row.original.startDate), 'dd/MM/yyyy', { locale: fr })}</div>
         <div className="text-gray-500">
@@ -189,7 +198,7 @@ export default function AdvertisingPage() {
                 data={ads}
                 searchKey="name"
                 loading={loading}
-                onRowClick={(row) => setSelectedAd(row.original)}
+                onRowClick={(row) => setSelectedAd(row)}
               />
             </CardContent>
           </Card>

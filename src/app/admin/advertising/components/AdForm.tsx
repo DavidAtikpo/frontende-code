@@ -21,13 +21,16 @@ interface AdFormProps {
   loading?: boolean;
 }
 
+type AdType = 'banner' | 'popup' | 'sidebar';
+
 export default function AdForm({ onSubmit, loading }: AdFormProps) {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
-    type: '',
+    type: 'banner' as AdType,
     location: '',
-    startDate: null as Date | null,
-    endDate: null as Date | null,
+    startDate: undefined as Date | undefined,
+    endDate: undefined as Date | undefined,
     targetUrl: '',
     file: null as File | null,
     imagePreview: null as string | null
@@ -95,7 +98,7 @@ export default function AdForm({ onSubmit, loading }: AdFormProps) {
             <Label htmlFor="type">Type de publicité</Label>
             <Select
               value={formData.type}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
+              onValueChange={(value: AdType) => setFormData(prev => ({ ...prev, type: value }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un type" />

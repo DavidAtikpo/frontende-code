@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Calendar as CalendarIcon, Mail, Users, Edit } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,6 +31,7 @@ interface User {
 }
 
 export default function EmailCampaign() {
+  const { toast } = useToast();
   const [campaign, setCampaign] = useState({
     title: '',
     subject: '',

@@ -34,7 +34,6 @@ const ProductImage = ({ images, alt, width = 300, height = 300, className = "" }
         target.src = "/placeholder.jpg";
       }}
       priority={true}
-      unoptimized={process.env.NODE_ENV === 'development'}
     />
   );
 };

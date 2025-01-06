@@ -5,6 +5,7 @@ import { useDropzone } from "react-dropzone";
 import { Upload, X } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ImageDropzoneProps {
   onImagesChange: (files: File[]) => void;
@@ -19,12 +20,13 @@ export default function ImageDropzone({
   acceptedTypes = ["image/jpeg", "image/png", "image/gif"],
   maxSize = 5242880 // 5MB
 }: ImageDropzoneProps) {
+  const { toast } = useToast();
   const [previews, setPreviews] = useState<string[]>([]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     // Vérification des dimensions selon le type de publicité
     acceptedFiles.forEach(file => {
-      const img = new Image();
+      const img = document.createElement('img');
       img.src = URL.createObjectURL(file);
       img.onload = () => {
         // Exemple de validation pour une bannière

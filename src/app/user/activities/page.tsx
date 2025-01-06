@@ -42,17 +42,22 @@ interface ActivityDetails {
 export default function UserActivities() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    total: 0,
+    page: 1,
+    pages: 1
+  });
   const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
-    fetchActivities();
+    fetchActivities(1);
   }, []);
 
-  const fetchActivities = async () => {
+  const fetchActivities = async (page: number = 1) => {
     try {
       const token = getCookie('token');
-      const response = await fetch(`${BASE_URL}/api/user/activities`, {
+      const response = await fetch(`${BASE_URL}/api/user/activities?page=${page}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -61,6 +66,7 @@ export default function UserActivities() {
       if (response.ok) {
         const data = await response.json();
         setActivities(data.activities);
+        setPagination(data.pagination);
       }
     } catch (error) {
       toast({

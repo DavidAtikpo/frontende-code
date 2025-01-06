@@ -1,7 +1,8 @@
 "use client";
 
+import React from "react";
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -9,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { 
   Settings, Mail, Globe, Shield, Bell, Database,
   Save, RefreshCcw, Server, Users, CreditCard 
@@ -187,6 +188,7 @@ const defaultSettings: GroupedSettings = {
 };
 
 export default function AdminSettings() {
+  const { toast } = useToast();
   const [settings, setSettings] = useState<GroupedSettings>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -233,9 +235,18 @@ export default function AdminSettings() {
       if (response.ok) {
         // Recharger les paramètres pour confirmer les changements
         await fetchSettings();
+        toast({
+          title: "Succès",
+          description: "Les paramètres ont été mis à jour"
+        });
       }
     } catch (error) {
       console.error('Erreur:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour les paramètres",
+        variant: "destructive"
+      });
     } finally {
       setSaving(false);
     }

@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Plus, Trash2, Save, Eye } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -23,6 +23,7 @@ interface TemplateEditorProps {
 }
 
 export default function TemplateEditor({ open, onOpenChange, onTemplatesUpdate }: TemplateEditorProps) {
+  const { toast } = useToast();
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [currentTemplate, setCurrentTemplate] = useState<EmailTemplate | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
