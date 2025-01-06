@@ -1,16 +1,21 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [
-      'localhost',
-      'dubon-server.onrender.com'
-    ],
+    unoptimized: true,
+    domains: ['dubon-server.onrender.com', 'dubon-server.vercel.app', 'localhost'],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'dubon-server.onrender.com',
-        pathname: '/**',
-      }
+      },
+      {
+        protocol: 'https',
+        hostname: 'dubon-server.vercel.app',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
     ],
   },
   env: {

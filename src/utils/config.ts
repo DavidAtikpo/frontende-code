@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'https://dubon-server.onrender.com',
   API_PATH: '/api',
   HEADERS: {
     'Content-Type': 'application/json',
