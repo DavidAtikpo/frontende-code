@@ -1,44 +1,28 @@
-import { API_CONFIG } from "@/utils/config";
-const { BASE_URL } = API_CONFIG;
+import Image from 'next/image';
+import { useState } from 'react';
 
 interface ProductImageProps {
-  images: string | string[];
+  src: string;
   alt: string;
-  width?: number;
-  height?: number;
   className?: string;
 }
 
-const getImageUrl = (imagePath: string | string[]) => {
-  if (!imagePath) return "/placeholder.jpg";
-  const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
-  if (!path) return "/placeholder.jpg";
-  
-  if (path.startsWith("http")) {
-    return path.replace("http://localhost:5000", BASE_URL);
-  }
-  return `${BASE_URL}/uploads/products/${path.replace(/^\/+/, '')}`;
+const ProductImage = ({ src, alt, className = '' }: ProductImageProps) => {
+  const [error, setError] = useState(false);
+
+  return (
+    <div className={`relative ${className}`}>
+      <Image
+        src={error ? '/no-image.png' : src}
+        alt={alt}
+        width={100}
+        height={100}
+        className="object-cover"
+        onError={() => setError(true)}
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      />
+    </div>
+  );
 };
 
-export default function ProductImage({
-  images,
-  alt,
-  width = 300,
-  height = 300,
-  className = ""
-}: ProductImageProps) {
-  return (
-    <img
-      src={getImageUrl(images)}
-      alt={alt}
-      width={width}
-      height={height}
-      className={className}
-      onError={(e) => {
-        console.error('Erreur de chargement image:', e);
-        const target = e.target as HTMLImageElement;
-        target.src = "/placeholder.jpg";
-      }}
-    />
-  );
-} 
+export default ProductImage;

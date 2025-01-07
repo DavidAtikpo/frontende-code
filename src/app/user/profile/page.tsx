@@ -60,6 +60,19 @@ export default function UserProfile() {
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  // Valeurs par défaut pour les préférences
+  const defaultPreferences = {
+    language: 'fr',
+    currency: 'XOF',
+    theme: 'light',
+    notifications: {
+      email: true,
+      push: true,
+      sms: false
+    },
+    newsletter: true
+  };
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -73,15 +86,17 @@ export default function UserProfile() {
         if (response.ok) {
           const { data } = await response.json();
           
-          // Récupérer l'URL de la photo depuis le localStorage
-          const userData = localStorage.getItem('userData');
-          if (userData) {
-            const user = JSON.parse(userData);
-            data.avatarUrl = user.profilePhotoUrl || data.avatarUrl;
-          }
+          // Fusionner les préférences par défaut avec celles du serveur
+          const mergedData = {
+            ...data,
+            preferences: {
+              ...defaultPreferences,
+              ...(data.preferences || {})
+            }
+          };
           
-          setProfile(data);
-          setFormData(data);
+          setProfile(mergedData);
+          setFormData(mergedData);
         }
       } catch (error) {
         console.error('Erreur:', error);
@@ -407,7 +422,7 @@ export default function UserProfile() {
               <div className="grid gap-2">
                 <Label>Langue</Label>
                 <Select
-                  value={profile?.preferences.language}
+                  value={profile?.preferences?.language || defaultPreferences.language}
                   onValueChange={(value) => handlePreferenceUpdate('language', value)}
                 >
                   <SelectTrigger>
@@ -423,14 +438,14 @@ export default function UserProfile() {
               <div className="grid gap-2">
                 <Label>Devise</Label>
                 <Select
-                  value={profile?.preferences.currency}
+                  value={profile?.preferences?.currency || defaultPreferences.currency}
                   onValueChange={(value) => handlePreferenceUpdate('currency', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionnez une devise" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="FCFA">FCFA</SelectItem>
+                    <SelectItem value="XOF">FCFA</SelectItem>
                     <SelectItem value="EUR">EUR</SelectItem>
                     <SelectItem value="USD">USD</SelectItem>
                   </SelectContent>
@@ -440,7 +455,7 @@ export default function UserProfile() {
               <div className="grid gap-2">
                 <Label>Thème</Label>
                 <Select
-                  value={profile?.preferences.theme}
+                  value={profile?.preferences?.theme || defaultPreferences.theme}
                   onValueChange={(value) => handlePreferenceUpdate('theme', value)}
                 >
                   <SelectTrigger>

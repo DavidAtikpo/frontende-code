@@ -43,7 +43,7 @@ interface Product {
 
 const ProductDetailPage = () => {
   const params = useParams();
-  const productId = params?.productId;
+  const id = params?.id;
   const [activeTab, setActiveTab] = useState("description");
   const [selectedImage, setSelectedImage] = useState(0);
   const [product, setProduct] = useState<Product | null>(null);
@@ -57,11 +57,11 @@ const ProductDetailPage = () => {
   };
 
   useEffect(() => {
-    if (!productId) return;
+      if (!id) return;
 
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/api/products/product-detail/${productId}`);
+        const response = await fetch(`${BASE_URL}/api/products/product-detail/${id}`);
         if (!response.ok) throw new Error("Product not found");
         const data = await response.json();
         
@@ -94,7 +94,7 @@ const ProductDetailPage = () => {
     };
 
     fetchProduct();
-  }, [productId]);
+      }, [id]);
 
   const handleQuantityChange = (delta: number) => {
     setQuantity((prev) => Math.max(1, prev + delta));
@@ -244,7 +244,7 @@ const ProductDetailPage = () => {
               <button   
                 onClick={() => {
                   if (product.availability === "Disponible") {
-                    router.push(`/product/${productId}`);
+                    router.push(`/product/${product._id}`);
                   }
                 }}
                 disabled={product.availability !== "Disponible"}

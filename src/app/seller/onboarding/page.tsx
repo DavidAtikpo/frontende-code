@@ -243,7 +243,7 @@ export default function SellerOnboardingPage() {
 
   const handleFinalStepCompletion = () => {
     // Redirect to the ValidationStatusForm page
-    router.push('/seller/validation-status');
+    router.push('/seller/ValidationStatusForm ');
   };
 
   // Valider que l'étape actuelle existe

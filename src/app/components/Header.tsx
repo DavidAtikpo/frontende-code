@@ -43,7 +43,7 @@ const getImageUrl = (imagePath: string | string[]) => {
 const getProfileImageUrl = (imagePath: string | null) => {
   if (!imagePath) return "/placeholder-avatar.jpg";
   if (imagePath.startsWith("http")) return imagePath;
-  return `${BASE_URL}${imagePath}`;
+  return `${BASE_URL}${imagePath.startsWith('/') ? imagePath : `/${imagePath}`}`;
 };
 
 const Header = () => {
@@ -459,3 +459,4 @@ const Header = () => {
 };
 
 export default Header;
+

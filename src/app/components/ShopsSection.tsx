@@ -1,35 +1,48 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { API_CONFIG } from '@/utils/config';
+import { getCookie } from 'cookies-next';
 import axios from 'axios';
-import Image from 'next/image';
-import Link from 'next/link';
-import { FaStar, FaStore, FaMapMarkerAlt, FaShoppingBag } from 'react-icons/fa';
-import { motion } from 'framer-motion';
+
+const { BASE_URL } = API_CONFIG;
 
 interface Shop {
-  id: string;
+  _id: string;
   name: string;
   description: string;
-  image: string;
+  logo: string;
+  coverImage: string;
   rating: number;
-  location: string;
-  category: string;
-  productsCount: number;
-  isOpen: boolean;
+  status: string;
 }
 
-export default function ShopsSection() {
+const ShopsSection = () => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchShops = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/shops/featured`);
-        setShops(response.data.data);
+        setLoading(true);
+        const token = getCookie('token');
+        const response = await axios.get(`${BASE_URL}/api/shops/get-all`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.data.success) {
+          setShops(response.data.data || []);
+        } else {
+          setError('Erreur lors du chargement des boutiques');
+        }
       } catch (error) {
         console.error('Erreur lors du chargement des boutiques:', error);
+        setError('Impossible de charger les boutiques');
       } finally {
         setLoading(false);
       }
@@ -40,94 +53,74 @@ export default function ShopsSection() {
 
   if (loading) {
     return (
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex justify-center items-center h-64"
-      >
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
-      </motion.div>
+      <div className="min-h-[200px] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
     );
   }
 
-  if (shops.length === 0) {
+  if (error) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-lg shadow-lg p-8 text-center"
-      >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4"
-        >
-          <FaStore className="text-orange-500 text-3xl" />
-        </motion.div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-2">Coming Soon</h3>
-        <p className="text-gray-600">
-          Nos boutiques partenaires seront bientôt disponibles !
-        </p>
-      </motion.div>
+      <div className="text-center py-8">
+        <p className="text-gray-500">Les boutiques ne sont pas disponibles pour le moment.</p>
+      </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {shops.map((shop, index) => (
-        <motion.div
-          key={shop.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="bg-white rounded-lg shadow-lg overflow-hidden"
-        >
-          <div className="relative h-48">
-            <Image
-              src={shop.image}
-              alt={shop.name}
-              width={400}
-              height={300}
-              className="object-cover w-full h-full"
-            />
-            <div className="absolute top-2 right-2 bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
-              {shop.category}
-            </div>
-            {!shop.isOpen && (
-              <div className="absolute top-2 left-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm">
-                Fermé
-              </div>
-            )}
-          </div>
-          <div className="p-4">
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="text-xl font-semibold">{shop.name}</h3>
-              <div className="flex items-center">
-                <FaStar className="text-yellow-400 mr-1" />
-                <span>{shop.rating}</span>
-              </div>
-            </div>
-            <p className="text-gray-600 mb-4 line-clamp-2">{shop.description}</p>
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center space-x-2">
-                <FaMapMarkerAlt className="text-gray-400" />
-                <span className="text-sm">{shop.location}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <FaShoppingBag className="text-gray-400" />
-                <span className="text-sm">{shop.productsCount} produits disponibles</span>
-              </div>
-            </div>
-            <Link 
-              href={`/shops/${shop.id}`}
-              className="block text-center bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+    <section className="py-12 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900">Nos Boutiques Partenaires</h2>
+          <p className="mt-4 text-lg text-gray-600">
+            Découvrez notre sélection de boutiques de confiance
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {shops.map((shop) => (
+            <div
+              key={shop._id}
+              className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
             >
-              Visiter la boutique
-            </Link>
-          </div>
-        </motion.div>
-      ))}
-    </div>
+              <div className="relative h-48">
+                <img
+                  src={shop.coverImage ? `${BASE_URL}${shop.coverImage}` : '/shop-default.jpg'}
+                  alt={shop.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-4 left-4">
+                  <div className="h-16 w-16 rounded-full bg-white p-2">
+                    <img
+                      src={shop.logo ? `${BASE_URL}${shop.logo}` : '/logo-default.png'}
+                      alt={`${shop.name} logo`}
+                      className="w-full h-full object-contain rounded-full"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{shop.name}</h3>
+                <p className="text-gray-600 mb-4">{shop.description}</p>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <span className="text-yellow-400">★</span>
+                    <span className="ml-1 text-gray-600">{shop.rating.toFixed(1)}</span>
+                  </div>
+                  <button
+                    onClick={() => router.push(`/shops/${shop._id}`)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Visiter
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
-} 
+};
+
+export default ShopsSection; 

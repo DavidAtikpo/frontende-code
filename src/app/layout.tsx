@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const shouldRenderLayout = !noLayoutRoutes.some((route) => pathname.startsWith(route));
 
   return (
-    <html lang="en">
+    <html lang="fr">
       <head>
         <link rel="icon" href="/favicon.png" />
         <title>DUBON SERVICE</title>

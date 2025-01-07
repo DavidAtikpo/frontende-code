@@ -19,7 +19,7 @@ import {
   Menu
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { NotificationsDropdown } from '@/components/seller/NotificationsDropdown';
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
 
 const sidebarLinks = [
   {
@@ -74,6 +76,12 @@ const sidebarLinks = [
   },
 ];
 
+const getAvatarUrl = (avatarPath: string | null | undefined) => {
+  if (!avatarPath) return "/placeholder-avatar.jpg";
+  if (avatarPath.startsWith("http")) return avatarPath;
+  return `${BASE_URL}${avatarPath.startsWith('/') ? avatarPath : `/${avatarPath}`}`;
+};
+
 export default function DashboardLayout({
   children,
 }: {
@@ -112,7 +120,7 @@ export default function DashboardLayout({
       <header className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-16 items-center px-4 md:px-6">
           <Button 
-            variant="ghost" 
+            variant="ghost"
             size="icon"
             onClick={toggleSidebar}
             className="md:hidden"
@@ -131,7 +139,7 @@ export default function DashboardLayout({
                   <Avatar>
                     {user && user.avatar ? (
                       <AvatarImage 
-                        src={user.avatar} 
+                        src={getAvatarUrl(user.avatar)} 
                         alt={user.name || ''}
                       />
                     ) : (
@@ -167,7 +175,7 @@ export default function DashboardLayout({
             </DropdownMenu>
 
             <Button 
-              variant="ghost" 
+              variant="ghost"
               size="icon"
               onClick={toggleSidebar}
               className="hidden md:flex"

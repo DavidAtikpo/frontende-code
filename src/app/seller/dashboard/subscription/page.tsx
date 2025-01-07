@@ -96,14 +96,25 @@ export default function SubscriptionPage() {
       const data = await response.json();
       
       if (data.success && data.paymentUrl) {
+        // Vérifier que l'URL est valide
+        if (!data.paymentUrl.startsWith('https://checkout.fedapay.com')) {
+          throw new Error('URL de paiement invalide');
+        }
+
+        // Ajouter un petit délai pour être sûr que la transaction est bien initialisée
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         // Redirection vers la page de paiement FedaPay
         window.location.href = data.paymentUrl;
       } else {
-        throw new Error(data.message || 'Erreur lors de l\'initiation du paiement');
+        console.error('Réponse du serveur:', data);
+        throw new Error(data.message || 'URL de paiement manquante dans la réponse');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur initiation paiement:', error);
-      toast.error('Une erreur est survenue lors de l\'initiation du paiement');
+      toast.error(
+        'Erreur lors de l\'initiation du paiement. Veuillez vérifier votre connexion et réessayer.'
+      );
     } finally {
       setLoading(false);
     }

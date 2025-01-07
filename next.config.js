@@ -2,24 +2,20 @@
 const nextConfig = {
   images: {
     unoptimized: true,
-    domains: ['dubon-server.onrender.com', 'dubon-server.vercel.app', 'localhost'],
+    domains: ['localhost', 'api.dubon.store', 'dubon-server.onrender.com'],
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'dubon-server.onrender.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'dubon-server.vercel.app',
+        hostname: '**',
       },
       {
         protocol: 'http',
-        hostname: 'localhost',
+        hostname: '**',
       },
     ],
   },
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://dubon-server.onrender.com',
     NEXT_PUBLIC_FEDAPAY_PUBLIC_KEY: process.env.NEXT_PUBLIC_FEDAPAY_PUBLIC_KEY,
     NEXT_PUBLIC_FEDAPAY_SANDBOX: process.env.NEXT_PUBLIC_FEDAPAY_SANDBOX,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,

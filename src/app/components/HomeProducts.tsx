@@ -34,22 +34,33 @@ interface Product {
 }
 
 // Fonction pour gérer les URLs des images
-const getImageUrl = (imagePath: string) => {
-  if (!imagePath) return "/placeholder.jpg";
-  
-  // Si l'URL contient localhost, la remplacer par l'URL de production
-  if (imagePath.includes('localhost:5000')) {
-    const relativePath = imagePath.split('/uploads/products/')[1];
-    return `${BASE_URL}/uploads/products/${relativePath}`;
+const getImageUrl = (imagePath: string | string[]) => {
+  if (!imagePath) {
+    return "/no-image.png";
+  }
+
+  const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
+  if (!path) {
+    return "/no-image.png";
   }
   
-  // Si c'est déjà une URL complète qui n'est pas localhost
-  if (imagePath.startsWith('http') && !imagePath.includes('localhost')) {
-    return imagePath;
+  try {
+    // Si c'est déjà une URL complète
+    if (path.startsWith('http')) {
+      return path;
+    }
+    
+    // Si le chemin commence par /uploads
+    if (path.includes('/uploads')) {
+      return `${BASE_URL}${path}`;
+    }
+    
+    // Pour les autres chemins relatifs
+    return `${BASE_URL}/uploads/products/${path.replace(/^\/+/, '')}`;
+  } catch (error) {
+    console.error('Error processing image URL:', error);
+    return "/no-image.png";
   }
-  
-  // Si c'est un chemin relatif
-  return `${BASE_URL}/uploads/products/${imagePath.replace(/^\/+/, '')}`;
 };
 
 const HomeProducts = () => {
@@ -65,20 +76,22 @@ const HomeProducts = () => {
         const data = await response.json();
         
         if (data.success) {
-          // Transformer les URLs des images avant de stocker les produits
-          const productsWithFixedImages = data.data.slice(0, 8).map((product: Product) => ({
-            ...product,
-            images: Array.isArray(product.images)
-              ? product.images.map(getImageUrl)
-              : getImageUrl(product.images)
-          }));
+          const productsWithFixedImages = data.data.slice(0, 8).map((product: Product) => {
+            const images = Array.isArray(product.images) 
+              ? product.images.map(img => getImageUrl(img))
+              : getImageUrl(product.images);
+
+            return {
+              ...product,
+              images
+            };
+          });
+          
           setProducts(productsWithFixedImages);
-        } else {
-          console.error("Erreur lors de la récupération des produits:", data.message);
         }
         setLoading(false);
       } catch (error) {
-        console.error("Erreur lors de la récupération des produits:", error);
+        console.error("Error fetching products:", error);
         setLoading(false);
       }
     };
