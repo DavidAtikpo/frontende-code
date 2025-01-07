@@ -6,7 +6,7 @@ import { getCookie } from 'cookies-next';
 import { API_CONFIG } from '@/utils/config';
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
-import ProductImage from "@/components/ui/ProductImage";
+import ProductImage from "../components/ProductImage";
 import Link from "next/link";
 import { motion } from "framer-motion";
 

@@ -2,7 +2,7 @@ import React from "react";
 import { FaHeart, FaShoppingCart, FaEye } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useCartContext } from "../context/CartContext";
-import ProductImage from "@/components/ui/ProductImage";
+import ProductImage from "./ProductImage";
 import { motion } from "framer-motion";
 
 interface Product {

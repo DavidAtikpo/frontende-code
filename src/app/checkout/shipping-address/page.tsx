@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useCartContext } from "../../context/CartContext";
 import { useRouter } from "next/navigation";
-import ProductImage from "@/components/ui/ProductImage";
+import ProductImage from "../../components/ProductImage";
 import { API_CONFIG } from '@/utils/config';
 
 const { BASE_URL } = API_CONFIG;

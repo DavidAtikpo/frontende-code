@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { FaShoppingCart, FaHeart, FaUser, FaSearch } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
-import ProductImage from "@/components/ui/ProductImage";
+import ProductImage from "./ProductImage";
 import { useCartContext } from "../context/CartContext";
 import { API_CONFIG } from '@/utils/config';
 import { useRouter } from 'next/navigation';
