@@ -57,7 +57,7 @@ export default function UserActivities() {
   const fetchActivities = async (page: number = 1) => {
     try {
       const token = getCookie('token');
-      const response = await fetch(`${BASE_URL}/api/user/activities?page=${page}`, {
+      const response = await fetch(`${BASE_URL}/api/user/activity?page=${page}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

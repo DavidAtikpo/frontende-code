@@ -5,9 +5,9 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { FaArrowRight, FaClock, FaFire } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
+import { API_CONFIG } from '@/utils/config';
+const { BASE_URL } = API_CONFIG;
 
-const BASE_URL = "https://dubon-server.onrender.com";
-// const BASE_URL = "http://localhost:5000";
 interface Product {
   _id: string;
   title: string;
@@ -23,21 +23,37 @@ const PromotionSection = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchPromotionalProducts = async () => {
-      try {
-        const response = await fetch(`${BASE_URL}/api/product/get-all`);
-        const data = await response.json();
-        // Filtrer les produits avec des réductions
-        const productsWithDiscount = data.filter((product: Product) => product.discount && product.discount > 0);
-        setPromotionalProducts(productsWithDiscount.slice(0, 5)); // Prendre les 5 premiers produits en promotion
-        setLoading(false);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des promotions :", error);
-        setLoading(false);
-      }
-    };
+  const fetchPromotionalProducts = async () => {
+    try {
+      // Vérifier que l'URL est correcte
+      console.log('Fetching from:', `${BASE_URL}/api/product/get-all`);
+      
+      const response = await fetch(`${BASE_URL}/api/product/get-all`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        // Ajouter credentials si nécessaire
+        credentials: 'include'
+      });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const productsWithDiscount = data.filter(
+        (product: Product) => product.discount && product.discount > 0
+      );
+      
+      setPromotionalProducts(productsWithDiscount);
+    } catch (error) {
+      console.error('Erreur lors du fetch:', error);
+    }
+  };
+
+  useEffect(() => {
     fetchPromotionalProducts();
   }, []);
 

@@ -3,10 +3,13 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { API_CONFIG } from "@/utils/config";
+
 import { getCookie } from "cookies-next";
 import { cn } from "@/lib/utils";
 import { toast } from "react-hot-toast";
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
+
 
 const plans = [
   {
@@ -80,40 +83,58 @@ export default function SubscriptionPage() {
         return;
       }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/seller/subscription/initiate`, {
+      const requestData = { 
+        planId: selectedPlan,
+        billingCycle: billingCycle,
+        amount: plans.find(p => p.id === selectedPlan)?.pricing[billingCycle]
+      };
+
+      console.log('📤 Envoi de la requête:', {
+        url: `${BASE_URL}/api/subscription/initiate`,
+        data: requestData
+      });
+
+      const response = await fetch(`${BASE_URL}/api/subscription/initiate`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 
-          planId: selectedPlan,
-          billingCycle: billingCycle,
-          amount: plans.find(p => p.id === selectedPlan)?.pricing[billingCycle]
-        })
+        body: JSON.stringify(requestData)
       });
 
+      console.log('📥 Statut de la réponse:', response.status);
       const data = await response.json();
+      console.log('📥 Données de la réponse:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.message || `Erreur ${response.status}: ${response.statusText}`);
+      }
       
       if (data.success && data.paymentUrl) {
-        // Vérifier que l'URL est valide
-        if (!data.paymentUrl.startsWith('https://checkout.fedapay.com')) {
+        // Vérifier que l'URL est valide (production ou sandbox)
+        if (!data.paymentUrl.startsWith('https://checkout.fedapay.com') && 
+            !data.paymentUrl.startsWith('https://sandbox-checkout.fedapay.com')) {
+          console.error('❌ URL de paiement invalide:', data.paymentUrl);
           throw new Error('URL de paiement invalide');
         }
-
-        // Ajouter un petit délai pour être sûr que la transaction est bien initialisée
-        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Redirection vers la page de paiement FedaPay
+        console.log('✓ Redirection vers:', data.paymentUrl);
         window.location.href = data.paymentUrl;
       } else {
-        console.error('Réponse du serveur:', data);
+        console.error('❌ Réponse du serveur invalide:', {
+          success: data.success,
+          paymentUrl: data.paymentUrl,
+          message: data.message,
+          fullResponse: data
+        });
         throw new Error(data.message || 'URL de paiement manquante dans la réponse');
       }
     } catch (error: any) {
-      console.error('Erreur initiation paiement:', error);
+      console.error('❌ Erreur complète:', error);
       toast.error(
-        'Erreur lors de l\'initiation du paiement. Veuillez vérifier votre connexion et réessayer.'
+        error.message || 
+        'Erreur lors de l\'initiation du paiement. Veuillez réessayer.'
       );
     } finally {
       setLoading(false);

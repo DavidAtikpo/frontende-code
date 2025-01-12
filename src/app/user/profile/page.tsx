@@ -77,27 +77,39 @@ export default function UserProfile() {
     const fetchProfile = async () => {
       try {
         const token = getCookie('token');
+        
+        if (!token) {
+          toast({
+            title: "Erreur",
+            description: "Vous devez être connecté",
+            variant: "destructive"
+          });
+          return;
+        }
+
         const response = await fetch(`${BASE_URL}/api/user/profile`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
         
-        if (response.ok) {
-          const { data } = await response.json();
-          
-          // Fusionner les préférences par défaut avec celles du serveur
-          const mergedData = {
-            ...data,
-            preferences: {
-              ...defaultPreferences,
-              ...(data.preferences || {})
-            }
-          };
-          
-          setProfile(mergedData);
-          setFormData(mergedData);
+        if (!response.ok) {
+          throw new Error('Erreur lors du chargement du profil');
         }
+
+        const { data } = await response.json();
+        
+        // Fusionner les préférences par défaut avec celles du serveur
+        const mergedData = {
+          ...data,
+          preferences: {
+            ...defaultPreferences,
+            ...(data.preferences || {})
+          }
+        };
+        
+        setProfile(mergedData);
+        setFormData(mergedData);
       } catch (error) {
         console.error('Erreur:', error);
         toast({
@@ -183,16 +195,20 @@ export default function UserProfile() {
 
       if (response.ok) {
         const { data } = await response.json();
-        const fullAvatarUrl = `${BASE_URL}${data.avatarUrl}`;
-        setProfile(prev => prev ? { ...prev, avatarUrl: data.avatarUrl } : null);
+        // Construire l'URL complète de l'avatar
+        const avatarUrl = data.avatarUrl.startsWith('http') 
+          ? data.avatarUrl 
+          : `${BASE_URL}/uploads/${data.avatarUrl.replace(/^[\/\\]?uploads[\/\\]?/, '').replace(/\\/g, '/')}`;
         
-        // Mettre à jour le localStorage avec l'URL complète
+        setProfile(prev => prev ? { ...prev, avatarUrl } : null);
+        
+        // Mettre à jour le localStorage avec la nouvelle URL
         const userData = localStorage.getItem('userData');
         if (userData) {
           const parsedUserData = JSON.parse(userData);
           const updatedUserData = {
             ...parsedUserData,
-            profilePhotoUrl: fullAvatarUrl
+            profilePhotoUrl: avatarUrl
           };
           localStorage.setItem('userData', JSON.stringify(updatedUserData));
         }
@@ -313,27 +329,51 @@ export default function UserProfile() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <h1 className="text-3xl font-bold">Mon Profil</h1>
-
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
+    <div className="container mx-auto p-4 sm:p-6 space-y-6">
+      <h1 className="text-2xl font-bold mb-6">Mon Profil</h1>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* Informations personnelles */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
             <CardTitle>Informations personnelles</CardTitle>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditing(!isEditing)}
+                className="flex-1 sm:flex-none"
+              >
+                {isEditing ? 'Annuler' : 'Modifier'}
+              </Button>
+              {isEditing && (
+                <Button 
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="flex-1 sm:flex-none"
+                >
+                  {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
+                </Button>
+              )}
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
+          <CardContent>
+            <div className="flex flex-col sm:flex-row items-center gap-6 mb-6">
               <div className="relative">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage 
-                    src={profile?.avatarUrl ? `${BASE_URL}${profile.avatarUrl}` : undefined}
-                    alt={profile?.name || 'Avatar'}
-                    className="object-cover"
-                  />
-                  <AvatarFallback>
-                    {profile?.name ? profile.name.charAt(0).toUpperCase() : 'U'}
-                  </AvatarFallback>
-                </Avatar>
+                {profile?.avatarUrl ? (
+                  <div className="h-24 w-24 rounded-full overflow-hidden">
+                    <iframe
+                      src={profile.avatarUrl}
+                      className="w-full h-full"
+                      style={{ border: 'none' }}
+                    />
+                  </div>
+                ) : (
+                  <div className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center">
+                    <span className="text-2xl font-semibold text-gray-500">
+                      {profile?.name?.charAt(0)?.toUpperCase() || '?'}
+                    </span>
+                  </div>
+                )}
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -344,16 +384,15 @@ export default function UserProfile() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="absolute bottom-0 right-0 h-6 w-6 rounded-full"
+                  className="absolute bottom-0 right-0"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <span className="sr-only">Changer la photo</span>
                   <Pencil className="h-4 w-4" />
                 </Button>
               </div>
-              <div>
-                <h2 className="text-2xl font-bold">{profile?.name}</h2>
-                <p className="text-sm text-gray-500">{profile?.email}</p>
+              <div className="space-y-1 text-center sm:text-left">
+                <h3 className="font-medium">{profile?.name}</h3>
+                <p className="text-sm text-muted-foreground">{profile?.email}</p>
               </div>
             </div>
 
@@ -389,35 +428,16 @@ export default function UserProfile() {
                   disabled={!isEditing}
                 />
               </div>
-
-              <div className="flex justify-end gap-4">
-                {isEditing ? (
-                  <>
-                    <Button variant="outline" onClick={() => {
-                      setIsEditing(false);
-                      setFormData(profile);
-                    }}>
-                      Annuler
-                    </Button>
-                    <Button onClick={handleSubmit}>
-                      Enregistrer
-                    </Button>
-                  </>
-                ) : (
-                  <Button onClick={() => setIsEditing(true)}>
-                    Modifier
-                  </Button>
-                )}
-              </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Préférences */}
         <Card>
           <CardHeader>
             <CardTitle>Préférences</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent>
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label>Langue</Label>
@@ -470,7 +490,7 @@ export default function UserProfile() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 mt-6">
               <h3 className="font-medium">Notifications</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -515,7 +535,7 @@ export default function UserProfile() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mt-6">
               <div className="space-y-1">
                 <Label htmlFor="newsletter">Newsletter</Label>
                 <p className="text-sm text-muted-foreground">
@@ -533,11 +553,12 @@ export default function UserProfile() {
           </CardContent>
         </Card>
 
+        {/* Sécurité */}
         <Card>
           <CardHeader>
             <CardTitle>Sécurité</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label>Mot de passe actuel</Label>
@@ -576,33 +597,11 @@ export default function UserProfile() {
                 Mettre à jour le mot de passe
               </Button>
             </div>
-            
+
             <div className="grid gap-2">
               <Label>Authentification à deux facteurs</Label>
               <div className="flex items-center gap-4">
                 <Button variant="outline">Configurer</Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Sessions actives</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Liste des sessions actives */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Chrome - Windows</p>
-                  <p className="text-sm text-muted-foreground">
-                    Dernière activité: il y a 2 minutes
-                  </p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Déconnecter
-                </Button>
               </div>
             </div>
           </CardContent>
@@ -654,4 +653,4 @@ export default function UserProfile() {
       </Dialog>
     </div>
   );
-} 
+}

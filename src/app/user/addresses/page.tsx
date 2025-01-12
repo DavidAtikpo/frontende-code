@@ -9,6 +9,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { MapPin, Plus, Trash2, Star, StarOff, Pencil } from "lucide-react";
 import { API_CONFIG } from "@/utils/config";
 import { getCookie } from "cookies-next";
+import { parsePhoneNumber, isValidPhoneNumber, CountryCode, getCountries, getCountryCallingCode } from 'libphonenumber-js';
+import { validateEmail } from '@/utils/validation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const { BASE_URL } = API_CONFIG;
 
@@ -37,6 +40,12 @@ export default function AddressesPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [isReloading, setIsReloading] = useState(false);
+  const [coordinates, setCoordinates] = useState<{latitude: number | null, longitude: number | null}>({
+    latitude: null,
+    longitude: null
+  });
+  const [isLocating, setIsLocating] = useState(false);
 
   const [newAddress, setNewAddress] = useState({
     type: 'both' as 'shipping' | 'billing' | 'both' | 'store',
@@ -54,6 +63,42 @@ export default function AddressesPage() {
     email: '',
     instructions: ''
   });
+
+  const [phoneError, setPhoneError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [countryCode, setCountryCode] = useState("");
+
+  const countries = getCountries();
+
+  useEffect(() => {
+    const userLocale = navigator.language;
+    const country = userLocale.split('-')[1] || 'FR';
+    setCountryCode(country as CountryCode);
+  }, []);
+
+  const validateForm = () => {
+    let isValid = true;
+    
+    // Validation email
+    const emailValidation = validateEmail(newAddress.email);
+    if (!emailValidation.isValid) {
+      setEmailError(emailValidation.message);
+      isValid = false;
+    }
+
+    // Validation téléphone
+    try {
+      if (!isValidPhoneNumber(newAddress.phone, countryCode as CountryCode)) {
+        setPhoneError("Numéro de téléphone invalide");
+        isValid = false;
+      }
+    } catch (error) {
+      setPhoneError("Numéro de téléphone invalide");
+      isValid = false;
+    }
+
+    return isValid;
+  };
 
   const fetchAddresses = useCallback(async () => {
     try {
@@ -99,58 +144,86 @@ export default function AddressesPage() {
     });
   };
 
+  const handleReload = async () => {
+    setIsReloading(true);
+    await fetchAddresses();
+    setIsReloading(false);
+  };
+
+  const getLocation = async () => {
+    setIsLocating(true);
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+      
+      setCoordinates({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      });
+
+      toast({
+        title: "Succès",
+        description: "Localisation obtenue avec succès"
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'obtenir la localisation",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLocating(false);
+    }
+  };
+
   const handleAddAddress = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const url = editingAddress 
-        ? `${BASE_URL}/api/user/address/${editingAddress.id}`
-        : `${BASE_URL}/api/user/address`;
-      
-      const method = editingAddress ? 'PUT' : 'POST';
+    setPhoneError("");
+    setEmailError("");
 
-      const response = await fetch(url, {
-        method,
+    if (!validateForm()) return;
+    
+    if (addresses.length >= 5) {
+      toast({
+        title: "Erreur",
+        description: "Vous ne pouvez pas enregistrer plus de 5 adresses",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Formatage du numéro de téléphone avec le code pays
+    const formattedPhone = `+${getCountryCallingCode(countryCode as CountryCode)}${newAddress.phone}`;
+
+    try {
+      const response = await fetch(`${BASE_URL}/api/user/address`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${getCookie('token')}`
         },
-        body: JSON.stringify(newAddress)
+        body: JSON.stringify({
+          ...newAddress,
+          phone: formattedPhone,
+          coordinates: coordinates
+        })
       });
 
       if (response.ok) {
         toast({
           title: "Succès",
-          description: editingAddress 
-            ? "Adresse modifiée avec succès"
-            : "Nouvelle adresse ajoutée avec succès"
+          description: "Adresse ajoutée avec succès"
         });
         setShowAddForm(false);
-        setEditingAddress(null);
-        setNewAddress({
-          type: 'both' as 'shipping' | 'billing' | 'both' | 'store',
-          label: '',
-          firstName: '',
-          lastName: '',
-          company: '',
-          address1: '',
-          address2: '',
-          city: '',
-          state: '',
-          postalCode: '',
-          country: '',
-          phone: '',
-          email: '',
-          instructions: ''
-        });
-        fetchAddresses();
+        handleReload();
       }
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de l'enregistrement",
+        description: "Une erreur est survenue",
         variant: "destructive"
       });
-      console.error('Erreur:', error);
     }
   };
 
@@ -204,30 +277,50 @@ export default function AddressesPage() {
     }
   };
 
+  // Fonction pour obtenir le drapeau emoji
+  const getFlagEmoji = (countryCode: string) => {
+    const codePoints = countryCode
+      .toUpperCase()
+      .split('')
+      .map(char => 127397 + char.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
+  };
+
   if (isLoading) {
     return <div>Chargement...</div>;
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Mes adresses</h1>
-        <Button onClick={() => setShowAddForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Ajouter une adresse
-        </Button>
+    <div className="container mx-auto p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-bold">Mes adresses</h1>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button 
+            variant="outline" 
+            onClick={fetchAddresses} 
+            disabled={isReloading}
+            className="w-full sm:w-auto"
+          >
+            Actualiser
+          </Button>
+          <Button 
+            onClick={() => setShowAddForm(true)}
+            className="w-full sm:w-auto"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter une adresse
+          </Button>
+        </div>
       </div>
 
       {showAddForm && (
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
-            <CardTitle>
-              {editingAddress ? 'Modifier l\'adresse' : 'Nouvelle adresse'}
-            </CardTitle>
+            <CardTitle>{editingAddress ? 'Modifier l\'adresse' : 'Nouvelle adresse'}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAddAddress} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="firstName">Prénom</Label>
                   <Input
@@ -317,26 +410,49 @@ export default function AddressesPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="phone">Téléphone</Label>
+              <div className="grid gap-2">
+                <Label>Téléphone</Label>
+                <div className="flex gap-2">
+                  <Select 
+                    value={countryCode} 
+                    onValueChange={(value) => setCountryCode(value as CountryCode)}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Pays" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px] overflow-y-auto">
+                      {countries.map((country) => (
+                        <SelectItem key={country} value={country}>
+                          <span className="flex items-center gap-2">
+                            <span>{getFlagEmoji(country)}</span>
+                            <span>{country}</span>
+                            <span className="text-gray-500">
+                              +{getCountryCallingCode(country as CountryCode)}
+                            </span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
                   <Input
-                    id="phone"
-                    type="tel"
                     value={newAddress.phone}
                     onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})}
+                    placeholder="Numéro de téléphone"
                     required
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={newAddress.email}
-                    onChange={(e) => setNewAddress({...newAddress, email: e.target.value})}
-                  />
-                </div>
+                {phoneError && <p className="text-sm text-red-500">{phoneError}</p>}
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={newAddress.email}
+                  onChange={(e) => setNewAddress({...newAddress, email: e.target.value})}
+                />
               </div>
 
               <div className="grid gap-2">
@@ -349,17 +465,48 @@ export default function AddressesPage() {
                 />
               </div>
 
-              <div className="flex justify-end gap-4">
+              <div className="grid gap-2">
+                <Label>Localisation</Label>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={getLocation}
+                    disabled={isLocating}
+                  >
+                    {isLocating ? (
+                      "Localisation en cours..."
+                    ) : (
+                      <>
+                        <MapPin className="h-4 w-4 mr-2" />
+                        Obtenir ma position
+                      </>
+                    )}
+                  </Button>
+                  {coordinates.latitude && coordinates.longitude && (
+                    <span className="text-sm text-muted-foreground">
+                      {coordinates.latitude.toFixed(6)}, {coordinates.longitude.toFixed(6)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 mt-6">
                 <Button 
+                  type="button"
                   variant="outline" 
                   onClick={() => {
                     setShowAddForm(false);
                     setEditingAddress(null);
                   }}
+                  className="w-full sm:w-auto"
                 >
                   Annuler
                 </Button>
-                <Button type="submit">
+                <Button 
+                  type="submit"
+                  className="w-full sm:w-auto"
+                >
                   {editingAddress ? 'Modifier' : 'Ajouter'}
                 </Button>
               </div>
@@ -372,10 +519,10 @@ export default function AddressesPage() {
         {addresses.map((address) => (
           <Card key={address.id}>
             <CardContent className="pt-6">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-4">
-                  <MapPin className="h-5 w-5 mt-1 text-muted-foreground" />
-                  <div>
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                <div className="flex items-start gap-4 w-full">
+                  <MapPin className="h-5 w-5 mt-1 text-muted-foreground hidden sm:block" />
+                  <div className="flex-1">
                     <p className="font-medium">
                       {address.firstName} {address.lastName}
                     </p>
@@ -392,7 +539,7 @@ export default function AddressesPage() {
                     <p className="text-sm text-muted-foreground">{address.phone}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex justify-end gap-2 w-full sm:w-auto">
                   <Button
                     variant="ghost"
                     size="icon"

@@ -2,45 +2,80 @@
 
 import React, { useState, useEffect } from "react";
 import { FaPhoneAlt } from "react-icons/fa";
-import { AiOutlineMenu, AiOutlineClose, AiOutlineCaretDown, AiOutlineCaretRight } from "react-icons/ai";
+import { AiOutlineMenu, AiOutlineClose, AiOutlineCaretDown } from "react-icons/ai";
+import { API_CONFIG } from '@/utils/config';
+import { useRouter } from "next/navigation";
 
-const BASE_URL = "https://dubon-server.onrender.com";
+const { BASE_URL } = API_CONFIG;
+
+const DEFAULT_IMAGE = '/placeholder.jpg';
+
+// Fonction pour gérer les URLs des images
+const getImageUrl = (imagePath: string | string[]) => {
+  if (!imagePath) return DEFAULT_IMAGE;
+  
+  try {
+    // Si c'est un tableau, prendre la première image
+    const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
+    if (!path) return DEFAULT_IMAGE;
+  
+    // Si c'est déjà une URL complète
+    if (path.startsWith('http')) {
+      return path;
+    }
+  
+    // Si le chemin commence par 'uploads'
+    if (path.startsWith('uploads')) {
+      return `${BASE_URL}/${path}`;
+    }
+
+    // Pour tout autre cas
+    return `${BASE_URL}/uploads/products/${path.replace(/^\/+/, '')}`;
+  } catch (error) {
+    console.error('Erreur dans getImageUrl:', error);
+    return DEFAULT_IMAGE;
+  }
+};
 
 // Types mis à jour selon la structure du backend
 interface Product {
-  _id: string;
-  title: string;
+  id: string;
+  name: string;
   price: number;
   images: string[];
-  category: string;
+  description?: string;
+  categoryId: string;
 }
 
 interface Category {
-  _id: string;
+  id: string;
   name: string;
   description?: string;
   products?: Product[];
+  subcategories?: Category[];
 }
 
 const NavigationBar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeLink, setActiveLink] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   // Récupération des catégories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/api/categories`);
+        const response = await fetch(`${BASE_URL}/api/category/all`);
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération des catégories');
         }
         const data = await response.json();
-        setCategories(data);
+        setCategories(data.data || []);
         setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
@@ -53,13 +88,14 @@ const NavigationBar = () => {
 
   // Récupération des produits pour une catégorie
   const fetchProductsByCategory = async (categoryId: string) => {
+    if (!categoryId) return [];
     try {
-      const response = await fetch(`${BASE_URL}/api/products/category/${categoryId}`);
+      const response = await fetch(`${BASE_URL}/api/category/${categoryId}/products`);
       if (!response.ok) {
         throw new Error('Erreur lors de la récupération des produits');
       }
-      const products = await response.json();
-      return products;
+      const data = await response.json();
+      return data.data?.products || [];
     } catch (err) {
       console.error('Erreur:', err);
       return [];
@@ -69,20 +105,41 @@ const NavigationBar = () => {
   const handleCategoryClick = () => {
     setIsDropdownOpen(!isDropdownOpen);
     setSelectedCategory(null);
+    setSelectedProduct(null);
   };
 
-  const handleSubCategoryClick = async (category: Category) => {
-    const products = await fetchProductsByCategory(category._id);
-    setSelectedCategory({ ...category, products });
+  const handleCategoryHover = async (category: Category) => {
+    if (!category.products) {
+      const products = await fetchProductsByCategory(category.id);
+      setSelectedCategory({ ...category, products });
+    } else {
+      setSelectedCategory(category);
+    }
+    setSelectedProduct(null);
+  };
+
+  const handleProductHover = (product: Product) => {
+    setSelectedProduct(product);
+  };
+
+  const handleDropdownEnter = () => {
+    setIsDropdownOpen(true);
+  };
+
+  const handleDropdownLeave = () => {
+    setIsDropdownOpen(false);
+    setSelectedCategory(null);
+    setSelectedProduct(null);
   };
 
   return (
     <nav className="bg-white shadow-lg py-3 sticky top-0 z-10 transition-all duration-300">
       <div className="max-w-7xl mx-auto flex justify-between items-center px-6">
         {/* Dropdown pour Catégories */}
-        <div className="relative hidden md:block">
+        <div className="relative hidden md:block"
+             onMouseEnter={handleDropdownEnter}
+             onMouseLeave={handleDropdownLeave}>
           <button 
-            onClick={handleCategoryClick}
             className="flex items-center bg-gradient-to-r from-blue-700 to-blue-800 text-white px-6 py-2.5 rounded-full 
               hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg 
               focus:outline-none transform hover:scale-105"
@@ -93,50 +150,72 @@ const NavigationBar = () => {
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute left-0 top-full bg-white rounded-lg shadow-xl mt-2 w-72 z-10 
-              overflow-hidden border border-gray-100">
-              {loading ? (
-                <div className="p-4 text-center text-gray-500">Chargement...</div>
-              ) : error ? (
-                <div className="p-4 text-center text-red-500">{error}</div>
-              ) : (
-                <ul className="text-gray-700">
+            <div className="absolute left-0 top-[calc(100%_-_2px)] flex bg-white rounded-lg shadow-xl border border-gray-100 z-20">
+              {/* Première colonne - Catégories */}
+              <div className="w-48 border-r border-gray-100">
+                <ul className="py-2">
                   {categories.map((category) => (
                     <li
-                      key={category._id}
-                      onClick={() => handleSubCategoryClick(category)}
-                      className={`px-6 py-3 cursor-pointer flex items-center justify-between 
-                        transition-colors duration-200 hover:bg-blue-50
-                        ${selectedCategory?._id === category._id ? 'bg-blue-50' : ''}`}
+                      key={category.id}
+                      onMouseEnter={() => handleCategoryHover(category)}
+                      className={`px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors
+                        ${selectedCategory?.id === category.id ? 'bg-blue-50' : ''}`}
                     >
-                      <span className="font-medium">{category.name}</span>
-                      <AiOutlineCaretRight className={`text-blue-600 transform transition-transform duration-300
-                        ${selectedCategory?._id === category._id ? 'rotate-90' : ''}`} />
+                      <span className="font-medium text-sm">{category.name}</span>
                     </li>
                   ))}
                 </ul>
-              )}
-            </div>
-          )}
+              </div>
 
-          {selectedCategory && selectedCategory.products && isDropdownOpen && (
-            <div className="absolute left-full top-0 bg-white rounded-lg shadow-xl mt-2 w-96 z-10 
-              overflow-hidden border border-gray-100">
-              <h3 className="px-6 py-4 bg-gradient-to-r from-blue-50 to-blue-100 text-gray-800 font-bold">
-                {selectedCategory.name}
-              </h3>
-              <ul className="text-gray-700 p-6 grid grid-cols-2 gap-4">
-                {selectedCategory.products.map((product) => (
-                  <li 
-                    key={product._id} 
-                    className="hover:bg-blue-50 px-4 py-2 rounded-lg cursor-pointer 
-                      transition-colors duration-200"
+              {/* Deuxième colonne - Noms des produits */}
+              {selectedCategory && (
+                <div className="w-56 border-r border-gray-100 max-h-[400px] overflow-y-auto">
+                  <div className="p-3 bg-gray-50 border-b">
+                    <h3 className="font-semibold text-sm text-gray-800">
+                      {selectedCategory.name}
+                    </h3>
+                  </div>
+                  <ul className="py-2">
+                    {selectedCategory.products?.map((product) => (
+                      <li
+                        key={product.id}
+                        onMouseEnter={() => handleProductHover(product)}
+                        className={`px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors
+                          ${selectedProduct?.id === product.id ? 'bg-blue-50' : ''}`}
+                      >
+                        <p className="text-sm text-gray-800">
+                          {product.name}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Troisième colonne - Aperçu du produit */}
+              {selectedProduct && (
+                <div className="w-48 p-3">
+                  <div className="w-32 h-32 mx-auto relative mb-2">
+                    <img
+                      src={getImageUrl(selectedProduct.images)}
+                      alt={selectedProduct.name}
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                  </div>
+                  <h3 className="font-medium text-xs text-gray-900 mb-1 truncate">
+                    {selectedProduct.name}
+                  </h3>
+                  <p className="text-xs font-bold text-blue-600 mb-2">
+                    {selectedProduct.price.toLocaleString()} CFA
+                  </p>
+                  <button
+                    onClick={() => router.push(`/product/${selectedProduct.id}`)}
+                    className="w-full bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
                   >
-                    <span className="font-medium">{product.title}</span>
-                    <span className="block text-blue-600 mt-1">{product.price} FCFA</span>
-                  </li>
-                ))}
-              </ul>
+                    Voir détails
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

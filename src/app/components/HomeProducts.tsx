@@ -9,66 +9,82 @@ import { motion } from "framer-motion";
 import LoadingSpinner from "./LoadingSpinner";
 import { API_CONFIG } from '@/utils/config';
 import Image from "next/image";
+import { getCookie } from 'cookies-next';
+
+
 
 const { BASE_URL } = API_CONFIG;
 // const BASE_URL = "http://localhost:5000";
 interface Product {
-  _id: string;
-  title: string;
+  id: string;
+  name: string;
   description: string;
   shortDescription: string;
-  price: number;
-  compareAtPrice: number | null;
-  images: string | string[];
-  category: string;
-  rating: number;
-  stock: number;
+  price: string;
+  compareAtPrice: string | null;
+  images: string[];
+  category: {
+    id: string;
+    title: string;
+  };
+  ratings: {
+    average: number;
+    count: number;
+  };
+  quantity: number;
   seller: {
     storeName: string;
     status: string;
+    id: string;
   };
   featured: boolean;
-  isDigital: boolean;
   lowStockThreshold: number;
   discount: number | null;
 }
 
-// Fonction pour gérer les URLs des images
-const getImageUrl = (imagePath: string | string[]) => {
-  if (!imagePath) {
-    return "/no-image.png";
-  }
+// 1. D'abord, créons une constante pour l'image par défaut
+const DEFAULT_IMAGE = '/placeholder.png'; // ou utilisez une autre image que vous avez dans votre dossier public
 
-  const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
-  if (!path) {
-    return "/no-image.png";
-  }
+// 2. Modifions la fonction getImageUrl
+const getImageUrl = (imagePath: string | string[]) => {
+  if (!imagePath) return DEFAULT_IMAGE;
   
   try {
+    // Si c'est un tableau, prendre la première image
+    const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
+    if (!path) return DEFAULT_IMAGE;
+
     // Si c'est déjà une URL complète
     if (path.startsWith('http')) {
       return path;
     }
-    
-    // Si le chemin commence par /uploads
-    if (path.includes('/uploads')) {
-      return `${BASE_URL}${path}`;
+
+    // Si le chemin commence par 'uploads'
+    if (path.startsWith('uploads')) {
+      return `${BASE_URL}/${path}`;
     }
-    
-    // Pour les autres chemins relatifs
+
+    // Pour tout autre cas
     return `${BASE_URL}/uploads/products/${path.replace(/^\/+/, '')}`;
   } catch (error) {
-    console.error('Error processing image URL:', error);
-    return "/no-image.png";
+    console.error('Erreur dans getImageUrl:', error);
+    return DEFAULT_IMAGE;
   }
 };
 
 const HomeProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const { state, dispatch } = useCartContext();
 
+  // Montage du composant
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Chargement des produits
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -76,18 +92,8 @@ const HomeProducts = () => {
         const data = await response.json();
         
         if (data.success) {
-          const productsWithFixedImages = data.data.slice(0, 8).map((product: Product) => {
-            const images = Array.isArray(product.images) 
-              ? product.images.map(img => getImageUrl(img))
-              : getImageUrl(product.images);
-
-            return {
-              ...product,
-              images
-            };
-          });
-          
-          setProducts(productsWithFixedImages);
+          // Pas besoin de transformer les URLs ici car getImageUrl le fera au moment du rendu
+          setProducts(data.products.slice(0, 8));
         }
         setLoading(false);
       } catch (error) {
@@ -96,40 +102,119 @@ const HomeProducts = () => {
       }
     };
 
-    fetchProducts();
-  }, []);
+    if (mounted) {
+      fetchProducts();
+    }
+  }, [mounted]);
 
   const handleAddToCart = (product: Product) => {
+    console.log('handleAddToCart - Product:', product);
+    
     const finalPrice = product.discount
-      ? product.price * (1 - product.discount / 100)
-      : product.price;
+      ? parseFloat(product.price) * (1 - product.discount / 100)
+      : parseFloat(product.price);
+
+    console.log('handleAddToCart - Final Price:', finalPrice);
+    console.log('handleAddToCart - Current Cart State:', state.cart);
+
+    // Mapper le produit pour correspondre à la structure attendue
+    const cartItem = {
+      _id: product.id,
+      title: product.name,
+      images: product.images,
+      quantity: 1,
+      finalPrice,
+      sellerId: product.seller.id
+    };
+
+    console.log('handleAddToCart - Mapped Cart Item:', cartItem);
 
     dispatch({
       type: "ADD_TO_CART",
-      payload: { 
-        ...product, 
-        quantity: 1, 
-        finalPrice 
-      },
+      payload: cartItem
     });
+
+    console.log('handleAddToCart - Cart State After Dispatch:', state.cart);
   };
 
   const handleToggleWishlist = (product: Product) => {
-    const isInWishlist = state.wishlist.find((item) => item._id === product._id);
+    const isInWishlist = state.wishlist.find((item) => item._id === product.id);
     if (isInWishlist) {
-      dispatch({ type: "REMOVE_FROM_WISHLIST", payload: product._id });
+      dispatch({ type: "REMOVE_FROM_WISHLIST", payload: product.id });
     } else {
       dispatch({
         type: "ADD_TO_WISHLIST",
         payload: {
-          _id: product._id,
-          title: product.title,
+          _id: product.id,
+          title: product.name,
           images: product.images,
-          finalPrice: product.price,
+          finalPrice: parseFloat(product.price),
+          sellerId: product.seller.id
         },
       });
     }
   };
+
+  const handleBuyNow = async (product: Product) => {
+    try {
+      console.log('1. handleBuyNow - Starting with product:', product);
+      const token = getCookie('token');
+      console.log('2. handleBuyNow - Token:', token);
+      
+      if (!token) {
+        console.log('3A. handleBuyNow - No token, redirecting to login');
+        localStorage.setItem('pendingPurchase', JSON.stringify({
+          productId: product.id,
+          redirect: '/checkout/shipping-address'
+        }));
+        console.log('3B. handleBuyNow - Saved to localStorage:', localStorage.getItem('pendingPurchase'));
+        
+        router.push('/login');
+        return;
+      }
+
+      console.log('4. handleBuyNow - Token exists, calculating price');
+      const finalPrice = product.discount
+        ? parseFloat(product.price) * (1 - product.discount / 100)
+        : parseFloat(product.price);
+
+      console.log('5. handleBuyNow - Final price calculated:', finalPrice);
+
+      const cartItem = {
+        _id: product.id,
+        title: product.name,
+        images: product.images,
+        quantity: 1,
+        finalPrice,
+        sellerId: product.seller.id
+      };
+
+      console.log('6. handleBuyNow - Cart item prepared:', cartItem);
+
+      dispatch({
+        type: "ADD_TO_CART",
+        payload: cartItem
+      });
+
+      console.log('7. handleBuyNow - Added to cart, attempting redirect to shipping-address');
+      
+      try {
+        await router.push('/checkout/shipping-address');
+        console.log('8. handleBuyNow - Redirect successful');
+      } catch (redirectError) {
+        console.error('8X. handleBuyNow - Redirect error:', redirectError);
+        // Tentative de redirection alternative
+        console.log('9. handleBuyNow - Trying alternative redirect');
+        window.location.href = '/checkout/shipping-address';
+      }
+    } catch (error) {
+      console.error('XX. handleBuyNow - Main error:', error);
+    }
+  };
+
+  if (!mounted) {
+    return null;
+  }
 
   if (loading) {
     return (
@@ -160,7 +245,7 @@ const HomeProducts = () => {
           <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory hide-scrollbar">
             {products.map((product, index) => (
               <motion.div
-                key={product._id}
+                key={product.id}
                 initial={{ opacity: 0, x: 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
@@ -170,20 +255,21 @@ const HomeProducts = () => {
               >
                 <div className="relative h-[140px] sm:h-[160px]">
                   <img
-                    src={Array.isArray(product.images) ? getImageUrl(product.images[0]) : getImageUrl(product.images)}
-                    alt={product.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    src={getImageUrl(product.images)}
+                    alt={product.name}
+                    className="w-full h-full object-cover rounded-t-lg"
+                    loading="lazy"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = "/placeholder.jpg";
+                      target.src = DEFAULT_IMAGE;
                     }}
                   />
                   
                   {/* Badges */}
                   <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
-                    {product.stock <= product.lowStockThreshold && (
+                    {product.quantity <= product.lowStockThreshold && (
                       <span className="bg-orange-500 text-white px-2 py-0.5 rounded-full text-xs">
-                        {product.stock === 0 ? 'Rupture de stock' : `${product.stock} en stock`}
+                        {product.quantity === 0 ? 'Rupture de stock' : `${product.quantity} en stock`}
                       </span>
                     )}
                     {product.discount && product.discount > 0 && (
@@ -215,7 +301,7 @@ const HomeProducts = () => {
                       <FaHeart size={16} />
                     </button>
                     <button 
-                      onClick={() => router.push(`/product/${product._id}`)}
+                      onClick={() => router.push(`/product/${product.id}`)}
                       className="p-2 bg-white rounded-full shadow-lg hover:bg-green-500 hover:text-white transition-colors"
                       title="Voir le produit"
                     >
@@ -226,7 +312,7 @@ const HomeProducts = () => {
 
                 <div className="p-1 sm:p-2">
                   <h3 className="font-semibold text-gray-900 text-xs sm:text-sm mb-0.5 truncate">
-                    {product.title}
+                    {product.name}
                   </h3>
                   <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1 truncate">
                     {product.shortDescription || product.description}
@@ -242,10 +328,10 @@ const HomeProducts = () => {
                         </span>
                       )}
                     </div>
-                    {product.rating > 0 && (
+                    {product.ratings.average > 0 && (
                       <div className="flex items-center">
                         <FaStar className="text-yellow-400 mr-0.5" size={10} />
-                        <span className="text-[10px] sm:text-xs text-gray-600">{product.rating.toFixed(1)}</span>
+                        <span className="text-[10px] sm:text-xs text-gray-600">{product.ratings.average.toFixed(1)}</span>
                       </div>
                     )}
                   </div>
@@ -258,15 +344,27 @@ const HomeProducts = () => {
                   >
                     <div className="absolute bottom-6 right-14 transform -rotate-45 flex flex-col items-center top-12">
                       <button
-                        onClick={() => {
-                          if (product.stock > 0) {
-                            router.push(`/product/${product._id}/`);
+                        type="button"
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (product.quantity > 0) {
+                            try {
+                              const button = e.currentTarget;
+                              button.disabled = true;
+                              button.classList.add('opacity-50');
+                              await handleBuyNow(product);
+                            } catch (error) {
+                              console.error('Erreur lors du clic sur Acheter:', error);
+                            }
                           }
                         }}
-                        disabled={product.stock === 0}
-                        className={`text-white text-sm font-medium ${product.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={product.quantity === 0}
+                        className={`text-white text-sm font-medium transition-opacity duration-200 ${
+                          product.quantity === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
+                        }`}
                       >
-                        {product.stock === 0 ? 'Indisponible' : 'Acheter'}
+                        {product.quantity === 0 ? 'Indisponible' : 'Acheter'}
                       </button>
                       <img 
                         src="/Logo blanc.png" 

@@ -18,7 +18,7 @@ const getImageUrl = (imagePath: string | string[]) => {
   const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
   if (!path) return "/placeholder.jpg";
   if (path.startsWith("http")) return path;
-  return `${BASE_URL}/${path}`;
+  return `${BASE_URL}/uploads/products/${path.replace(/^\/+/, '')}`;
 };
 
 const CartPage = () => {
@@ -29,148 +29,108 @@ const CartPage = () => {
   const { toast } = useToast();
   const router = useRouter();
 
-  // Charger le panier depuis le backend
+  // Charger le panier depuis le backend ou localStorage
   useEffect(() => {
-    const fetchCart = async () => {
+    const loadCart = async () => {
       try {
         const token = getCookie('token');
-        if (!token) {
-          setIsLoading(false);
-          return;
-        }
-
-        const response = await fetch(`${BASE_URL}/api/user/cart`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          dispatch({ type: "SET_CART", payload: data.cart });
-        } else if (response.status === 403) {
-          toast({
-            title: "Erreur d'autorisation",
-            description: "Vous n'avez pas les permissions nécessaires pour accéder au panier",
-            variant: "destructive"
+        
+        if (token) {
+          // Si l'utilisateur est connecté, charger depuis le backend
+          const response = await fetch(`${BASE_URL}/api/user/cart`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
           });
-          // Rediriger vers la page de connexion utilisateur
-          router.push('/login');
+
+          if (response.ok) {
+            const data = await response.json();
+            dispatch({ type: "SET_CART", payload: data.cart });
+          }
         }
       } catch (error) {
         console.error('Erreur chargement panier:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger le panier",
-          variant: "destructive"
-        });
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchCart();
-  }, [dispatch, router, toast]);
+    loadCart();
+  }, [dispatch]);
 
   // Mettre à jour la quantité
-  const handleUpdateQuantity = async (productId: string, delta: number) => {
-    try {
-      const token = getCookie('token');
-      if (!token) {
-        toast({
-          title: "Erreur",
-          description: "Veuillez vous connecter",
-          variant: "destructive"
-        });
-        router.push('/login');
-        return;
-      }
+// Mettre à jour la quantité
+const handleUpdateQuantity = async (productId: string, delta: number) => {
+  try {
+    // Trouver l'item dans le panier
+    const cartItem = state.cart.find((item) => item._id === productId);
+    if (!cartItem) return;
 
+    // Calculer la nouvelle quantité
+    const newQuantity = (cartItem.quantity || 1) + delta;
+
+    // Vérifier que la nouvelle quantité est valide (minimum 1)
+    if (newQuantity < 1) return;
+
+    // Mettre à jour le state local immédiatement
+    dispatch({
+      type: "UPDATE_QUANTITY",
+      payload: { _id: productId, delta },
+    });
+
+    const token = getCookie("token");
+    if (token) {
+      // Si connecté, synchroniser avec le backend
       const response = await fetch(`${BASE_URL}/api/user/cart/${productId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ delta })
+        body: JSON.stringify({ quantity: newQuantity }),
       });
 
-      if (response.ok) {
-        dispatch({
-          type: "UPDATE_QUANTITY",
-          payload: { _id: productId, delta }
-        });
-        toast({
-          title: "Succès",
-          description: "Quantité mise à jour"
-        });
-      } else if (response.status === 403) {
-        toast({
-          title: "Erreur d'autorisation",
-          description: "Vous n'avez pas les permissions nécessaires",
-          variant: "destructive"
-        });
-        router.push('/login');
-      } else {
-        const data = await response.json();
-        toast({
-          title: "Erreur",
-          description: data.message || "Impossible de mettre à jour la quantité",
-          variant: "destructive"
-        });
+      if (!response.ok) {
+        throw new Error("Erreur de mise à jour");
       }
-    } catch (error) {
-      console.error('Erreur mise à jour quantité:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour la quantité",
-        variant: "destructive"
-      });
     }
-  };
+  } catch (error) {
+    console.error("Erreur mise à jour quantité:", error);
+    toast({
+      title: "Erreur",
+      description: "Impossible de mettre à jour la quantité",
+      variant: "destructive",
+    });
+  }
+};
+
 
   // Supprimer du panier
   const handleRemoveFromCart = async (productId: string) => {
     try {
       const token = getCookie('token');
-      if (!token) {
-        toast({
-          title: "Erreur",
-          description: "Veuillez vous connecter",
-          variant: "destructive"
-        });
-        router.push('/login');
-        return;
-      }
+      
+      // Supprimer localement d'abord
+      dispatch({ type: "REMOVE_FROM_CART", payload: productId });
 
-      const response = await fetch(`${BASE_URL}/api/user/cart/${productId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+      if (token) {
+        // Si connecté, synchroniser avec le backend
+        const response = await fetch(`${BASE_URL}/api/user/cart/${productId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error("Erreur de suppression");
         }
-      });
-
-      if (response.ok) {
-        dispatch({ type: "REMOVE_FROM_CART", payload: productId });
-        toast({
-          title: "Succès",
-          description: "Produit retiré du panier"
-        });
-      } else if (response.status === 403) {
-        toast({
-          title: "Erreur d'autorisation",
-          description: "Vous n'avez pas les permissions nécessaires",
-          variant: "destructive"
-        });
-        router.push('/login');
-      } else {
-        const data = await response.json();
-        toast({
-          title: "Erreur",
-          description: data.message || "Impossible de retirer le produit",
-          variant: "destructive"
-        });
       }
+
+      toast({
+        title: "Succès",
+        description: "Produit retiré du panier"
+      });
     } catch (error) {
       console.error('Erreur suppression panier:', error);
       toast({
@@ -201,14 +161,16 @@ const CartPage = () => {
   };
 
   const handleCheckout = () => {
-    const isAuthenticated = !!localStorage.getItem("token");
-    if (!isAuthenticated) {
+    const token = getCookie('token');
+    if (!token) {
+      // Rediriger vers la connexion si non connecté
       router.push("/login");
-    } else {
-      const hasShippingAddress =
-        localStorage.getItem("hasShippingAddress") === "true";
-      router.push(hasShippingAddress ? "/checkout" : "/checkout/shipping-address");
+      return;
     }
+
+    // Si connecté, vérifier l'adresse de livraison
+    const hasShippingAddress = localStorage.getItem("hasShippingAddress") === "true";
+    router.push(hasShippingAddress ? "/checkout/payment-method" : "/checkout/shipping-address");
   };
 
   if (isLoading) return <div>Chargement...</div>;

@@ -2,11 +2,12 @@ import React, { createContext, useContext, useReducer, useEffect } from "react";
 
 // Définition des types
 interface CartItem {
-  _id: string; // Changé en string
-  title: string;
+  _id: string;
+  title : string;
   images: string | string[];
   quantity: number;
   finalPrice: number;
+  sellerId: string;
 }
 
 interface WishlistItem {
@@ -14,6 +15,7 @@ interface WishlistItem {
   title: string;
   images: string | string[];
   finalPrice: number;
+  sellerId: string;
 }
 
 
@@ -29,7 +31,8 @@ type Action =
   | { type: "REMOVE_FROM_WISHLIST"; payload: string }
   | { type: "UPDATE_QUANTITY"; payload: { _id: string; delta: number } }
   | { type: "SET_CART"; payload: CartItem[] }
-  | { type: "SET_WISHLIST"; payload: WishlistItem[] };
+  | { type: "SET_WISHLIST"; payload: WishlistItem[] }
+  | { type: "CLEAR_CART" };
 
 const cartReducer = (
   state: typeof initialState,
@@ -77,17 +80,18 @@ const cartReducer = (
         wishlist: state.wishlist.filter((item) => item._id !== action.payload),
       };
 
-    case "UPDATE_QUANTITY":
-      return {
-        ...state,
-        cart: state.cart
-          .map((item) =>
-            item._id === action.payload._id
-              ? { ...item, quantity: item.quantity + action.payload.delta }
-              : item
-          )
-          .filter((item) => item.quantity > 0),
-      };
+      case "UPDATE_QUANTITY":
+        return {
+          ...state,
+          cart: state.cart
+            .map((item) =>
+              item._id === action.payload._id
+                ? { ...item, quantity: item.quantity + action.payload.delta }
+                : item
+            )
+            .filter((item) => item.quantity > 0), // Supprime les items avec une quantité <= 0
+        };
+      
 
     case "SET_CART":
       return {
@@ -99,6 +103,12 @@ const cartReducer = (
       return {
         ...state,
         wishlist: action.payload,
+      };
+
+    case "CLEAR_CART":
+      return {
+        ...state,
+        cart: []
       };
 
     default:

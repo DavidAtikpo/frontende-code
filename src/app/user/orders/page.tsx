@@ -14,10 +14,13 @@ const { BASE_URL } = API_CONFIG;
 
 interface Order {
   id: string;
-  status: "IN_PROGRESS" | "COMPLETED" | "CANCELED";
-  date: string;
+  status: "pending" | "processing" | "completed" | "cancelled";
+  createdAt: string;
   total: number;
-  productsCount: number;
+  items: Array<{
+    name: string;
+    quantity: number;
+  }>;
 }
 
 export default function OrdersPage() {
@@ -33,18 +36,25 @@ export default function OrdersPage() {
             Authorization: `Bearer ${getCookie('token')}`
           }
         });
+        
         if (!response.ok) throw new Error("Erreur lors du chargement des commandes");
+        
         const data = await response.json();
-        setOrders(data);
+        if (data.success && Array.isArray(data.data)) {
+          setOrders(data.data);
+        } else {
+          setOrders([]);
+        }
       } catch (err: unknown) {
         setError((err as Error).message || "Une erreur est survenue");
+        setOrders([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchOrders();
-  }, [error]);
+  }, []);
 
   if (isLoading) {
     return (
@@ -63,32 +73,58 @@ export default function OrdersPage() {
     );
   }
 
+  if (orders.length === 0) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-6">Mes Commandes</h1>
+        <Card>
+          <CardContent className="p-6 text-center">
+            <p className="text-gray-500">Vous n'avez pas encore de commandes</p>
+            <Link href="/products">
+              <Button className="mt-4">
+                Découvrir nos produits
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const getStatusColor = (status: Order["status"]) => {
     switch (status) {
-      case "IN_PROGRESS":
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "processing":
         return "bg-blue-100 text-blue-800";
-      case "COMPLETED":
+      case "completed":
         return "bg-green-100 text-green-800";
-      case "CANCELED":
+      case "cancelled":
         return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusText = (status: Order["status"]) => {
     switch (status) {
-      case "IN_PROGRESS":
+      case "pending":
+        return "EN ATTENTE";
+      case "processing":
         return "EN COURS";
-      case "COMPLETED":
+      case "completed":
         return "TERMINÉE";
-      case "CANCELED":
+      case "cancelled":
         return "ANNULÉE";
+      default:
+        return String(status).toUpperCase();
     }
   };
 
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Historique des commandes</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Mes Commandes</h1>
         <p className="text-gray-500">Consultez et suivez vos commandes</p>
       </div>
 
@@ -119,7 +155,7 @@ export default function OrdersPage() {
                 {orders.map((order) => (
                   <tr key={order.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {order.id}
+                      #{order.id.slice(-8)}
                     </td>
                     <td className="px-6 py-4">
                       <Badge className={getStatusColor(order.status)}>
@@ -127,10 +163,13 @@ export default function OrdersPage() {
                       </Badge>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
-                      {order.date}
+                      {new Date(order.createdAt).toLocaleDateString('fr-FR')}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      ${order.total} ({order.productsCount} Produits)
+                      {order.total.toLocaleString()} FCFA
+                      <span className="text-gray-500 ml-2">
+                        ({order.items?.length || 0} articles)
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link href={`/user/orders/${order.id}`}>
@@ -143,26 +182,6 @@ export default function OrdersPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-
-          <div className="flex items-center justify-between px-6 py-4 bg-gray-50">
-            <Button variant="outline" className="w-8 h-8 p-0">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="flex gap-2">
-              {[1, 2, 3, 4, 5, 6].map((page) => (
-                <Button
-                  key={page}
-                  variant={page === 1 ? "default" : "ghost"}
-                  className="w-8 h-8 p-0"
-                >
-                  {page}
-                </Button>
-              ))}
-            </div>
-            <Button variant="outline" className="w-8 h-8 p-0">
-              <ArrowRight className="h-4 w-4" />
-            </Button>
           </div>
         </CardContent>
       </Card>

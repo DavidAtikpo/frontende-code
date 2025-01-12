@@ -31,6 +31,16 @@ interface UserSettings {
   };
 }
 
+interface ApiResponse {
+  success: boolean;
+  data: {
+    name: string;
+    email: string;
+    phoneNumber: string;
+    preferences: UserSettings['preferences'];
+  };
+}
+
 export default function UserSettings() {
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,15 +54,31 @@ export default function UserSettings() {
   const fetchSettings = async () => {
     try {
       const token = getCookie('token');
-      const response = await fetch(`${BASE_URL}/api/user/settings`, {
+      const response = await fetch(`${BASE_URL}/api/user/profile`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setSettings(data.settings);
+        const { data } = await response.json() as ApiResponse;
+        setSettings({
+          name: data.name,
+          email: data.email,
+          address: '',
+          phone: data.phoneNumber || '',
+          preferences: data.preferences || {
+            language: 'fr',
+            currency: 'XOF',
+            theme: 'light',
+            notifications: {
+              email: true,
+              push: true,
+              sms: false
+            },
+            newsletter: true
+          }
+        });
       }
     } catch (error) {
       toast({
@@ -70,27 +96,42 @@ export default function UserSettings() {
 
     try {
       const token = getCookie('token');
+      let updateData;
+
+      // Handle nested notifications object
+      if (key.startsWith('notifications.')) {
+        const notificationKey = key.split('.')[1];
+        updateData = {
+          notifications: {
+            ...settings.preferences.notifications,
+            [notificationKey]: value
+          }
+        };
+      } else {
+        updateData = { [key]: value };
+      }
+
       const response = await fetch(`${BASE_URL}/api/user/preferences`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ [key]: value })
+        body: JSON.stringify(updateData)
       });
 
       if (response.ok) {
+        const { data } = await response.json();
         setSettings(prev => prev ? {
           ...prev,
-          preferences: {
-            ...prev.preferences,
-            [key]: value
-          }
+          preferences: data
         } : null);
         toast({
           title: "Succès",
           description: "Préférences mises à jour"
         });
+      } else {
+        throw new Error('Erreur lors de la mise à jour');
       }
     } catch (error) {
       toast({

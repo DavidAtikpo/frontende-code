@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FaClock, FaStar, FaUser, FaTools } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { API_CONFIG } from '@/utils/config';
+const { BASE_URL } = API_CONFIG;
+
 
 interface Service {
   id: string;
@@ -28,10 +31,38 @@ export default function ServicesSection() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/services/featured`);
-        setServices(response.data.data);
+        setLoading(true);
+        console.log('Fetching services from:', `${BASE_URL}/api/services/featured`);
+        
+        const response = await axios.get(`${BASE_URL}/api/services/featured`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          withCredentials: true,
+          timeout: 5000,
+          // Ajouter la configuration proxy si nécessaire
+          proxy: {
+            protocol: 'http',
+            host: 'localhost',
+            port: 5000
+          }
+        });
+
+        if (response.data) {
+          setServices(response.data.data);
+        }
       } catch (error) {
-        console.error('Erreur lors du chargement des services:', error);
+        if (error instanceof Error) {
+          console.error('Erreur lors du chargement des services:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+          });
+        } else {
+          console.error('Erreur inconnue:', error);
+        }
+        setServices([]);
       } finally {
         setLoading(false);
       }

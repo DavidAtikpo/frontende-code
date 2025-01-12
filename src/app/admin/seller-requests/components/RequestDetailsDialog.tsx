@@ -1,252 +1,136 @@
 "use client";
 
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import Image from 'next/image';
-import { useState } from "react";
-import { API_CONFIG } from "@/utils/config";
-
-const { BASE_URL } = API_CONFIG;
-
-interface RequestDetailsDialogProps {
-  request: SellerRequest;
-  onClose: () => void;
-  onApprove: (id: string) => void;
-  onReject: (id: string, reason: string) => void;
-}
+import { X } from "lucide-react";
 
 interface SellerRequest {
   _id: string;
-  type: 'individual' | 'company';
-  personalInfo: {
-    fullName: string;
+  user?: {
+    name: string;
     email: string;
-    phone: string;
-    address: string;
-    companyName?: string;
-    idNumber?: string;
-    taxNumber: string;
-    legalRepName?: string;
-    rccmNumber?: string;
   };
   documents: {
     idCard: string;
     proofOfAddress: string;
     taxCertificate: string;
-    photos: string[];
-    rccm?: string;
-    companyStatutes?: string;
-  };
-  contract: {
-    signed: boolean;
-    signedDocument: string;
-  };
-  videoVerification: {
-    completed: boolean;
-    recordingUrl: string;
-  };
-  businessInfo: {
-    category: string;
-    description: string;
-    products: Array<{
-      name: string;
-      description: string;
-      price: number;
-    }>;
-    bankDetails: {
-      type: "bank" | "mobile";
-      accountNumber: string;
-      bankName?: string;
-    };
-    returnPolicy: string;
   };
   status: string;
-  createdAt: string;
 }
 
-const normalizeImagePath = (path: string) => {
-  // Convertir les backslashes en forward slashes
-  return `${BASE_URL}/${path.replace(/\\/g, '/')}`;
-};
+interface RequestDetailsDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  request: SellerRequest;
+}
 
-export function RequestDetailsDialog({
-  request,
-  onClose,
-  onApprove,
-  onReject,
-}: RequestDetailsDialogProps) {
-  const [rejectReason, setRejectReason] = useState("");
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+const RequestDetailsDialog = ({ isOpen, onClose, request }: RequestDetailsDialogProps) => {
+  const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+
+  const normalizeImagePath = (path: string | undefined) => {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    return `${BASE_URL}/uploads/${path.replace(/^[\/\\]?uploads[\/\\]?/, '').replace(/\\/g, '/')}`;
+  };
+
+  if (!request) return null;
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Détails de la demande de vendeur</DialogTitle>
+          <DialogTitle>Détails de la demande</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Informations personnelles */}
-          <section>
-            <h3 className="font-semibold mb-4">Informations personnelles</h3>
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Informations personnelles</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-500">Nom complet</p>
-                <p>{request.personalInfo.fullName}</p>
+                <p className="text-sm text-gray-600">Nom</p>
+                <p>{request.user?.name}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Email</p>
-                <p>{request.personalInfo.email}</p>
+                <p className="text-sm text-gray-600">Email</p>
+                <p>{request.user?.email}</p>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">Téléphone</p>
-                <p>{request.personalInfo.phone}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Adresse</p>
-                <p>{request.personalInfo.address}</p>
-              </div>
-              {request.type === 'company' && (
-                <>
-                  <div>
-                    <p className="text-sm text-gray-500">Nom de l'entreprise</p>
-                    <p>{request.personalInfo.companyName}</p>
+            </div>
+          </div>
+
+          {/* Documents */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Documents</h3>
+            <div className="space-y-4">
+              {request.documents?.idCard && (
+                <div>
+                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded mb-2">
+                    <span className="font-medium">Carte d'identité</span>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Numéro RCCM</p>
-                    <p>{request.personalInfo.rccmNumber}</p>
+                  <div className="w-full h-[200px] border rounded overflow-hidden">
+                    <iframe
+                      src={normalizeImagePath(request.documents.idCard)}
+                      className="w-full h-full"
+                      title="Carte d'identité"
+                    />
                   </div>
-                </>
+                </div>
+              )}
+              
+              {request.documents?.proofOfAddress && (
+                <div>
+                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded mb-2">
+                    <span className="font-medium">Justificatif de domicile</span>
+                  </div>
+                  <div className="w-full h-[200px] border rounded overflow-hidden">
+                    <iframe
+                      src={normalizeImagePath(request.documents.proofOfAddress)}
+                      className="w-full h-full"
+                      title="Justificatif de domicile"
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {request.documents?.taxCertificate && (
+                <div>
+                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded mb-2">
+                    <span className="font-medium">Certificat fiscal</span>
+                  </div>
+                  <div className="w-full h-[200px] border rounded overflow-hidden">
+                    <iframe
+                      src={normalizeImagePath(request.documents.taxCertificate)}
+                      className="w-full h-full"
+                      title="Certificat fiscal"
+                    />
+                  </div>
+                </div>
               )}
             </div>
-          </section>
+          </div>
 
-          {/* Documents PDF */}
-          <section>
-            <h3 className="font-semibold mb-4">Documents</h3>
-            <div className="grid grid-cols-1 gap-4">
-              {Object.entries(request.documents).map(([key, path]) => {
-                if (key !== 'photos' && path && typeof path === 'string') {
-                  const normalizedPath = normalizeImagePath(path);
-                  const isImage = path.match(/\.(jpg|jpeg|png|gif)$/i);
-                  return (
-                    <div key={key} className="border rounded-lg p-4">
-                      <h4 className="font-medium mb-2">{key}</h4>
-                      {isImage ? (
-                        <Image
-                          src={normalizedPath}
-                          alt={key}
-                          width={300}
-                          height={400}
-                          className="object-contain"
-                        />
-                      ) : (
-                        <iframe
-                          src={normalizedPath}
-                          className="w-full h-[500px]"
-                          title={key}
-                        />
-                      )}
-                      <a
-                        href={normalizedPath}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-2 text-blue-600 hover:underline block"
-                      >
-                        Ouvrir dans un nouvel onglet
-                      </a>
-                    </div>
-                  );
-                }
-                return null;
-              })}
-            </div>
-          </section>
-
-          {/* Photos */}
-          <section>
-            <h3 className="font-semibold mb-4">Photos</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {request.documents.photos.map((photo, index) => (
-                <div key={index} className="relative aspect-square">
-                  <Image
-                    src={normalizeImagePath(photo)}
-                    alt={`Photo ${index + 1}`}
-                    width={500}
-                    height={500}
-                    className="object-cover rounded-lg w-full h-full"
-                  />
-                  <a
-                    href={normalizeImagePath(photo)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="absolute bottom-2 right-2 bg-white px-2 py-1 rounded text-sm"
-                  >
-                    Voir
-                  </a>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Vidéo */}
-          <section>
-            <h3 className="font-semibold mb-4">Vidéo de vérification</h3>
-            {request.videoVerification.recordingUrl && (
-              <div className="relative aspect-video">
-                <video
-                  src={`${BASE_URL}/${request.videoVerification.recordingUrl}`}
-                  controls
-                  className="w-full rounded-lg"
-                />
-              </div>
-            )}
-          </section>
-
-          {/* Informations commerciales */}
-          <section>
-            <h3 className="font-semibold mb-4">Informations commerciales</h3>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-500">Catégorie</p>
-                <p>{request.businessInfo.category}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Description</p>
-                <p>{request.businessInfo.description}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Politique de retour</p>
-                <p>{request.businessInfo.returnPolicy}</p>
-              </div>
-            </div>
-          </section>
-
-          {/* Actions */}
-          <div className="space-y-4">
-            <Textarea
-              placeholder="Raison du rejet (obligatoire en cas de rejet)"
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-            />
-            <div className="flex justify-end space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => onReject(request._id, rejectReason)}
-                disabled={!rejectReason}
-              >
-                Rejeter
-              </Button>
-              <Button
-                onClick={() => onApprove(request._id)}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                Approuver
-              </Button>
+          {/* Statut */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Statut</h3>
+            <div className="flex items-center space-x-2">
+              <span className={`px-2 py-1 rounded text-sm ${
+                request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                request.status === 'approved' ? 'bg-green-100 text-green-800' :
+                'bg-red-100 text-red-800'
+              }`}>
+                {request.status}
+              </span>
             </div>
           </div>
         </div>
       </DialogContent>
     </Dialog>
   );
-} 
+};
+
+export default RequestDetailsDialog; 

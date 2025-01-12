@@ -42,8 +42,39 @@ const getImageUrl = (imagePath: string | string[]) => {
 
 const getProfileImageUrl = (imagePath: string | null) => {
   if (!imagePath) return "/placeholder-avatar.jpg";
-  if (imagePath.startsWith("http")) return imagePath;
-  return `${BASE_URL}${imagePath.startsWith('/') ? imagePath : `/${imagePath}`}`;
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    return imagePath;
+  }
+  // Nettoyer le chemin en supprimant les doubles slashes et en s'assurant qu'il commence par /uploads
+  const cleanPath = imagePath
+    .replace(/^[\/\\]+/, '')  // Supprime les slashes au début
+    .replace(/^uploads[\/\\]?/, '')  // Supprime 'uploads/' au début s'il existe
+    .replace(/\\/g, '/');  // Remplace les backslashes par des forward slashes
+  
+  return `${BASE_URL}/uploads/${cleanPath}`;
+};
+
+interface SearchResult {
+  _id: string;
+  title: string;
+  type: 'product' | 'event' | 'training' | 'service' | 'restaurant';
+}
+
+// Ajout de la fonction debounce
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
 };
 
 const Header = () => {
@@ -62,6 +93,10 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const [_firstName, setFirstName] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useClickOutside(() => setShowResults(false));
+  const debouncedSearchQuery = useDebounce(searchQuery, 300); // 300ms delay
 
   // Refs pour les menus déroulants
   const cartRef = useClickOutside(() => setIsCartOpen(false));
@@ -84,20 +119,11 @@ const Header = () => {
         const user = JSON.parse(userData);
         const firstName = user.name?.split(' ')[0] || '';
         
-        // Construire l'URL de la photo de profil de manière sécurisée
+        // Construire l'URL de la photo de profil
         let photoURL = null;
         if (user.profilePhotoUrl) {
-          // Si l'URL commence déjà par http, on la garde telle quelle
-          if (user.profilePhotoUrl.startsWith('http')) {
-            photoURL = user.profilePhotoUrl;
-          } else {
-            // Sinon, on ajoute le BASE_URL
-            photoURL = `${API_CONFIG.BASE_URL}${user.profilePhotoUrl}`;
-          }
+          photoURL = getProfileImageUrl(user.profilePhotoUrl);
         }
-
-        console.log('Photo URL:', photoURL); // Pour le débogage
-        console.log('User Data:', user); // Pour le débogage
 
         setUserInfo({
           name: user.name || '',
@@ -155,6 +181,57 @@ const Header = () => {
     router.push(path);
   };
 
+  // Fonction de recherche
+  const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+  };
+
+  // Effet pour gérer la recherche avec debounce
+  useEffect(() => {
+    const fetchSearchResults = async () => {
+      if (debouncedSearchQuery.length > 0) {
+        try {
+          const response = await fetch(`${BASE_URL}/api/search?query=${encodeURIComponent(debouncedSearchQuery)}`);
+          if (response.ok) {
+            const results = await response.json();
+            setSearchResults(results || []);
+            setShowResults(true);
+          }
+        } catch (error) {
+          console.error('Erreur de recherche:', error);
+        }
+      } else {
+        setShowResults(false);
+        setSearchResults([]);
+      }
+    };
+
+    fetchSearchResults();
+  }, [debouncedSearchQuery]);
+
+  const handleResultClick = (result: SearchResult) => {
+    setShowResults(false);
+    setSearchQuery('');
+    switch (result.type) {
+      case 'product':
+        router.push(`/product/${result._id}`);
+        break;
+      case 'event':
+        router.push(`/event/${result._id}`);
+        break;
+      case 'training':
+        router.push(`/training/${result._id}`);
+        break;
+      case 'service':
+        router.push(`/service/${result._id}`);
+        break;
+      case 'restaurant':
+        router.push(`/restaurant/${result._id}`);
+        break;
+    }
+  };
+
   return (
     <header className="bg-gradient-to-r bg-customBlue text-white py-2 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -173,13 +250,13 @@ const Header = () => {
 
           {/* Barre de recherche desktop */}
           {!isMobile && (
-            <div className="flex-1 max-w-2xl">
+            <div className="flex-1 max-w-2xl" ref={searchRef}>
               <div className="relative">
                 <input
                   type="text"
                   placeholder="Rechercher un produit, une catégorie..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchInput}
                   className="w-full px-3 py-1.5 pr-10 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm text-white placeholder-white/70 focus:outline-none focus:border-white/40 transition-all duration-200 text-sm"
                 />
                 <button 
@@ -188,6 +265,24 @@ const Header = () => {
                 >
                   <FaSearch size={16} />
                 </button>
+
+                {/* Résultats de recherche */}
+                {showResults && searchResults.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-lg shadow-xl border border-gray-100 max-h-[300px] overflow-y-auto">
+                    <ul className="py-1">
+                      {searchResults.map((result) => (
+                        <li
+                          key={result._id}
+                          onClick={() => handleResultClick(result)}
+                          className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-gray-700 text-sm flex items-center justify-between"
+                        >
+                          <span>{result.title}</span>
+                          <span className="text-xs text-gray-500 capitalize">{result.type}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -329,14 +424,13 @@ const Header = () => {
               >
                 {userInfo.profilePhotoURL ? (
                   <div className="flex items-center gap-2">
-                    <Image
-                      src={getProfileImageUrl(userInfo.profilePhotoURL)}
-                      alt="Photo de profil"
-                      width={24}
-                      height={24}
-                      className="w-6 h-6 rounded-full object-cover"
-                      priority={true}
-                    />
+                    <div className="w-6 h-6 rounded-full overflow-hidden">
+                      <iframe
+                        src={userInfo.profilePhotoURL}
+                        className="w-full h-full"
+                        style={{ border: 'none' }}
+                      />
+                    </div>
                     <span className="text-sm">{userInfo.name}</span>
                   </div>
                 ) : (
@@ -355,14 +449,13 @@ const Header = () => {
                       {/* En-tête du profil */}
                       <div className="flex items-center space-x-3 mb-4 pb-4 border-b">
                         {userInfo.profilePhotoURL ? (
-                          <Image
-                            src={getProfileImageUrl(userInfo.profilePhotoURL)}
-                            alt="Photo de profil"
-                            width={40}
-                            height={40}
-                            className="w-10 h-10 rounded-full object-cover"
-                            priority={true}
-                          />
+                          <div className="w-10 h-10 rounded-full overflow-hidden">
+                            <iframe
+                              src={userInfo.profilePhotoURL}
+                              className="w-full h-full"
+                              style={{ border: 'none' }}
+                            />
+                          </div>
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
                             <FaUser className="text-gray-500" size={20} />
@@ -435,13 +528,13 @@ const Header = () => {
 
         {/* Barre de recherche mobile */}
         {isMobile && (
-          <div className="w-full mt-2">
+          <div className="w-full mt-2" ref={searchRef}>
             <div className="relative">
               <input
                 type="text"
                 placeholder="Rechercher..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchInput}
                 className="w-full px-3 py-1.5 pr-10 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm text-white placeholder-white/70 focus:outline-none focus:border-white/40 transition-all duration-200 text-sm"
               />
               <button 
@@ -450,6 +543,24 @@ const Header = () => {
               >
                 <FaSearch size={16} />
               </button>
+
+              {/* Résultats de recherche mobile */}
+              {showResults && searchResults.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-lg shadow-xl border border-gray-100 max-h-[300px] overflow-y-auto">
+                  <ul className="py-1">
+                    {searchResults.map((result) => (
+                      <li
+                        key={result._id}
+                        onClick={() => handleResultClick(result)}
+                        className="px-4 py-2 hover:bg-gray-50 cursor-pointer text-gray-700 text-sm flex items-center justify-between"
+                      >
+                        <span>{result.title}</span>
+                        <span className="text-xs text-gray-500 capitalize">{result.type}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         )}

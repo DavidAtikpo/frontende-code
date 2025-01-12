@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { getCookie } from 'cookies-next';
 import { API_CONFIG } from '@/utils/config';
 const { BASE_URL } = API_CONFIG;
 import { 
@@ -15,26 +16,12 @@ import {
   FaChartLine,
   FaList,
   FaPlus,
-  FaUser
+  FaUser,
+  FaCogs,
+  FaShoppingBag,
+  FaClipboardList
 } from 'react-icons/fa';
-
-interface SellerProfile {
-  businessType: 'products' | 'restaurant' | 'training' | 'events' | 'services';
-  businessName: string;
-  subscriptionStatus: 'trial' | 'active' | 'expired';
-  trialEndsAt?: string;
-  subscriptionEndsAt?: string;
-  stats: {
-    totalRevenue: number;
-    totalOrders: number;
-    totalCustomers: number;
-    averageRating: number;
-    pendingOrders: number;
-    monthlyRevenue: number;
-    totalProducts: number;
-    viewsCount: number;
-  };
-}
+import type { SellerProfile } from '@/types/seller';
 
 const SellerDashboard = () => {
   const router = useRouter();
@@ -44,7 +31,12 @@ const SellerDashboard = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/api/seller/profile`);
+        const token = getCookie('token');
+        const response = await axios.get(`${BASE_URL}/api/seller/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         if (response.data.success) {
           setProfile(response.data.data);
         }
@@ -60,53 +52,67 @@ const SellerDashboard = () => {
   }, []);
 
   const getActionButtons = () => {
-    switch (profile?.businessType) {
-      case 'products':
-        return [
-          { icon: FaPlus, label: 'Ajouter un produit', href: '/seller/products/add' },
-          { icon: FaList, label: 'Mes produits', href: '/seller/products' },
-          { icon: FaChartLine, label: 'Statistiques', href: '/seller/stats' }
-        ];
-      case 'restaurant':
-        return [
-          { icon: FaPlus, label: 'Ajouter un plat', href: '/seller/restaurant/add' },
-          { icon: FaList, label: 'Menu', href: '/seller/restaurant/menu' },
-          { icon: FaChartLine, label: 'Statistiques', href: '/seller/stats' }
-        ];
-      case 'training':
-        return [
-          { icon: FaPlus, label: 'Nouvelle formation', href: '/seller/training/add' },
-          { icon: FaList, label: 'Mes formations', href: '/seller/training' },
-          { icon: FaChartLine, label: 'Statistiques', href: '/seller/stats' }
-        ];
-      case 'events':
-        return [
-          { icon: FaPlus, label: 'Nouvel événement', href: '/seller/events/add' },
-          { icon: FaList, label: 'Mes événements', href: '/seller/events' },
-          { icon: FaChartLine, label: 'Statistiques', href: '/seller/stats' }
-        ];
-      case 'services':
-        return [
-          { icon: FaPlus, label: 'Ajouter un service', href: '/seller/services/add' },
-          { icon: FaList, label: 'Mes services', href: '/seller/services' },
-          { icon: FaChartLine, label: 'Statistiques', href: '/seller/stats' }
-        ];
-      default:
-        return [];
-    }
+    return [
+      // Produits
+      { 
+        icon: FaStore, 
+        label: 'Gérer les produits', 
+        href: '/seller/dashboard/products',
+        description: 'Ajoutez et gérez vos produits physiques'
+      },
+      // Restaurant
+      { 
+        icon: FaUtensils, 
+        label: 'Menu restaurant', 
+        href: '/seller/restaurant/dashboard',
+        description: 'Gérez votre menu et vos plats'
+      },
+      // Formations
+      { 
+        icon: FaGraduationCap, 
+        label: 'Formations', 
+        href: '/seller/training',
+        description: 'Créez et gérez vos formations en ligne'
+      },
+      // Événements
+      { 
+        icon: FaCalendarAlt, 
+        label: 'Événements', 
+        href: '/seller/events',
+        description: 'Organisez et gérez vos événements'
+      },
+      // Services
+      { 
+        icon: FaCogs, 
+        label: 'Services', 
+        href: '/seller/services',
+        description: 'Proposez vos services professionnels'
+      },
+      // Commandes
+      { 
+        icon: FaShoppingBag, 
+        label: 'Commandes', 
+        href: '/seller/dashboard/orders',
+        description: 'Gérez toutes vos commandes'
+      },
+      // Statistiques
+      { 
+        icon: FaChartLine, 
+        label: 'Statistiques', 
+        href: '/seller/dashboard/stats',
+        description: 'Analysez vos performances'
+      },
+      // Catalogue
+      { 
+        icon: FaClipboardList, 
+        label: 'Catalogue', 
+        href: '/seller/dashboard/catalog',
+        description: 'Gérez votre catalogue complet'
+      }
+    ];
   };
 
-  const getBusinessIcon = () => {
-    switch (profile?.businessType) {
-      case 'products': return FaStore;
-      case 'restaurant': return FaUtensils;
-      case 'training': return FaGraduationCap;
-      case 'events': return FaCalendarAlt;
-      default: return FaStore;
-    }
-  };
-
-  const BusinessIcon = getBusinessIcon();
+  const BusinessIcon = FaStore;
 
   if (loading) {
     return <div>Chargement...</div>;
@@ -130,25 +136,45 @@ const SellerDashboard = () => {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => router.push('/seller/settings')}
-            className="p-2 text-gray-600 hover:text-blue-600"
-          >
-            <FaCog className="h-6 w-6" />
-          </button>
+          <div className="flex items-center space-x-4">
+            {profile?.shop ? (
+              <button
+                onClick={() => router.push('/seller/dashboard/shop')}
+                className="flex items-center px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <FaStore className="h-5 w-5 mr-2" />
+                Voir ma boutique
+              </button>
+            ) : (
+              <button
+                onClick={() => router.push('/seller/settings')}
+                className="flex items-center px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <FaPlus className="h-5 w-5 mr-2" />
+                Créer ma boutique
+              </button>
+            )}
+            <button
+              onClick={() => router.push('/seller/settings')}
+              className="p-2 text-gray-600 hover:text-blue-600"
+            >
+              <FaCog className="h-6 w-6" />
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Actions rapides */}
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
+      <div className="grid md:grid-cols-4 gap-6 mb-8">
         {getActionButtons().map((action, index) => (
           <button
             key={index}
             onClick={() => router.push(action.href)}
-            className="flex items-center justify-center p-6 bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow"
+            className="flex flex-col items-center p-6 bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow"
           >
-            <action.icon className="h-6 w-6 text-blue-600 mr-3" />
-            <span>{action.label}</span>
+            <action.icon className="h-8 w-8 text-blue-600 mb-3" />
+            <span className="font-semibold text-gray-900">{action.label}</span>
+            <p className="text-sm text-gray-500 text-center mt-2">{action.description}</p>
           </button>
         ))}
       </div>
@@ -206,5 +232,3 @@ const SellerDashboard = () => {
 };
 
 export default SellerDashboard;
-
-

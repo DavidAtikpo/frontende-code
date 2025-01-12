@@ -10,12 +10,15 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/hooks/useAuth';
 
 export function NotificationsDropdown() {
+  const { user } = useAuth();
   const {
     notifications,
     unreadCount,
     isLoading,
+    error,
     markAsRead,
     markAllAsRead
   } = useNotifications();
@@ -23,6 +26,10 @@ export function NotificationsDropdown() {
   const handleNotificationClick = async (notificationId: string) => {
     await markAsRead(notificationId);
   };
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <DropdownMenu>
@@ -57,6 +64,10 @@ export function NotificationsDropdown() {
           {isLoading ? (
             <div className="p-4 text-center text-muted-foreground">
               Chargement...
+            </div>
+          ) : error ? (
+            <div className="p-4 text-center text-red-500">
+              {error}
             </div>
           ) : notifications.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">

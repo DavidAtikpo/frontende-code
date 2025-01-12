@@ -16,7 +16,9 @@ import {
   HelpCircle,
   LogOut,
   History,
-  Menu
+  Menu,
+  Bell,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -29,8 +31,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
-import { NotificationsDropdown } from '@/components/seller/NotificationsDropdown';
+import { useNotifications } from "@/hooks/useNotifications";
 import { API_CONFIG } from "@/utils/config";
+import axios from "axios";
+import { getCookie } from "cookies-next";
 const { BASE_URL } = API_CONFIG;
 
 const sidebarLinks = [
@@ -89,9 +93,51 @@ export default function DashboardLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [validationStatus, setValidationStatus] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { 
+    notifications, 
+    unreadCount, 
+    isLoading, 
+    error, 
+    markAsRead, 
+    markAllAsRead 
+  } = useNotifications();
+
+  useEffect(() => {
+    const checkValidationStatus = async () => {
+      const token = getCookie('token');
+      if (!token) {
+        console.error('No token found');
+        return;
+      }
+
+      try {
+        console.log('Fetching validation status...');
+        const response = await fetch(`${BASE_URL}/api/seller/validation-status`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        if (data.success) {
+          const status = data.status || (data.data && data.data.status);
+          console.log('Setting validation status to:', status);
+          setValidationStatus(status);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification du statut:', error);
+      }
+    };
+
+    checkValidationStatus();
+  }, []);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -115,9 +161,18 @@ export default function DashboardLayout({
     router.push('/auth/login');
   };
 
+  useEffect(() => {
+    if (validationStatus) {
+      console.log('Current validation status:', validationStatus);
+    }
+  }, [validationStatus]);
+
   return (
     <div className="min-h-screen bg-gray-100/40">
-      <header className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className={cn(
+        "fixed z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+        "top-0"
+      )}>
         <div className="flex h-16 items-center px-4 md:px-6">
           <Button 
             variant="ghost"
@@ -131,7 +186,94 @@ export default function DashboardLayout({
             <Store className="h-6 w-6" />
           </Link>
           <div className="ml-auto flex items-center gap-4">
-            <NotificationsDropdown />
+            {(validationStatus === 'verified' || validationStatus === 'approved' || validationStatus === 'active') && !pathname.includes('/subscription') && (
+              <Button 
+                variant="ghost"
+                onClick={() => router.push('/seller/dashboard/subscription')}
+                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+              >
+                Votre demande a été approuvée. Souscrire à un abonnement pour commencer à vendre
+              </Button>
+            )}
+            {validationStatus === 'pending' && (
+              <span className="text-yellow-600 text-sm">
+                Demande en cours d'examen
+              </span>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  {isLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <>
+                      <Bell className="h-5 w-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <div className="flex items-center justify-between px-4 py-2 border-b">
+                  <span className="text-sm font-medium">Notifications</span>
+                  {unreadCount > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={markAllAsRead}
+                    >
+                      Tout marquer comme lu
+                    </Button>
+                  )}
+                </div>
+                <div className="max-h-[300px] overflow-y-auto">
+                  {error ? (
+                    <div className="px-4 py-3 text-sm text-red-500 text-center">
+                      {error}
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                      Aucune nouvelle notification
+                    </div>
+                  ) : (
+                    notifications.map((notif) => (
+                      <DropdownMenuItem 
+                        key={notif.id}
+                        className="px-4 py-3 cursor-pointer"
+                        onClick={() => {
+                          if (!notif.read) {
+                            markAsRead(notif.id);
+                          }
+                          if (notif.data?.link) {
+                            router.push(notif.data.link);
+                          }
+                        }}
+                      >
+                        <div className={cn(
+                          "w-full",
+                          !notif.read && "font-medium"
+                        )}>
+                          <div className="flex items-start justify-between">
+                            <p className="text-sm">{notif.title}</p>
+                            {!notif.read && (
+                              <span className="h-2 w-2 rounded-full bg-blue-500 ml-2 mt-1.5" />
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">{notif.message}</p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {new Date(notif.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -191,7 +333,10 @@ export default function DashboardLayout({
         </div>
       </header>
 
-      <div className="flex pt-16">
+      <div className={cn(
+        "flex",
+        validationStatus ? "pt-28" : "pt-16"
+      )}>
         {isMobile && isSidebarOpen && (
           <div 
             className="fixed inset-0 z-30 bg-black/50"

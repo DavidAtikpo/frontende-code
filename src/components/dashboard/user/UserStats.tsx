@@ -1,9 +1,10 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from 'next/link';
+import { Card } from "@/components/ui/card";
 import { ShoppingBag, Heart, MapPin, Star } from "lucide-react";
 
-interface UserStatsProps {
+interface StatsProps {
   stats: {
     totalOrders: number;
     favoriteCount: number;
@@ -12,49 +13,48 @@ interface UserStatsProps {
   };
 }
 
-export function UserStats({ stats }: UserStatsProps) {
+export function UserStats({ stats }: StatsProps) {
   const statItems = [
     {
-      title: "Commandes",
+      label: "Commandes",
       value: stats.totalOrders,
       icon: ShoppingBag,
-      description: "Total des commandes"
+      href: "/user/orders"
     },
     {
-      title: "Favoris",
+      label: "Favoris",
       value: stats.favoriteCount,
       icon: Heart,
-      description: "Produits favoris"
+      href: "/user/favorites"
     },
     {
-      title: "Adresses",
+      label: "Adresses",
       value: stats.addressCount,
       icon: MapPin,
-      description: "Adresses enregistrées"
+      href: "/user/addresses"
     },
     {
-      title: "Avis",
+      label: "Avis",
       value: stats.reviewCount,
       icon: Star,
-      description: "Avis laissés"
+      href: "/user/reviews"
     }
   ];
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {statItems.map((item) => (
-        <Card key={item.title}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {item.title}
-            </CardTitle>
-            <item.icon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{item.value}</div>
-            <p className="text-xs text-muted-foreground">{item.description}</p>
-          </CardContent>
-        </Card>
+        <Link key={item.label} href={item.href}>
+          <Card className="p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+            <div className="flex items-center space-x-4">
+              <item.icon className="h-6 w-6 text-gray-400" />
+              <div>
+                <p className="text-sm font-medium text-gray-500">{item.label}</p>
+                <p className="text-2xl font-bold">{item.value}</p>
+              </div>
+            </div>
+          </Card>
+        </Link>
       ))}
     </div>
   );

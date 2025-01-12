@@ -12,6 +12,7 @@ import AuthTabs from "../components/auth/AuthTabs";
 // import Popup from "../components/Popup";
 import { useRouter } from 'next/navigation';
 import { API_CONFIG } from '@/utils/config';
+import { validateEmail, validatePassword } from '@/utils/validation';
 
 const { BASE_URL } = API_CONFIG;
 // const BASE_URL = 'http://localhost:5000';
@@ -37,6 +38,22 @@ export default function RegisterPage() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+
+    // Validation de l'email
+    const emailValidation = validateEmail(formData.email);
+    if (!emailValidation.isValid) {
+      setError(emailValidation.message);
+      setIsLoading(false);
+      return;
+    }
+
+    // Validation du mot de passe
+    const passwordValidation = validatePassword(formData.password);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.message);
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch(`${BASE_URL}/api/user/register`, {

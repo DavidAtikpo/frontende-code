@@ -18,21 +18,53 @@ const { BASE_URL } = API_CONFIG;
 interface Product {
   _id: string;
   title: string;
-  images: string[];
-  category: string;
+  description: string;
+  shortDescription: string;
   price: number;
+  compareAtPrice: number | null;
+  images: string | string[];
+  category: string;
   rating: number;
-  discount?: number;
-  badge?: string;
+  quantity: number;
+  seller: {
+    storeName: string;
+    status: string;
+    id: string;
+  };
+  featured: boolean;
+  isDigital: boolean;
+  lowStockThreshold: number;
+  discount: number | null;
 }
 
+// Constante pour l'image par défaut
+const DEFAULT_IMAGE = '/placeholder.jpg';
+
 // Fonction pour gérer les URLs des images
-const getImageUrl = (imagePath: string) => {
-  if (!imagePath) return "/placeholder.jpg";
-  if (imagePath.startsWith("http")) {
-    return imagePath.replace("http://localhost:5000", BASE_URL);
+const getImageUrl = (imagePath: string | string[]) => {
+  if (!imagePath) return DEFAULT_IMAGE;
+  
+  try {
+    // Si c'est un tableau, prendre la première image
+    const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
+    if (!path) return DEFAULT_IMAGE;
+  
+  // Si c'est déjà une URL complète
+    if (path.startsWith('http')) {
+      return path;
   }
-  return `${BASE_URL}/uploads/products/${imagePath.replace(/^\/+/, '')}`;
+  
+  // Si le chemin commence par 'uploads'
+    if (path.startsWith('uploads')) {
+      return `${BASE_URL}/${path}`;
+  }
+
+  // Pour tout autre cas
+    return `${BASE_URL}/uploads/products/${path.replace(/^\/+/, '')}`;
+  } catch (error) {
+    console.error('Erreur dans getImageUrl:', error);
+    return DEFAULT_IMAGE;
+  }
 };
 
 const ShopPage = () => {
@@ -46,6 +78,7 @@ const ShopPage = () => {
   const { state, dispatch } = useCartContext();
   const router = useRouter();
   const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -54,29 +87,30 @@ const ShopPage = () => {
         const data = await response.json();
         
         if (data.success) {
-          setProducts(data.data);
-          setFilteredProducts(data.data);
+          // Log détaillé du premier produit pour voir sa structure
+          console.log('Structure du premier produit:', data.products[0]);
+          
+          // Transformation des données pour s'assurer que _id est présent
+          const formattedProducts = data.products.map((product: any) => ({
+            ...product,
+            _id: product._id || product.id // Utilise _id ou id si _id n'existe pas
+          }));
+          
+          setProducts(formattedProducts);
+          setFilteredProducts(formattedProducts);
         } else {
-          toast({
-            title: "Erreur",
-            description: data.message || "Impossible de charger les produits",
-            variant: "destructive"
-          });
+          setError('Erreur lors du chargement des produits');
         }
-        setLoading(false);
       } catch (error) {
-        console.error("Erreur lors de la récupération des produits :", error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les produits",
-          variant: "destructive"
-        });
+        console.error('Erreur:', error);
+        setError('Erreur lors du chargement des produits');
+      } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [toast]);
+  }, []);
 
   const handleAddToCart = (product: Product) => {
     const finalPrice = product.discount
@@ -85,7 +119,7 @@ const ShopPage = () => {
 
     dispatch({
       type: "ADD_TO_CART",
-      payload: { ...product, quantity: 1, finalPrice },
+      payload: { ...product, quantity: 1, finalPrice, sellerId: product.seller.id },
     });
   };
 
@@ -99,6 +133,7 @@ const ShopPage = () => {
         title: product.title,
         images: product.images,
         finalPrice: product.price,
+        sellerId: product.seller.id
       };
 
       dispatch({
@@ -109,36 +144,58 @@ const ShopPage = () => {
   };
 
   const handleViewProduct = (productId: string) => {
+    console.log('Product complet:', products.find(p => p._id === productId));
+    console.log('Product ID reçu:', productId);
+    if (!productId) {
+      console.error('ID du produit non défini');
+      return;
+    }
     router.push(`/product/${productId}`);
   };
 
   useEffect(() => {
     let filtered = [...products];
 
+    // Filtre par catégorie
     if (filterCategory) {
       filtered = filtered.filter((product) => product.category === filterCategory);
     }
 
+    // Filtre par note
     if (filterRating) {
       filtered = filtered.filter((product) => product.rating >= filterRating);
     }
 
+    // Filtre par recherche
     if (search) {
+      const searchLower = search.toLowerCase();
       filtered = filtered.filter((product) =>
-        product.title.toLowerCase().includes(search.toLowerCase())
+        product.title.toLowerCase().includes(searchLower) ||
+        product.description.toLowerCase().includes(searchLower) ||
+        product.category.toLowerCase().includes(searchLower)
       );
     }
 
-    if (sortBy === "low-price") {
-      filtered.sort((a, b) => a.price - b.price);
-    } else if (sortBy === "high-price") {
-      filtered.sort((a, b) => b.price - a.price);
+    // Tri
+    switch (sortBy) {
+      case "low-price":
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case "high-price":
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case "rating":
+        filtered.sort((a, b) => b.rating - a.rating);
+        break;
+      default: // "popular" ou autres
+        filtered.sort((a, b) => b.rating * b.quantity - a.rating * a.quantity);
+        break;
     }
 
     setFilteredProducts(filtered);
   }, [filterCategory, filterRating, search, sortBy, products]);
 
-  const handleDirectCheckout = async (product: Product) => {
+  const handleBuyNow = async (product: Product) => {
     try {
       const token = getCookie('token');
       if (!token) {
@@ -150,47 +207,37 @@ const ShopPage = () => {
         ? product.price * (1 - product.discount / 100)
         : product.price;
 
-      const cartItem = {
-        ...product,
-        quantity: 1,
-        finalPrice
-      };
-
       const cartResponse = await fetch(`${BASE_URL}/api/user/cart`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ productId: product._id, quantity: 1 })
+        body: JSON.stringify({ productId: product._id, quantity: 1 }),
       });
 
       if (cartResponse.ok) {
-        dispatch({ type: "ADD_TO_CART", payload: cartItem });
-        
-        // Vérifier l'adresse de livraison
         const userResponse = await fetch(`${BASE_URL}/api/user/profile`, {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
-        
         const userData = await userResponse.json();
-        
+
         if (userData.shippingAddress) {
-          // Si l'adresse existe, aller directement au paiement
           router.push('/checkout/payment');
         } else {
-          // Sinon, aller à la page d'adresse de livraison
           router.push('/checkout/shipping-address');
         }
+      } else {
+        throw new Error('Erreur lors de l\'ajout au panier.');
       }
     } catch (error) {
-      console.error('Erreur checkout:', error);
+      console.error('Erreur lors de l\'achat immédiat :', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de procéder au paiement",
-        variant: "destructive"
+        title: 'Erreur',
+        description: 'Une erreur est survenue. Veuillez réessayer.',
+        variant: 'destructive',
       });
     }
   };
@@ -333,86 +380,121 @@ const ShopPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden group"
+                className="bg-white rounded-xl shadow-lg overflow-hidden group relative border-2 border-blue-500"
               >
-                <div className="relative aspect-square">
+                <div className="relative h-[200px]">
                   <img
-                    src={getImageUrl(product.images[0])}
+                    src={getImageUrl(product.images)}
                     alt={product.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="w-full h-full object-cover rounded-t-lg"
+                    loading="lazy"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = "/placeholder.jpg";
+                      target.src = DEFAULT_IMAGE;
                     }}
                   />
                   
                   {/* Badges */}
-                  {product.badge && (
-                    <span className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      {product.badge}
-                    </span>
-                  )}
+                  <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                    {product.quantity <= product.lowStockThreshold && (
+                      <span className="bg-orange-500 text-white px-2 py-0.5 rounded-full text-xs">
+                        {product.quantity === 0 ? 'Rupture de stock' : `${product.quantity} en stock`}
+                      </span>
+                    )}
+                    {product.discount && product.discount > 0 && (
+                      <span className="bg-green-500 text-white px-2 py-0.5 rounded-full text-xs">
+                        -{product.discount}%
+                      </span>
+                    )}
+                    {product.featured && (
+                      <span className="bg-blue-500 text-white px-2 py-0.5 rounded-full text-xs">
+                        Populaire
+                      </span>
+                    )}
+                  </div>
 
                   {/* Actions Overlay */}
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleToggleWishlist(product)}
-                      className="bg-white p-3 rounded-full hover:bg-gray-100"
-                    >
-                      <FaHeart className={`${
-                        state.wishlist.find((item) => item._id === product._id)
-                          ? "text-red-500"
-                          : "text-gray-600"
-                      }`} />
-                    </motion.button>
+                  <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleAddToCart(product)}
-                      className="bg-white p-3 rounded-full hover:bg-gray-100"
+                      className="p-2 bg-white rounded-full shadow-lg hover:bg-blue-500 hover:text-white transition-colors"
+                      title="Ajouter au panier"
                     >
-                      <FaShoppingCart className="text-blue-600" />
+                      <FaShoppingCart size={16} />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleToggleWishlist(product)}
+                      className="p-2 bg-white rounded-full shadow-lg hover:bg-red-500 hover:text-white transition-colors"
+                      title="Ajouter aux favoris"
+                    >
+                      <FaHeart className={state.wishlist.find((item) => item._id === product._id) ? "text-red-500" : ""} size={16} />
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleViewProduct(product._id)}
-                      className="bg-white p-3 rounded-full hover:bg-gray-100"
+                      className="p-2 bg-white rounded-full shadow-lg hover:bg-green-500 hover:text-white transition-colors"
+                      title="Voir le produit"
                     >
-                      <FaEye className="text-blue-600" />
+                      <FaEye size={16} />
                     </motion.button>
                   </div>
                 </div>
 
                 <div className="p-4">
-                  <div className="flex items-center gap-1 mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <FaStar
-                        key={i}
-                        className={`${
-                          i < product.rating ? "text-yellow-400" : "text-gray-300"
-                        } w-4 h-4`}
-                      />
-                    ))}
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-1 truncate">
+                  <h3 className="font-semibold text-gray-900 text-sm mb-1 truncate">
                     {product.title}
                   </h3>
-                  <p className="text-sm text-gray-500 mb-2">{product.category}</p>
+                  <p className="text-xs text-gray-500 mb-2 truncate">
+                    {product.shortDescription || product.description}
+                  </p>
                   <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-blue-600">
-                      {product.price} CFA
-                    </span>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleDirectCheckout(product)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    <div className="flex flex-col">
+                      <span className="text-lg font-bold text-blue-600">
+                        {product.price.toLocaleString()} CFA
+                      </span>
+                      {product.compareAtPrice && product.compareAtPrice > product.price && (
+                        <span className="text-xs text-gray-500 line-through">
+                          {product.compareAtPrice.toLocaleString()} CFA
+                        </span>
+                      )}
+                    </div>
+                    {product.rating > 0 && (
+                      <div className="flex items-center">
+                        <FaStar className="text-yellow-400 mr-1" size={14} />
+                        <span className="text-sm text-gray-600">{product.rating.toFixed(1)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bouton Acheter avec effet diagonal et logo */}
+                  <div className="absolute bottom-0 right-0 w-20 h-20 overflow-hidden">
+                    <div 
+                      className="absolute bottom-0 right-0 w-28 h-28 bg-blue-600 transform rotate-45 translate-x-14 translate-y-6 hover:bg-blue-700 transition-colors cursor-pointer"
                     >
-                      Acheter
-                    </motion.button>
+                      <div className="absolute bottom-6 right-14 transform -rotate-45 flex flex-col items-center top-12">
+                        <button
+                          onClick={() => {
+                            if (product.quantity > 0) {
+                              handleBuyNow(product);
+                            }
+                          }}    
+                          disabled={product.quantity === 0}
+                          className={`text-white text-sm font-medium ${product.quantity === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          {product.quantity === 0 ? 'Indisponible' : 'Acheter'}
+                        </button>
+                        <img 
+                          src="/Logo blanc.png" 
+                          alt="Logo" 
+                          className="w-4 h-4 mt-1"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>

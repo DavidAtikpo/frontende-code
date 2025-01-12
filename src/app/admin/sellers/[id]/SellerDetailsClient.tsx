@@ -161,6 +161,14 @@ const SellerDetailsClient = ({ params }: Props) => {
     }
   };
 
+  const normalizeDocumentUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return `${BASE_URL}/uploads/${url.replace(/^[\/\\]?uploads[\/\\]?/, '').replace(/\\/g, '/')}`;
+  };
+
   if (loading || !seller) {
     return <div>Chargement...</div>;
   }
@@ -300,7 +308,7 @@ const SellerDetailsClient = ({ params }: Props) => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(doc.url)}
+                        onClick={() => window.open(normalizeDocumentUrl(doc.url), '_blank', 'noopener,noreferrer')}
                       >
                         <FaDownload className="mr-2" />
                         Télécharger

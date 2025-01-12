@@ -6,20 +6,35 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import axios from "axios";
+import { API_CONFIG } from '@/utils/config';
+
+const { BASE_URL } = API_CONFIG;
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulation d'envoi - à remplacer par l'appel API réel
-    setTimeout(() => {
-      setIsSuccess(true);
+    setError("");
+
+    try {
+      const response = await axios.post(`${BASE_URL}/api/user/forgot-password`, {
+        email: email.trim()
+      });
+
+      if (response.data.success) {
+        setIsSuccess(true);
+      }
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Une erreur est survenue");
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -32,6 +47,12 @@ export default function ForgotPasswordPage() {
               Entrez votre adresse e-mail pour réinitialiser votre mot de passe
             </p>
           </div>
+
+          {error && (
+            <div className="p-3 bg-red-50 text-red-600 rounded-md text-sm">
+              {error}
+            </div>
+          )}
 
           {!isSuccess ? (
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -51,7 +72,7 @@ export default function ForgotPasswordPage() {
                 className="w-full bg-[#1D4ED8] hover:bg-[#1e40af]"
                 disabled={isLoading}
               >
-                {isLoading ? "Envoi en cours..." : "ENVOYER LE CODE"}
+                {isLoading ? "Envoi en cours..." : "ENVOYER LE LIEN"}
               </Button>
             </form>
           ) : (

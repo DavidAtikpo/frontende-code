@@ -13,110 +13,255 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Filter, Download, Edit, Trash } from "lucide-react";
-import { getApiUrl } from '@/utils/api';
 import Image from 'next/image';
 import Link from 'next/link';
+import { API_CONFIG } from "@/utils/config";
+import { getCookie } from "cookies-next";
+import axios from 'axios';
 
-const BASE_URL = `${getApiUrl()}/api`;
+const { BASE_URL } = API_CONFIG;
+
+// Constante pour l'image par défaut
+const DEFAULT_IMAGE = '/placeholder.jpg';
+
+// Fonction pour gérer les URLs des images
+const getImageUrl = (imagePath: string | string[]) => {
+  if (!imagePath) return DEFAULT_IMAGE;
+  
+  try {
+    // Si c'est un tableau, prendre la première image
+    const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
+    if (!path) return DEFAULT_IMAGE;
+  
+    // Si c'est déjà une URL complète
+    if (path.startsWith('http')) {
+      return path;
+    }
+  
+    // Si le chemin commence par 'uploads'
+    if (path.startsWith('uploads')) {
+      return `${BASE_URL}/${path}`;
+    }
+
+    // Pour tout autre cas
+    return `${BASE_URL}/uploads/products/${path.replace(/^\/+/, '')}`;
+  } catch (error) {
+    console.error('Erreur dans getImageUrl:', error);
+    return DEFAULT_IMAGE;
+  }
+};
 
 interface Product {
   id: string;
   name: string;
   price: number;
-  stock: number;
+  quantity: number;
   status: string;
   category: string;
   images: string[];
+  description?: string;
+  createdAt: string;
 }
 
 export default function ProductsPage() {
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
-  const [_categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [_selectedProducts, _setSelectedProducts] = useState<string[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [filter, setFilter] = useState({ status: 'all', category: 'all' });
 
   const fetchProducts = useCallback(async () => {
+    const token = getCookie('token');
+    if (!token) {
+      setIsLoading(false);
+      console.log('No token found');
+      toast({
+        title: "Accès refusé",
+        description: "Vous devez être connecté",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${BASE_URL}/products/seller/products`, {
+      console.log('Fetching products with token:', token?.slice(0, 20) + '...');
+      console.log('Current filters:', filter);
+      
+      const response = await axios.get(API_CONFIG.getFullUrl('/seller/products'), {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`
+        },
+        params: {
+          status: filter.status === 'all' ? undefined : filter.status,
+          category: filter.category === 'all' ? undefined : filter.category
         }
       });
 
-      if (!response.ok) throw new Error("Erreur lors du chargement des produits");
-      const data = await response.json();
-      
-      if (data.success) {
-        setProducts(data.data);
+      console.log('Products API Response:', {
+        status: response.status,
+        success: response.data.success,
+        productsCount: response.data.data?.products?.length || 0,
+        data: response.data
+      });
+
+      if (response.data.success) {
+        const productsData = response.data.data?.products || [];
+        console.log('Setting products:', productsData);
+        setProducts(productsData);
       } else {
-        throw new Error(data.message);
+        console.error('API returned success: false', response.data);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les produits",
+          variant: "destructive",
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Erreur détaillée lors du chargement des produits:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       toast({
         title: "Erreur",
-        description: "Impossible de charger les produits",
+        description: error.response?.data?.message || "Impossible de charger les produits",
         variant: "destructive",
       });
-      console.error(error);
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, filter]);
 
   useEffect(() => {
+    const token = getCookie('token');
+    console.log('UseEffect triggered with token:', token);
     fetchProducts();
   }, [fetchProducts]);
 
-  const _fetchCategories = async () => {
+  const fetchCategories = async () => {
+    const token = getCookie('token');
+    if (!token) return;
+
     try {
-      const response = await fetch(`${BASE_URL}/seller/products/categories`);
-      if (!response.ok) throw new Error("Erreur lors du chargement des catégories");
-      const data = await response.json();
-      setCategories(data.data);
+      const response = await axios.get(API_CONFIG.getFullUrl('/seller/categories'), {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.data.success) {
+        setCategories(response.data.data);
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Erreur lors du chargement des catégories:", error);
     }
   };
 
-  const handleBulkUpdate = async (updates: Partial<Product>[]) => {
-    try {
-      const response = await fetch(`${BASE_URL}/seller/products/bulk-update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products: updates })
-      });
-
-      if (!response.ok) throw new Error("Erreur lors de la mise à jour");
-
-      toast({
-        title: "Succès",
-        description: "Produits mis à jour avec succès",
-      });
-
-      fetchProducts();
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour les produits",
-        variant: "destructive",
-      });
-      console.error(error);
-    }
-  };
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const handleStatusChange = async (productId: string, newStatus: string) => {
-    await handleBulkUpdate([{ id: productId, status: newStatus }]);
+    const token = getCookie('token');
+    if (!token) return;
+
+    try {
+      const response = await axios.put(
+        API_CONFIG.getFullUrl(`/seller/products/${productId}`),
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+      toast({
+        title: "Succès",
+          description: "Statut du produit mis à jour",
+      });
+      fetchProducts();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du statut:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleStockUpdate = async (productId: string, newStock: number) => {
-    await handleBulkUpdate([{ id: productId, stock: newStock }]);
+    const token = getCookie('token');
+    if (!token) return;
+
+    try {
+      const response = await axios.put(
+        API_CONFIG.getFullUrl(`/seller/products/${productId}`),
+        { stock: newStock },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        toast({
+          title: "Succès",
+          description: "Stock mis à jour",
+        });
+        fetchProducts();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du stock:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le stock",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteProduct = async (productId: string) => {
+    const token = getCookie('token');
+    if (!token) return;
+
+    if (!confirm("Êtes-vous sûr de vouloir supprimer ce produit ?")) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(
+        API_CONFIG.getFullUrl(`/seller/products/${productId}`),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        toast({
+          title: "Succès",
+          description: "Produit supprimé avec succès",
+        });
+        fetchProducts();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le produit",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Produits</h1>
@@ -125,10 +270,40 @@ export default function ProductsPage() {
           </p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline">
-            <Filter className="h-4 w-4 mr-2" />
-            Filtres
-          </Button>
+          <div className="flex gap-2">
+            <Select
+              value={filter.status}
+              onValueChange={(value) => setFilter(prev => ({ ...prev, status: value }))}
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Filtrer par statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous</SelectItem>
+                <SelectItem value="active">Actif</SelectItem>
+                <SelectItem value="inactive">Inactif</SelectItem>
+                <SelectItem value="outofstock">Rupture</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filter.category}
+              onValueChange={(value) => setFilter(prev => ({ ...prev, category: value }))}
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Filtrer par catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes</SelectItem>
+                {Array.isArray(categories) && categories.map((cat: any) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Exporter
@@ -161,7 +336,7 @@ export default function ProductsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {products.filter(p => p.stock <= 5).length}
+              {products.filter(p => p.quantity <= 5).length}
             </div>
           </CardContent>
         </Card>
@@ -197,7 +372,9 @@ export default function ProductsPage() {
                 {isLoading ? (
                   <tr>
                     <td colSpan={6} className="p-4 text-center">
-                      Chargement...
+                      <div className="flex justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                      </div>
                     </td>
                   </tr>
                 ) : products.length === 0 ? (
@@ -211,24 +388,35 @@ export default function ProductsPage() {
                     <tr key={product.id} className="border-b">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <Image
-                            src={product.images[0]}
-                            alt={product.name}
-                            width={100}
-                            height={100}
-                            className="object-cover"
-                          />
-                          <span>{product.name}</span>
+                          {product.images?.[0] && (
+                            <img
+                              src={getImageUrl(product.images)}
+                              alt={product.name}
+                              className="w-[100px] h-[100px] object-cover rounded-md"
+                              loading="lazy"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = DEFAULT_IMAGE;
+                              }}
+                            />
+                          )}
+                          <div>
+                            <div className="font-medium">{product.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {product.description?.slice(0, 50)}...
+                            </div>
+                          </div>
                         </div>
                       </td>
                       <td className="p-4">{product.category}</td>
-                      <td className="p-4">{product.price} FCFA</td>
+                      <td className="p-4">{product.price.toLocaleString()} FCFA</td>
                       <td className="p-4">
                         <Input
                           type="number"
-                          value={product.stock}
+                          value={product.quantity}
                           onChange={(e) => handleStockUpdate(product.id, parseInt(e.target.value))}
                           className="w-20"
+                          min="0"
                         />
                       </td>
                       <td className="p-4">
@@ -248,10 +436,16 @@ export default function ProductsPage() {
                       </td>
                       <td className="p-4">
                         <div className="flex gap-2">
+                          <Link href={`/seller/dashboard/products/${product.id}`}>
                           <Button variant="ghost" size="icon">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon">
+                          </Link>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleDeleteProduct(product.id)}
+                          >
                             <Trash className="h-4 w-4" />
                           </Button>
                         </div>

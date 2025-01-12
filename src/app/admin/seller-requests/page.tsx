@@ -39,6 +39,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "react-hot-toast";
 
 
 
@@ -77,6 +78,8 @@ export default function SellerRequests() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [viewingDocument, setViewingDocument] = useState<string | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<{ url: string; title: string } | null>(null);
 
   const fetchRequests = useCallback(async () => {
     try {
@@ -104,7 +107,7 @@ export default function SellerRequests() {
   const handleRequestAction = async (requestId: string, status: 'approved' | 'rejected') => {
     try {
       const response = await fetch(`${BASE_URL}/api/admin/sellers/requests/${requestId}`, {
-        method: 'PUT',
+        method: status === 'rejected' ? 'DELETE' : 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${getCookie('token')}`,
@@ -117,6 +120,7 @@ export default function SellerRequests() {
       });
 
       if (response.ok) {
+        toast.success(status === 'approved' ? 'Demande approuvée' : 'Demande rejetée');
         fetchRequests();
         setSelectedRequest(null);
         setShowRejectDialog(false);
@@ -124,7 +128,16 @@ export default function SellerRequests() {
       }
     } catch (error) {
       console.error('Erreur:', error);
+      toast.error('Une erreur est survenue');
     }
+  };
+
+  const normalizeDocumentUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return `${BASE_URL}/uploads/${url.replace(/^[\/\\]?uploads[\/\\]?/, '').replace(/\\/g, '/')}`;
   };
 
   if (loading) {
@@ -191,14 +204,20 @@ export default function SellerRequests() {
                 <TableCell>
                   <div className="flex gap-2">
                     {Object.entries(request.documents).map(([key, url]) => (
-                      <Button
-                        key={key}
-                        size="sm"
-                        variant="outline"
-                        onClick={() => window.open(url, '_blank')}
-                      >
-                        <FileText className="h-4 w-4" />
-                      </Button>
+                      url && (
+                        <Button
+                          key={key}
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedDocument({ 
+                            url: normalizeDocumentUrl(url),
+                            title: key.replace(/([A-Z])/g, ' $1').trim()
+                          })}
+                          title={`Voir ${key.replace(/([A-Z])/g, ' $1').trim()}`}
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                      )
                     ))}
                   </div>
                 </TableCell>
@@ -345,6 +364,35 @@ export default function SellerRequests() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Affichage du document sélectionné */}
+      {selectedDocument && (
+        <Card className="mt-6">
+          <div className="p-2 border-b">
+            <div className="flex justify-between items-center">
+              <h3 className="text-base font-semibold">
+                Document: {selectedDocument.title}
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedDocument(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <div className="p-2">
+            <div className="w-full h-[400px] border rounded overflow-hidden">
+              <iframe
+                src={selectedDocument.url}
+                className="w-full h-full"
+                title={selectedDocument.title}
+              />
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

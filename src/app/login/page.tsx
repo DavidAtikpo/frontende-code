@@ -43,7 +43,7 @@ export default function LoginPage() {
         localStorage.setItem('refreshToken', data.refreshToken);
         
         setCookie('token', data.accessToken, {
-          maxAge: 3600,
+          maxAge: 7200,
           path: '/',
           secure: true,
           sameSite: 'strict'
