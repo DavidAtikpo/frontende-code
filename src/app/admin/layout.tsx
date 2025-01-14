@@ -139,6 +139,12 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       description: "Gestion des paiements"
     },
     { 
+      icon: CreditCard, 
+      label: "Retraits", 
+      href: "/admin/withdrawals",
+      description: "Validation des demandes de retrait"
+    },
+    { 
       icon: Settings, 
       label: "site-settings", 
       href: "/admin/site-settings",

@@ -9,6 +9,10 @@ import { useToast } from "@/components/ui/use-toast";
 import { History, Filter, Calendar, Package, ShoppingCart, LogIn, X } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { API_CONFIG } from '@/utils/config';
+import { getCookie } from 'cookies-next';
+
+const { BASE_URL } = API_CONFIG;
 
 interface HistoryItem {
   id: string;
@@ -28,6 +32,58 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
   const [filter, setFilter] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({
+    from: null,
+    to: null
+  });
+
+  const fetchHistory = async () => {
+    try {
+      setLoading(true);
+      const token = getCookie('token');
+      
+      let url = `${BASE_URL}/api/seller/history?`;
+      
+      // Ajouter les filtres à l'URL
+      if (filter !== 'all') {
+        url += `type=${filter}&`;
+      }
+      
+      if (dateRange.from) {
+        url += `startDate=${dateRange.from.toISOString()}&`;
+      }
+      
+      if (dateRange.to) {
+        url += `endDate=${dateRange.to.toISOString()}&`;
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération de l\'historique');
+      }
+
+      const data = await response.json();
+      setHistory(data.data);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Une erreur est survenue",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Charger l'historique au chargement et quand les filtres changent
+  useEffect(() => {
+    fetchHistory();
+  }, [filter, dateRange]);
 
   const getIconForType = (type: string) => {
     switch (type) {

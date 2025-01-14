@@ -10,6 +10,9 @@ interface Product {
   title: string;
   images: string[];
   price: number;
+  seller: {
+    id: string;
+  };
 }
 
 interface ProductSectionProps {
@@ -38,7 +41,8 @@ const ProductSection = ({ products }: ProductSectionProps) => {
                   ...product,
                   _id: product.id,
                   quantity: 1,
-                  finalPrice: product.price || 0
+                  finalPrice: product.price || 0,
+                  sellerId: product.seller.id
                 })}
                 className="w-full flex items-center justify-center gap-2 bg-white text-black py-2 rounded-lg hover:bg-gray-100"
               >

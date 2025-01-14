@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { MapPin, Plus, Trash2, Star, StarOff, Pencil } from "lucide-react";
 import { API_CONFIG } from "@/utils/config";
 import { getCookie } from "cookies-next";
-import { parsePhoneNumber, isValidPhoneNumber, CountryCode, getCountries, getCountryCallingCode } from 'libphonenumber-js';
+import { isValidPhoneNumber, CountryCode, getCountries, getCountryCallingCode } from 'libphonenumber-js';
 import { validateEmail } from '@/utils/validation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -93,6 +93,7 @@ export default function AddressesPage() {
         isValid = false;
       }
     } catch (error) {
+      console.error('Erreur lors de la validation du numéro de téléphone:', error);
       setPhoneError("Numéro de téléphone invalide");
       isValid = false;
     }
@@ -166,7 +167,8 @@ export default function AddressesPage() {
         title: "Succès",
         description: "Localisation obtenue avec succès"
       });
-    } catch (error) {
+    } catch (error: unknown) {
+      void error;
       toast({
         title: "Erreur",
         description: "Impossible d'obtenir la localisation",
@@ -218,7 +220,8 @@ export default function AddressesPage() {
         setShowAddForm(false);
         handleReload();
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      void error;
       toast({
         title: "Erreur",
         description: "Une erreur est survenue",
@@ -267,7 +270,8 @@ export default function AddressesPage() {
         });
         fetchAddresses();
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      void error;
       toast({
         title: "Erreur",
         description: "Impossible de supprimer l'adresse",

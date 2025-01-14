@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
@@ -21,7 +21,7 @@ import {
   Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -32,10 +32,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
-import { API_CONFIG } from "@/utils/config";
-import axios from "axios";
-import { getCookie } from "cookies-next";
-const { BASE_URL } = API_CONFIG;
 
 const sidebarLinks = [
   {
@@ -80,19 +76,12 @@ const sidebarLinks = [
   },
 ];
 
-const getAvatarUrl = (avatarPath: string | null | undefined) => {
-  if (!avatarPath) return "/placeholder-avatar.jpg";
-  if (avatarPath.startsWith("http")) return avatarPath;
-  return `${BASE_URL}${avatarPath.startsWith('/') ? avatarPath : `/${avatarPath}`}`;
-};
-
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [validationStatus, setValidationStatus] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -106,157 +95,92 @@ export default function DashboardLayout({
     markAllAsRead 
   } = useNotifications();
 
-  useEffect(() => {
-    const checkValidationStatus = async () => {
-      const token = getCookie('token');
-      if (!token) {
-        console.error('No token found');
-        return;
-      }
-
-      try {
-        console.log('Fetching validation status...');
-        const response = await fetch(`${BASE_URL}/api/seller/validation-status`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include'
-        });
-        const data = await response.json();
-        console.log('Response data:', data);
-        
-        if (data.success) {
-          const status = data.status || (data.data && data.data.status);
-          console.log('Setting validation status to:', status);
-          setValidationStatus(status);
-        }
-      } catch (error) {
-        console.error('Erreur lors de la vérification du statut:', error);
-      }
-    };
-
-    checkValidationStatus();
-  }, []);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-    };
-  }, []);
-
   const handleLogout = async () => {
     await logout();
     router.push('/auth/login');
   };
 
+  // Fermer le menu mobile lors du changement de page
   useEffect(() => {
-    if (validationStatus) {
-      console.log('Current validation status:', validationStatus);
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Empêcher le défilement du body quand le menu mobile est ouvert
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
-  }, [validationStatus]);
+  }, [isMobileMenuOpen]);
 
   return (
-    <div className="min-h-screen bg-gray-100/40">
-      <header className={cn(
-        "fixed z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
-        "top-0"
-      )}>
-        <div className="flex h-16 items-center px-4 md:px-6">
-          <Button 
-            variant="ghost"
-            size="icon"
-            onClick={toggleSidebar}
-            className="md:hidden"
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
-          <Link href="/seller/dashboard" className="mr-8">
-            <Store className="h-6 w-6" />
-          </Link>
-          <div className="ml-auto flex items-center gap-4">
-            {(validationStatus === 'verified' || validationStatus === 'approved' || validationStatus === 'active') && !pathname.includes('/subscription') && (
-              <Button 
+    <div>
+      <header className="fixed top-0 left-0 right-0 bg-white border-b z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <Button
                 variant="ghost"
-                onClick={() => router.push('/seller/dashboard/subscription')}
-                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                size="icon"
+                className="lg:hidden mr-2"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
-                Votre demande a été approuvée. Souscrire à un abonnement pour commencer à vendre
+                {isMobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
               </Button>
-            )}
-            {validationStatus === 'pending' && (
-              <span className="text-yellow-600 text-sm">
-                Demande en cours d'examen
-              </span>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  {isLoading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <>
-                      <Bell className="h-5 w-5" />
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">
-                          {unreadCount > 9 ? '9+' : unreadCount}
-                        </span>
-                      )}
-                    </>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <div className="flex items-center justify-between px-4 py-2 border-b">
-                  <span className="text-sm font-medium">Notifications</span>
-                  {unreadCount > 0 && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={markAllAsRead}
-                    >
-                      Tout marquer comme lu
-                    </Button>
-                  )}
-                </div>
-                <div className="max-h-[300px] overflow-y-auto">
-                  {error ? (
-                    <div className="px-4 py-3 text-sm text-red-500 text-center">
-                      {error}
-                    </div>
-                  ) : notifications.length === 0 ? (
-                    <div className="px-4 py-3 text-sm text-gray-500 text-center">
-                      Aucune nouvelle notification
-                    </div>
-                  ) : (
-                    notifications.map((notif) => (
+              <Link href="/seller/dashboard" className="flex items-center">
+                <Store className="h-6 w-6 mr-2" />
+                <span className="text-xl font-bold text-gray-900">Dashboard Vendeur</span>
+              </Link>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              {/* Notifications */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative">
+                    {isLoading ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Bell className="h-5 w-5" />
+                        {unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <div className="flex items-center justify-between px-4 py-2 border-b">
+                    <span className="text-sm font-medium">Notifications</span>
+                    {unreadCount > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={markAllAsRead}
+                      >
+                        Tout marquer comme lu
+                      </Button>
+                    )}
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    {notifications.map((notif) => (
                       <DropdownMenuItem 
                         key={notif.id}
                         className="px-4 py-3 cursor-pointer"
                         onClick={() => {
-                          if (!notif.read) {
-                            markAsRead(notif.id);
-                          }
-                          if (notif.data?.link) {
-                            router.push(notif.data.link);
-                          }
+                          if (!notif.read) markAsRead(notif.id);
+                          if (notif.data?.link) router.push(notif.data.link);
                         }}
                       >
-                        <div className={cn(
-                          "w-full",
-                          !notif.read && "font-medium"
-                        )}>
+                        <div className={cn("w-full", !notif.read && "font-medium")}>
                           <div className="flex items-start justify-between">
                             <p className="text-sm">{notif.title}</p>
                             {!notif.read && (
@@ -264,122 +188,112 @@ export default function DashboardLayout({
                             )}
                           </div>
                           <p className="text-xs text-gray-500 mt-1">{notif.message}</p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {new Date(notif.createdAt).toLocaleDateString()}
-                          </p>
                         </div>
                       </DropdownMenuItem>
-                    ))
-                  )}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                    ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Avatar>
-                    {user && user.avatar ? (
-                      <AvatarImage 
-                        src={getAvatarUrl(user.avatar)} 
-                        alt={user.name || ''}
-                      />
-                    ) : (
+              {/* User Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Avatar>
                       <AvatarFallback>
                         {user?.name?.charAt(0) || 'U'}
                       </AvatarFallback>
-                    )}
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium">{user?.name}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email}</p>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/seller/profile')}>
-                  Mon profil
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push('/seller/settings')}>
-                  Paramètres
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push('/seller/help')}>
-                  <HelpCircle className="mr-2 h-4 w-4" />
-                  Aide
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Déconnexion
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button 
-              variant="ghost"
-              size="icon"
-              onClick={toggleSidebar}
-              className="hidden md:flex"
-            >
-              <X 
-                className={cn(
-                  "h-4 w-4 transition-transform",
-                  isSidebarOpen ? "" : "rotate-180"
-                )} 
-              />
-            </Button>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium">{user?.name}</p>
+                    <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/seller/profile">Mon profil</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/seller/settings">Paramètres</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/seller/help" className="flex items-center">
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      Aide
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    className="text-red-600 focus:text-red-600"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Déconnexion
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </header>
 
-      <div className={cn(
-        "flex",
-        validationStatus ? "pt-28" : "pt-16"
-      )}>
-        {isMobile && isSidebarOpen && (
+      <div className="min-h-screen bg-gray-50 pt-[80px]">
+        {/* Overlay pour le menu mobile */}
+        {isMobileMenuOpen && (
           <div 
-            className="fixed inset-0 z-30 bg-black/50"
-            onClick={toggleSidebar}
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
           />
         )}
 
+        {/* Sidebar */}
         <aside className={cn(
-          "fixed left-0 z-40 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200",
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full",
-          "transition-transform duration-300 ease-in-out",
-          "md:translate-x-0"
+          "fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform",
+          "transition-transform duration-200 ease-in-out mt-[80px]",
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}>
-          <nav className="space-y-1 p-4">
-            {sidebarLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = pathname === link.href;
-              
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium",
-                    isActive ? 
-                      "bg-gray-100 text-gray-900" : 
-                      "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-                  )}
-                >
-                  <Icon className="h-5 w-5" />
-                  {link.title}
-                </Link>
-              );
-            })}
-          </nav>
+          <div className="h-full flex flex-col">
+            <div className="flex-1 py-4 overflow-y-auto">
+              <nav className="space-y-1 px-4">
+                {sidebarLinks.map((link) => {
+                  const Icon = link.icon;
+                  const isActive = pathname === link.href;
+                  
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium",
+                        isActive ? 
+                          "bg-blue-50 text-blue-600" : 
+                          "text-gray-600 hover:bg-gray-50"
+                      )}
+                    >
+                      <Icon className={cn(
+                        "h-5 w-5",
+                        isActive ? "text-blue-600" : "text-gray-400"
+                      )} />
+                      {link.title}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+          </div>
         </aside>
 
+        {/* Main content */}
         <main className={cn(
-          "flex-1 transition-all duration-300",
-          isSidebarOpen ? "md:ml-64" : "md:ml-0",
-          "p-4 md:p-6"
+          "transition-all duration-200 ease-in-out",
+          "lg:pl-64",
+          isMobileMenuOpen && "lg:pl-64 blur-sm"
         )}>
-          {children}
+          <div className="p-4 md:p-6">
+            {children}
+          </div>
         </main>
       </div>
     </div>

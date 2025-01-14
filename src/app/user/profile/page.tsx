@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { API_CONFIG } from "@/utils/config";
 import { 
   Select,
@@ -157,6 +157,7 @@ export default function UserProfile() {
         throw new Error('Erreur lors de la mise à jour');
       }
     } catch (error) {
+      console.error('Erreur lors de la mise à jour du profil:', error);
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour le profil",
@@ -222,6 +223,7 @@ export default function UserProfile() {
         throw new Error('Erreur lors du téléchargement');
       }
     } catch (error) {
+      console.error('Erreur lors de la mise à jour du profil:', error);
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour la photo",
@@ -312,6 +314,7 @@ export default function UserProfile() {
         });
       }
     } catch (error) {
+      console.error('Erreur lors de la mise à jour des préférences:', error);
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour les préférences",

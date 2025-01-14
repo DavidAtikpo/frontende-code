@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { getCookie } from "cookies-next";
 import {
   Select,
   SelectContent,
@@ -28,10 +29,14 @@ interface OrderStats {
 interface Order {
   id: string;
   orderNumber: string;
-  customerName: string;
   total: number;
   status: string;
   createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
   items: Array<{
     productName: string;
     quantity: number;
@@ -48,12 +53,18 @@ export default function OrdersPage() {
 
   const fetchOrders = useCallback(async () => {
     try {
+      const token = getCookie('token');
       const response = await fetch(
-        `${BASE_URL}/seller/orders?status=${statusFilter}`
+        `${BASE_URL}/seller/orders?status=${statusFilter}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
       );
       if (!response.ok) throw new Error("Erreur lors du chargement des commandes");
       const data = await response.json();
-      setOrders(data.data);
+      setOrders(data.data.orders);
     } catch (error) {
       toast({
         title: "Erreur",
@@ -73,7 +84,15 @@ export default function OrdersPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/seller/orders/stats`);
+      const token = getCookie('token');
+      const response = await fetch(
+        `${BASE_URL}/seller/stats`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
       if (!response.ok) throw new Error("Erreur lors du chargement des statistiques");
       const data = await response.json();
       setStats(data.data);
@@ -84,13 +103,17 @@ export default function OrdersPage() {
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
+      const token = getCookie('token');
       const response = await fetch(`${BASE_URL}/seller/orders/${orderId}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ status: newStatus })
       });
 
-      if (!response.ok) throw new Error("Erreur lors de la mise à jour");
+      if (!response.ok) throw new Error("Erreur lors de la mise à jour du statut");
 
       toast({
         title: "Succès",
@@ -113,9 +136,11 @@ export default function OrdersPage() {
   const getStatusColor = (status: string) => {
     const colors = {
       pending: "bg-yellow-100 text-yellow-800",
-      processing: "bg-blue-100 text-blue-800",
-      completed: "bg-green-100 text-green-800",
-      cancelled: "bg-red-100 text-red-800",
+      preparing: "bg-blue-100 text-blue-800",
+      ready: "bg-purple-100 text-purple-800",
+      delivering: "bg-orange-100 text-orange-800",
+      delivered: "bg-green-100 text-green-800",
+      cancelled: "bg-red-100 text-red-800"
     };
     return colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
@@ -231,8 +256,8 @@ export default function OrdersPage() {
                 ) : (
                   orders.map((order) => (
                     <tr key={order.id} className="border-b">
-                      <td className="p-2 sm:p-4">{order.orderNumber}</td>
-                      <td className="p-2 sm:p-4">{order.customerName}</td>
+                      <td className="p-2 sm:p-4">CMD-{order.id.slice(0, 8)}</td>
+                      <td className="p-2 sm:p-4">{order.user.name}</td>
                       <td className="p-2 sm:p-4 hidden sm:table-cell">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </td>
@@ -252,9 +277,11 @@ export default function OrdersPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="pending">En attente</SelectItem>
-                            <SelectItem value="processing">En cours</SelectItem>
-                            <SelectItem value="completed">Terminée</SelectItem>
-                            <SelectItem value="cancelled">Annulée</SelectItem>
+                            <SelectItem value="preparing">En préparation</SelectItem>
+                            <SelectItem value="ready">Prêt</SelectItem>
+                            <SelectItem value="delivering">En livraison</SelectItem>
+                            <SelectItem value="delivered">Livré</SelectItem>
+                            <SelectItem value="cancelled">Annulé</SelectItem>
                           </SelectContent>
                         </Select>
                       </td>

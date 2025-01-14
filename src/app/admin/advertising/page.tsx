@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import AdForm from "./components/AdForm";
 import AdScheduler from "./components/AdScheduler";
 import AdPreview from "./components/AdPreview";
@@ -10,9 +10,6 @@ import { DataTable } from "@/components/ui/data-table";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { MoreHorizontal, ExternalLink } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 interface Advertisement {
   id: string;
@@ -93,18 +90,14 @@ export default function AdvertisingPage() {
   const [loading, setLoading] = useState(true);
   const [selectedAd, setSelectedAd] = useState<Advertisement | null>(null);
 
-  useEffect(() => {
-    fetchAds();
-  }, []);
-
-  const fetchAds = async () => {
+  const fetchAds = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/advertising');
       const data = await response.json();
       if (response.ok) {
         setAds(data);
       }
-    } catch (error) {
+    } catch (err) {
       toast({
         title: "Erreur",
         description: "Impossible de charger les publicités",
@@ -113,7 +106,11 @@ export default function AdvertisingPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchAds();
+  }, [fetchAds]);
 
   const handleCreateAd = async (formData: FormData) => {
     try {
@@ -130,7 +127,7 @@ export default function AdvertisingPage() {
         });
         fetchAds();
       }
-    } catch (error) {
+    } catch (err) {
       toast({
         title: "Erreur",
         description: "Impossible de créer la publicité",
@@ -160,7 +157,7 @@ export default function AdvertisingPage() {
         });
         fetchAds();
       }
-    } catch (error) {
+    } catch (err) {
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour la planification",

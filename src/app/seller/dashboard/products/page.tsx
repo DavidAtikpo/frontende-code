@@ -58,15 +58,22 @@ interface Product {
   quantity: number;
   status: string;
   category: string;
+  categoryId?: string;
+  categoryName?: string;
   images: string[];
   description?: string;
   createdAt: string;
 }
 
+interface Category {
+  id: string;
+  name: string;
+}
+
 export default function ProductsPage() {
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [filter, setFilter] = useState({ status: 'all', category: 'all' });
@@ -85,8 +92,7 @@ export default function ProductsPage() {
     }
 
     try {
-      console.log('Fetching products with token:', token?.slice(0, 20) + '...');
-      console.log('Current filters:', filter);
+      console.log('Fetching products with filters:', filter);
       
       const response = await axios.get(API_CONFIG.getFullUrl('/seller/products'), {
         headers: {
@@ -94,7 +100,7 @@ export default function ProductsPage() {
         },
         params: {
           status: filter.status === 'all' ? undefined : filter.status,
-          category: filter.category === 'all' ? undefined : filter.category
+          categoryId: filter.category === 'all' ? undefined : filter.category
         }
       });
 
@@ -102,12 +108,14 @@ export default function ProductsPage() {
         status: response.status,
         success: response.data.success,
         productsCount: response.data.data?.products?.length || 0,
-        data: response.data
+        filters: {
+          status: filter.status,
+          category: filter.category
+        }
       });
 
       if (response.data.success) {
         const productsData = response.data.data?.products || [];
-        console.log('Setting products:', productsData);
         setProducts(productsData);
       } else {
         console.error('API returned success: false', response.data);
@@ -288,14 +296,17 @@ export default function ProductsPage() {
 
             <Select
               value={filter.category}
-              onValueChange={(value) => setFilter(prev => ({ ...prev, category: value }))}
+              onValueChange={(value) => {
+                console.log('Selected category:', value);
+                setFilter(prev => ({ ...prev, category: value }));
+              }}
             >
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Filtrer par catégorie" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes</SelectItem>
-                {Array.isArray(categories) && categories.map((cat: any) => (
+                {Array.isArray(categories) && categories.map((cat: Category) => (
                   <SelectItem key={cat.id} value={cat.id}>
                     {cat.name}
                   </SelectItem>
@@ -317,37 +328,37 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+      <div className="grid grid-cols-3 gap-2 mb-2">
+        <Card className="bg-white shadow-sm">
+          <CardHeader className="py-1 px-2">
+            <CardTitle className="text-xs text-muted-foreground">
               Total Produits
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{products.length}</div>
+          <CardContent className="py-1 px-2">
+            <div className="text-base font-bold">{products.length}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+        <Card className="bg-white shadow-sm">
+          <CardHeader className="py-1 px-2">
+            <CardTitle className="text-xs text-muted-foreground">
               Stock Faible
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
+          <CardContent className="py-1 px-2">
+            <div className="text-base font-bold text-yellow-600">
               {products.filter(p => p.quantity <= 5).length}
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+        <Card className="bg-white shadow-sm">
+          <CardHeader className="py-1 px-2">
+            <CardTitle className="text-xs text-muted-foreground">
               Produits Actifs
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+          <CardContent className="py-1 px-2">
+            <div className="text-base font-bold text-green-600">
               {products.filter(p => p.status === 'active').length}
             </div>
           </CardContent>
@@ -408,7 +419,12 @@ export default function ProductsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="p-4">{product.category}</td>
+                      <td className="p-4">
+                        {(() => {
+                          const category = categories.find((cat: Category) => cat.id === product.category);
+                          return category ? category.name : 'Non catégorisé';
+                        })()}
+                      </td>
                       <td className="p-4">{product.price.toLocaleString()} FCFA</td>
                       <td className="p-4">
                         <Input

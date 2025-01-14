@@ -45,7 +45,7 @@ export default function ImageDropzone({
     const newPreviews = acceptedFiles.map(file => URL.createObjectURL(file));
     setPreviews(prev => [...prev, ...newPreviews]);
     onImagesChange(acceptedFiles);
-  }, [onImagesChange]);
+  }, [onImagesChange, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

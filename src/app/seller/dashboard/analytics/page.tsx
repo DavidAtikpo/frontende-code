@@ -19,6 +19,7 @@ import {
   BarChart,
   Bar
 } from 'recharts';
+import { getCookie } from '@/utils/cookies';
 
 const BASE_URL = `${getApiUrl()}/api`;
 
@@ -50,7 +51,12 @@ export default function AnalyticsPage() {
   const fetchAnalytics = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/seller/analytics?period=${period}`);
+      const token = getCookie('token');
+      const response = await fetch(`${BASE_URL}/seller/analytics?period=${period}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (!response.ok) throw new Error("Erreur lors du chargement des analytics");
       const data = await response.json();
       setAnalytics(data.data);

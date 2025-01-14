@@ -11,8 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useToast } from "@/components/ui/use-toast";
-import { Calendar as CalendarIcon, Mail, Users, Edit } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Calendar as CalendarIcon,  Edit } from "lucide-react";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TemplateEditor from './TemplateEditor';
 
@@ -126,6 +126,7 @@ export default function EmailCampaign() {
         selectedUsers: []
       });
     } catch (error) {
+      console.error('Erreur lors de la programmation de la campagne:', error);
       toast({
         title: "Erreur",
         description: "Impossible de programmer la campagne",

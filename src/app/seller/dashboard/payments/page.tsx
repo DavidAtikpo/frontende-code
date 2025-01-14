@@ -8,9 +8,19 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { DateRange } from "react-day-picker";
 import { Download, Wallet, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { getApiUrl } from '@/utils/api';
+import { getCookie } from 'cookies-next';
+import { API_CONFIG } from '@/utils/config';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-const BASE_URL = `${getApiUrl()}/api`;
+const { BASE_URL } = API_CONFIG;
 
 interface PaymentStats {
   totalEarnings: number;
@@ -29,20 +39,39 @@ export default function PaymentsPage() {
   const [stats, setStats] = useState<PaymentStats | null>(null);
   const [_isLoading, setIsLoading] = useState(true);
   const [date, setDate] = useState<DateRange | undefined>();
+  const [isWithdrawalDialogOpen, setIsWithdrawalDialogOpen] = useState(false);
+  const [bankInfo, setBankInfo] = useState({
+    accountName: '',
+    accountNumber: '',
+    bankName: ''
+  });
 
   const fetchPaymentStats = useCallback(async () => {
     try {
-      const response = await fetch(`${BASE_URL}/seller/payments/stats`);
-      if (!response.ok) throw new Error("Erreur lors du chargement des statistiques");
+      const token = getCookie('token');
+      const response = await fetch(`${BASE_URL}/api/seller/payments/stat`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erreur lors du chargement des statistiques");
+      }
+      
       const data = await response.json();
       setStats(data.data);
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Impossible de charger les statistiques",
+        description: error instanceof Error ? error.message : "Impossible de charger les statistiques",
         variant: "destructive",
       });
-      console.error(error);
+      console.error('Fetch error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -54,27 +83,40 @@ export default function PaymentsPage() {
 
   const handleWithdrawalRequest = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/seller/payments/withdraw`, {
+      if (!bankInfo.accountName || !bankInfo.accountNumber || !bankInfo.bankName) {
+        throw new Error("Veuillez remplir toutes les informations bancaires");
+      }
+
+      const token = getCookie('token');
+      const response = await fetch(`${BASE_URL}/api/seller/payments/withdraw`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
-          amount: stats?.pendingAmount,
-          bankInfo: {} // À compléter avec les infos bancaires
+          amount: stats?.totalEarnings,
+          paymentMethod: 'bank_transfer',
+          bankInfo: bankInfo
         })
       });
 
-      if (!response.ok) throw new Error("Erreur lors de la demande de retrait");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erreur lors de la demande de retrait");
+      }
 
       toast({
         title: "Succès",
         description: "Demande de retrait envoyée avec succès",
       });
 
+      setIsWithdrawalDialogOpen(false);
       fetchPaymentStats();
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Impossible de traiter la demande de retrait",
+        description: error instanceof Error ? error.message : "Impossible de traiter la demande de retrait",
         variant: "destructive",
       });
       console.error(error);
@@ -126,6 +168,59 @@ export default function PaymentsPage() {
               <ArrowUpRight className="h-4 w-4 mr-1" />
               +12.5% vs mois dernier
             </div>
+            <Dialog open={isWithdrawalDialogOpen} onOpenChange={setIsWithdrawalDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={!stats?.totalEarnings}
+                  className="mt-2 w-full sm:w-auto"
+                >
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Demander un retrait
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Informations bancaires pour le retrait</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bankName">Nom de la banque</Label>
+                    <Input
+                      id="bankName"
+                      placeholder="Ex: ECOBANK"
+                      value={bankInfo.bankName}
+                      onChange={(e) => setBankInfo(prev => ({ ...prev, bankName: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="accountName">Nom du compte</Label>
+                    <Input
+                      id="accountName"
+                      placeholder="Ex: John DOE"
+                      value={bankInfo.accountName}
+                      onChange={(e) => setBankInfo(prev => ({ ...prev, accountName: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="accountNumber">Numéro de compte</Label>
+                    <Input
+                      id="accountNumber"
+                      placeholder="Ex: CI123456789"
+                      value={bankInfo.accountNumber}
+                      onChange={(e) => setBankInfo(prev => ({ ...prev, accountNumber: e.target.value }))}
+                    />
+                  </div>
+                  <Button 
+                    className="w-full mt-4" 
+                    onClick={handleWithdrawalRequest}
+                  >
+                    Confirmer le retrait de {stats?.totalEarnings} FCFA
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
         <Card>
@@ -138,16 +233,6 @@ export default function PaymentsPage() {
             <div className="text-2xl font-bold">
               {stats?.pendingAmount} FCFA
             </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleWithdrawalRequest}
-              disabled={!stats?.pendingAmount}
-              className="mt-2 w-full sm:w-auto"
-            >
-              <Wallet className="h-4 w-4 mr-2" />
-              Demander un retrait
-            </Button>
           </CardContent>
         </Card>
         <Card>

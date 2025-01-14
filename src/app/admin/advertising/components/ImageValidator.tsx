@@ -10,7 +10,7 @@ interface ImageValidatorProps {
 
 export default function ImageValidator({ file, type, onValidation }: ImageValidatorProps) {
   const [validating, setValidating] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   useEffect(() => {
     const validateImage = async () => {
