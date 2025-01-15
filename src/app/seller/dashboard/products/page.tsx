@@ -33,20 +33,20 @@ const getImageUrl = (imagePath: string | string[]) => {
     const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
     if (!path) return DEFAULT_IMAGE;
   
-    // Si c'est déjà une URL complète
-    if (path.startsWith('http')) {
+    // Si c'est déjà une URL complète (http ou https)
+    if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
   
-    // Si le chemin commence par 'uploads'
-    if (path.startsWith('uploads')) {
-      return `${BASE_URL}/${path}`;
+    // Si le chemin commence par '/uploads' ou 'uploads'
+    if (path.startsWith('/uploads') || path.startsWith('uploads')) {
+      return `${BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
     }
 
-    // Pour tout autre cas
+    // Pour tout autre cas, construire l'URL complète
     return `${BASE_URL}/uploads/products/${path.replace(/^\/+/, '')}`;
   } catch (error) {
-    console.error('Erreur dans getImageUrl:', error);
+    console.error('Erreur dans getImageUrl:', error, 'Path:', imagePath);
     return DEFAULT_IMAGE;
   }
 };
@@ -57,9 +57,16 @@ interface Product {
   price: number;
   quantity: number;
   status: string;
-  category: string;
-  categoryId?: string;
-  categoryName?: string;
+  categoryId: string;
+  subcategoryId: string;
+  category?: {
+    id: string;
+    name: string;
+  };
+  subcategory?: {
+    id: string;
+    name: string;
+  };
   images: string[];
   description?: string;
   createdAt: string;
@@ -70,13 +77,20 @@ interface Category {
   name: string;
 }
 
+interface Subcategory {
+  id: string;
+  name: string;
+  categoryId: string;
+}
+
 export default function ProductsPage() {
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [filter, setFilter] = useState({ status: 'all', category: 'all' });
+  const [filter, setFilter] = useState({ status: 'all', category: 'all', subcategory: 'all' });
 
   const fetchProducts = useCallback(async () => {
     const token = getCookie('token');
@@ -100,7 +114,8 @@ export default function ProductsPage() {
         },
         params: {
           status: filter.status === 'all' ? undefined : filter.status,
-          categoryId: filter.category === 'all' ? undefined : filter.category
+          categoryId: filter.category === 'all' ? undefined : filter.category,
+          subcategoryId: filter.subcategory === 'all' ? undefined : filter.subcategory
         }
       });
 
@@ -108,10 +123,7 @@ export default function ProductsPage() {
         status: response.status,
         success: response.data.success,
         productsCount: response.data.data?.products?.length || 0,
-        filters: {
-          status: filter.status,
-          category: filter.category
-        }
+        filters: filter
       });
 
       if (response.data.success) {
@@ -165,9 +177,39 @@ export default function ProductsPage() {
     }
   };
 
+  const fetchSubcategories = async (categoryId?: string) => {
+    const token = getCookie('token');
+    if (!token) return;
+
+    try {
+      const url = categoryId 
+        ? API_CONFIG.getFullUrl(`/seller/subcategories/${categoryId}`)
+        : API_CONFIG.getFullUrl('/seller/subcategories');
+      
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.data.success) {
+        setSubcategories(response.data.data);
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des sous-catégories:", error);
+    }
+  };
+
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    if (filter.category !== 'all') {
+      fetchSubcategories(filter.category);
+    } else {
+      setSubcategories([]);
+    }
+  }, [filter.category]);
 
   const handleStatusChange = async (productId: string, newStatus: string) => {
     const token = getCookie('token');
@@ -298,7 +340,7 @@ export default function ProductsPage() {
               value={filter.category}
               onValueChange={(value) => {
                 console.log('Selected category:', value);
-                setFilter(prev => ({ ...prev, category: value }));
+                setFilter(prev => ({ ...prev, category: value, subcategory: 'all' }));
               }}
             >
               <SelectTrigger className="w-[150px]">
@@ -306,13 +348,32 @@ export default function ProductsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes</SelectItem>
-                {Array.isArray(categories) && categories.map((cat: Category) => (
+                {categories.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
                     {cat.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
+            {filter.category !== 'all' && (
+              <Select
+                value={filter.subcategory}
+                onValueChange={(value) => setFilter(prev => ({ ...prev, subcategory: value }))}
+              >
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Sous-catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes</SelectItem>
+                  {subcategories.map((subcat) => (
+                    <SelectItem key={subcat.id} value={subcat.id}>
+                      {subcat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <Button variant="outline">
@@ -373,6 +434,7 @@ export default function ProductsPage() {
                 <tr className="border-b bg-muted/50">
                   <th className="p-4 text-left">Produit</th>
                   <th className="p-4 text-left">Catégorie</th>
+                  <th className="p-4 text-left">Sous-catégorie</th>
                   <th className="p-4 text-left">Prix</th>
                   <th className="p-4 text-left">Stock</th>
                   <th className="p-4 text-left">Statut</th>
@@ -420,10 +482,10 @@ export default function ProductsPage() {
                         </div>
                       </td>
                       <td className="p-4">
-                        {(() => {
-                          const category = categories.find((cat: Category) => cat.id === product.category);
-                          return category ? category.name : 'Non catégorisé';
-                        })()}
+                        {categories.find(cat => cat.id === product.categoryId)?.name || 'Non catégorisé'}
+                      </td>
+                      <td className="p-4">
+                        {product.subcategory?.name || subcategories.find(subcat => subcat.id === product.subcategoryId)?.name || 'Non spécifié'}
                       </td>
                       <td className="p-4">{product.price.toLocaleString()} FCFA</td>
                       <td className="p-4">

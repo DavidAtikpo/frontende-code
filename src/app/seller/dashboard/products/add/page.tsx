@@ -29,6 +29,12 @@ interface Category {
   name: string;
 }
 
+interface Subcategory {
+  id: string;
+  name: string;
+  categoryId: string;
+}
+
 interface NutritionalInfo {
   calories: number | null;
   proteins: number | null;
@@ -36,21 +42,7 @@ interface NutritionalInfo {
   fats: number | null;
   fiber: number | null;
   sodium: number | null;
-  allergens: string[];
   servingSize: string | null;
-}
-
-interface Temperature {
-  min: number | null;
-  max: number | null;
-  unit: '°C' | '°F';
-}
-
-interface Packaging {
-  type: string | null;
-  material: string | null;
-  weight: number | null;
-  units: string | null;
 }
 
 interface ProductFormData {
@@ -61,31 +53,19 @@ interface ProductFormData {
   compareAtPrice: string;
   quantity: string;
   categoryId: string;
+  subcategoryId: string;
   description: string;
   shortDescription: string;
   featured: boolean;
   
   // Food info
   nutritionalInfo: NutritionalInfo;
-  temperature: Temperature;
-  packaging: Packaging;
   productType: string;
-  storageConditions: string;
-  expirationDate: string;
-  shelfLife: string;
   origin: string;
   certifications: string;
   preparationTime: string;
   cookingInstructions: string;
   ingredients: string;
-  
-  // Shipping info
-  weight: string;
-  dimensions: {
-    length: string;
-    width: string;
-    height: string;
-  };
   
   // SEO info
   seoTitle: string;
@@ -98,6 +78,7 @@ export default function AddProduct() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -111,49 +92,27 @@ export default function AddProduct() {
     compareAtPrice: '',
     quantity: '',
     categoryId: '',
+    subcategoryId: '',
     description: '',
     shortDescription: '',
     featured: false,
 
     // Food info
     nutritionalInfo: {
-    calories: null,
-    proteins: null,
-    carbohydrates: null,
-    fats: null,
-    fiber: null,
-    sodium: null,
-    allergens: [],
-    servingSize: null
-    },
-    temperature: {
-    min: null,
-    max: null,
-    unit: '°C'
-    },
-    packaging: {
-    type: null,
-    material: null,
-    weight: null,
-    units: null
+      calories: null,
+      proteins: null,
+      carbohydrates: null,
+      fats: null,
+      fiber: null,
+      sodium: null,
+      servingSize: null
     },
     productType: '',
-    storageConditions: '',
-    expirationDate: '',
-    shelfLife: '',
     origin: '',
     certifications: '',
     preparationTime: '',
     cookingInstructions: '',
     ingredients: '',
-    
-    // Shipping info
-    weight: '',
-    dimensions: {
-      length: '',
-      width: '',
-      height: ''
-    },
     
     // SEO info
     seoTitle: '',
@@ -191,6 +150,38 @@ export default function AddProduct() {
     fetchCategories();
   }, [toast]);
 
+  // Chargement des sous-catégories quand une catégorie est sélectionnée
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      if (!formData.categoryId) return;
+      
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/api/seller/subcategories/${formData.categoryId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Erreur lors du chargement des sous-catégories');
+        }
+
+        const data = await response.json();
+        setSubcategories(data.data);
+      } catch (error) {
+        console.error('Erreur:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les sous-catégories",
+          variant: "destructive"
+        });
+      }
+    };
+
+    fetchSubcategories();
+  }, [formData.categoryId, toast]);
+
   // Génération automatique du SKU basé sur le nom du produit
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
@@ -221,33 +212,16 @@ export default function AddProduct() {
   };
 
   const handleNutritionalInfoChange = (field: keyof NutritionalInfo, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      nutritionalInfo: {
-        ...prev.nutritionalInfo,
-        [field]: value
-      }
-    }));
-  };
-
-  const handleTemperatureChange = (field: keyof Temperature, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      temperature: {
-        ...prev.temperature,
-        [field]: value
-      }
-    }));
-  };
-
-  const handlePackagingChange = (field: keyof Packaging, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      packaging: {
-        ...prev.packaging,
-        [field]: value
-      }
-    }));
+    if (field === 'calories' || field === 'proteins' || field === 'carbohydrates' || 
+        field === 'fats' || field === 'fiber' || field === 'sodium' || field === 'servingSize') {
+      setFormData(prev => ({
+        ...prev,
+        nutritionalInfo: {
+          ...prev.nutritionalInfo,
+          [field]: value
+        }
+      }));
+    }
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -369,7 +343,6 @@ export default function AddProduct() {
           <TabsTrigger value="basic">Informations de base</TabsTrigger>
           <TabsTrigger value="media">Médias</TabsTrigger>
           <TabsTrigger value="food">Informations alimentaires</TabsTrigger>
-          <TabsTrigger value="shipping">Expédition</TabsTrigger>
           <TabsTrigger value="seo">SEO</TabsTrigger>
         </TabsList>
 
@@ -450,7 +423,7 @@ export default function AddProduct() {
                   <Select 
                     name="categoryId" 
                     value={formData.categoryId}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, categoryId: value }))}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, categoryId: value, subcategoryId: '' }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner une catégorie" />
@@ -459,6 +432,27 @@ export default function AddProduct() {
                       {categories.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
                           {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="subcategoryId">Sous-catégorie</Label>
+                  <Select 
+                    name="subcategoryId" 
+                    value={formData.subcategoryId}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, subcategoryId: value }))}
+                    disabled={!formData.categoryId || subcategories.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner une sous-catégorie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subcategories.map((subcategory) => (
+                        <SelectItem key={subcategory.id} value={subcategory.id}>
+                          {subcategory.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -597,55 +591,6 @@ export default function AddProduct() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="storageConditions">Conditions de stockage</Label>
-                  <Select name="storageConditions" defaultValue="ambiant">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner les conditions" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ambiant">Ambiant</SelectItem>
-                      <SelectItem value="réfrigéré">Réfrigéré</SelectItem>
-                      <SelectItem value="congelé">Congelé</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Température de conservation</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Min"
-                      value={formData.temperature.min || ''}
-                      onChange={(e) => handleTemperatureChange('min', e.target.value ? Number(e.target.value) : null)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Max"
-                      value={formData.temperature.max || ''}
-                      onChange={(e) => handleTemperatureChange('max', e.target.value ? Number(e.target.value) : null)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="expirationDate">Date d'expiration</Label>
-                  <Input
-                    type="date"
-                    name="expirationDate"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="shelfLife">Durée de conservation (jours)</Label>
-                  <Input
-                    type="number"
-                    name="shelfLife"
-                    min="0"
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="origin">Origine</Label>
                   <Input
                     name="origin"
@@ -718,62 +663,12 @@ export default function AddProduct() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Allergènes</Label>
-                  <Input
-                    placeholder="Séparés par des virgules"
-                    value={formData.nutritionalInfo.allergens.join(',')}
-                    onChange={(e) => handleNutritionalInfoChange('allergens', e.target.value.split(',').map(a => a.trim()).filter(Boolean))}
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label>Portion</Label>
                   <Input
                     placeholder="Ex: 100g"
                     value={formData.nutritionalInfo.servingSize || ''}
                     onChange={(e) => handleNutritionalInfoChange('servingSize', e.target.value || null)}
                   />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="font-semibold">Emballage</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Type d'emballage</Label>
-                    <Input
-                      placeholder="Ex: Barquette"
-                      value={formData.packaging.type || ''}
-                      onChange={(e) => handlePackagingChange('type', e.target.value || null)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Matériau</Label>
-                    <Input
-                      placeholder="Ex: Plastique"
-                      value={formData.packaging.material || ''}
-                      onChange={(e) => handlePackagingChange('material', e.target.value || null)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Poids</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      placeholder="Poids"
-                      value={formData.packaging.weight || ''}
-                      onChange={(e) => handlePackagingChange('weight', e.target.value ? Number(e.target.value) : null)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Unité</Label>
-                    <Input
-                      placeholder="Ex: kg"
-                      value={formData.packaging.units || ''}
-                      onChange={(e) => handlePackagingChange('units', e.target.value || null)}
-                    />
-                  </div>
                 </div>
               </div>
 
@@ -808,51 +703,6 @@ export default function AddProduct() {
                   name="ingredients"
                   placeholder="Liste des ingrédients"
                 />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="shipping">
-          <Card>
-            <CardContent className="space-y-4 pt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="weight">Poids (kg)</Label>
-                  <Input
-                    type="number"
-                    name="weight"
-                    min="0"
-                    step="0.1"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Dimensions</Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Input
-                      type="number"
-                      name="dimensions.length"
-                      placeholder="Longueur"
-                      min="0"
-                      step="0.1"
-                    />
-                    <Input
-                      type="number"
-                      name="dimensions.width"
-                      placeholder="Largeur"
-                      min="0"
-                      step="0.1"
-                    />
-                    <Input
-                      type="number"
-                      name="dimensions.height"
-                      placeholder="Hauteur"
-                      min="0"
-                      step="0.1"
-                    />
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
