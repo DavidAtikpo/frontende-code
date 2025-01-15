@@ -254,7 +254,7 @@ export default function EditProductPage() {
 
     try {
       const response = await axios.put(
-        API_CONFIG.getFullUrl(`/seller/products/${id}`),
+        API_CONFIG.getFullUrl(`/products/update-product/${id}`),
         formData,
         {
           headers: { 
