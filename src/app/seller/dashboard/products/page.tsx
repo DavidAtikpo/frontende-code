@@ -46,7 +46,12 @@ const getImageUrl = (imagePath: string | string[]) => {
       return `http://localhost:5000/${cleanPath}`;
     }
 
-    // En production
+    // En production, s'assurer que le chemin commence par 'uploads'
+    if (!cleanPath.startsWith('uploads/')) {
+      return `${BASE_URL}/uploads/${cleanPath}`;
+    }
+
+    // Si le chemin commence déjà par 'uploads'
     return `${BASE_URL}/${cleanPath}`;
 
   } catch (error) {

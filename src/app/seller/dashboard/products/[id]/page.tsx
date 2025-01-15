@@ -79,20 +79,29 @@ const getImageUrl = (imagePath: string) => {
   if (!imagePath) return DEFAULT_IMAGE;
   
   try {
-    // Si c'est déjà une URL complète
-    if (imagePath.startsWith('http')) {
+    // Si c'est déjà une URL complète (http ou https)
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
       return imagePath;
     }
 
-    // Si le chemin commence par 'uploads'
-    if (imagePath.startsWith('uploads')) {
-      return `${BASE_URL}/${imagePath}`;
+    // Nettoyer le chemin de l'image
+    const cleanPath = imagePath.replace(/^\/+/, '').replace(/\\/g, '/');
+
+    // Si nous sommes en développement (localhost)
+    if (BASE_URL.includes('localhost')) {
+      return `http://localhost:5000/${cleanPath}`;
     }
 
-    // Pour tout autre cas
-    return `${BASE_URL}/uploads/products/${imagePath.replace(/^\/+/, '')}`;
+    // En production, s'assurer que le chemin commence par 'uploads'
+    if (!cleanPath.startsWith('uploads/')) {
+      return `${BASE_URL}/uploads/${cleanPath}`;
+    }
+
+    // Si le chemin commence déjà par 'uploads'
+    return `${BASE_URL}/${cleanPath}`;
+
   } catch (error) {
-    console.error('Erreur dans getImageUrl:', error);
+    console.error('Erreur dans getImageUrl:', error, 'Path:', imagePath);
     return DEFAULT_IMAGE;
   }
 };
