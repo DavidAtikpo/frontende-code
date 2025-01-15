@@ -40,11 +40,16 @@ const getImageUrl = (imagePath: string | string[]) => {
   
     // Si le chemin commence par '/uploads' ou 'uploads'
     if (path.startsWith('/uploads') || path.startsWith('uploads')) {
-      return `${BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+      // Assurez-vous que l'URL de base se termine sans slash
+      const baseUrl = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
+      // Assurez-vous que le chemin commence par un slash
+      const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+      return `${baseUrl}${normalizedPath}`;
     }
 
     // Pour tout autre cas, construire l'URL complète
-    return `${BASE_URL}/uploads/products/${path.replace(/^\/+/, '')}`;
+    const baseUrl = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
+    return `${baseUrl}/uploads/products/${path.replace(/^\/+/, '')}`;
   } catch (error) {
     console.error('Erreur dans getImageUrl:', error, 'Path:', imagePath);
     return DEFAULT_IMAGE;
@@ -182,34 +187,51 @@ export default function ProductsPage() {
     if (!token) return;
 
     try {
-      const url = categoryId 
-        ? API_CONFIG.getFullUrl(`/seller/subcategories/${categoryId}`)
-        : API_CONFIG.getFullUrl('/seller/subcategories');
+      if (!categoryId || categoryId === 'all') {
+        setSubcategories([]);
+        return;
+      }
+
+      const url = API_CONFIG.getFullUrl(`/seller/subcategories/${categoryId}`);
+      console.log('Fetching subcategories for category:', categoryId);
       
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
+
       if (response.data.success) {
+        console.log('Subcategories loaded:', response.data.data);
         setSubcategories(response.data.data);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors du chargement des sous-catégories:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les sous-catégories",
+        variant: "destructive",
+      });
     }
   };
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
+  // Charger les sous-catégories quand la catégorie change
   useEffect(() => {
     if (filter.category !== 'all') {
       fetchSubcategories(filter.category);
     } else {
-      setSubcategories([]);
+      setSubcategories([]); // Vider les sous-catégories quand aucune catégorie n'est sélectionnée
     }
   }, [filter.category]);
+
+  // Dans la partie du rendu, ajoutons un log pour voir les sous-catégories disponibles
+  useEffect(() => {
+    console.log('Current subcategories:', subcategories);
+  }, [subcategories]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const handleStatusChange = async (productId: string, newStatus: string) => {
     const token = getCookie('token');
@@ -463,20 +485,29 @@ export default function ProductsPage() {
                         <div className="flex items-center gap-3">
                           {product.images?.[0] && (
                             <img
-                              src={getImageUrl(product.images)}
+                              src={(() => {
+                                const url = getImageUrl(product.images);
+                                console.log('Image URL:', {
+                                  original: product.images,
+                                  processed: url,
+                                  baseUrl: BASE_URL
+                                });
+                                return url;
+                              })()}
                               alt={product.name}
                               className="w-[100px] h-[100px] object-cover rounded-md"
                               loading="lazy"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 target.src = DEFAULT_IMAGE;
+                                console.log('Image load error for:', product.images);
                               }}
                             />
                           )}
                           <div>
                             <div className="font-medium">{product.name}</div>
                             <div className="text-sm text-muted-foreground">
-                              {product.description?.slice(0, 50)}...
+                              {/* {product.description?.slice(0, 50)}... */}
                             </div>
                           </div>
                         </div>
@@ -485,7 +516,7 @@ export default function ProductsPage() {
                         {categories.find(cat => cat.id === product.categoryId)?.name || 'Non catégorisé'}
                       </td>
                       <td className="p-4">
-                        {product.subcategory?.name || subcategories.find(subcat => subcat.id === product.subcategoryId)?.name || 'Non spécifié'}
+                        {subcategories.find(sub => sub.id === product.subcategoryId)?.name || 'Non spécifié'}
                       </td>
                       <td className="p-4">{product.price.toLocaleString()} FCFA</td>
                       <td className="p-4">
