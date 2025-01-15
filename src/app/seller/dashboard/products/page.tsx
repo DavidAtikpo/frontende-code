@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Filter, Download, Edit, Trash } from "lucide-react";
-import Image from 'next/image';
+// import Image from 'next/image';
 import Link from 'next/link';
 import { API_CONFIG } from "@/utils/config";
 import { getCookie } from "cookies-next";
