@@ -2,17 +2,26 @@
 const nextConfig = {
   images: {
     unoptimized: true,
-    domains: ['localhost', 'api.dubon.store', 'dubon-server.onrender.com'],
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '**',
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '5000',
+        pathname: '/uploads/**',
       },
       {
-        protocol: 'http',
-        hostname: '**',
+        protocol: 'https',
+        hostname: 'dubon-server.onrender.com',
+        port: '',
+        pathname: '/uploads/**',
       },
-    ],
+      {
+        protocol: 'https',
+        hostname: 'api.dubonservice.com',
+        port: '',
+        pathname: '/uploads/**',
+      }
+    ]
   },
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://dubon-server.onrender.com',
@@ -33,18 +42,7 @@ const nextConfig = {
       type: 'asset/resource'
     });
     return config;
-  },
-  images: {
-    domains: ['localhost', process.env.NEXT_PUBLIC_API_HOST || 'localhost'],
-    remotePatterns: [
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '5000',
-        pathname: '/uploads/**',
-      },
-    ],
-  },
+  }
 };
 
 module.exports = nextConfig; 

@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthTabs from "../components/auth/AuthTabs";
 import Image from "next/image"
-import {  setCookie } from "cookies-next";
+import { setCookie } from "cookies-next";
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from 'next/navigation';
 import { API_CONFIG } from '@/utils/config';
+import { getAndClearRedirectUrl } from "@/utils/auth";
 
 const { BASE_URL } = API_CONFIG;
 
@@ -39,9 +40,11 @@ export default function LoginPage() {
 
       const data = await response.json();
       if (data.success) {
+        // Stocker les tokens dans localStorage
         localStorage.setItem('token', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);
         
+        // Stocker aussi dans les cookies
         setCookie('token', data.accessToken, {
           maxAge: 18000,
           path: '/',
@@ -56,6 +59,7 @@ export default function LoginPage() {
           sameSite: 'strict'
         });
         
+        // Stocker les données utilisateur
         localStorage.setItem('userData', JSON.stringify({
           id: data.user.id,
           name: data.user.name,
@@ -64,12 +68,19 @@ export default function LoginPage() {
           profilePhotoUrl: data.user.avatar || null
         }));
 
-        if (data.user.role === 'admin') {
-          router.push('/admin/dashboard');
-        } else if (data.user.role === 'seller') {
-          router.push('/seller/dashboard');
+        // Vérifier s'il y a une URL de redirection
+        const redirectUrl = getAndClearRedirectUrl();
+        if (redirectUrl) {
+          router.push(redirectUrl);
         } else {
-          router.push('/user/dashboard');
+          // Redirection basée sur le rôle si pas d'URL de redirection
+          if (data.user.role === 'admin') {
+            router.push('/admin/dashboard');
+          } else if (data.user.role === 'seller') {
+            router.push('/seller/dashboard');
+          } else {
+            router.push('/user/dashboard');
+          }
         }
       } else {
         setError(data.message || "Échec de la connexion");

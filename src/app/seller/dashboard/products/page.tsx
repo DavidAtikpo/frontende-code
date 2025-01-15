@@ -21,8 +21,8 @@ import axios from 'axios';
 
 const { BASE_URL } = API_CONFIG;
 
-// Constante pour l'image par défaut
-const DEFAULT_IMAGE = '/placeholder.jpg';
+// Constante pour l'image par défaut (utiliser une URL statique)
+const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDEwMEM4OC45NTQzIDEwMCA4MCAxMDguOTU0IDgwIDEyMEM4MCAxMzEuMDQ2IDg4Ljk1NDMgMTQwIDEwMCAxNDBDMTExLjA0NiAxNDAgMTIwIDEzMS4wNDYgMTIwIDEyMEMxMjAgMTA4Ljk1NCAxMTEuMDQ2IDEwMCAxMDAgMTAwWk04NSAxMjBDODUgMTExLjcxNiA5MS43MTU3IDEwNSAxMDAgMTA1QzEwOC4yODQgMTA1IDExNSAxMTEuNzE2IDExNSAxMjBDMTE1IDEyOC4yODQgMTA4LjI4NCAxMzUgMTAwIDEzNUM5MS43MTU3IDEzNSA4NSAxMjguMjg0IDg1IDEyMFoiIGZpbGw9IiM5Q0EzQUYiLz48L3N2Zz4=';
 
 // Fonction pour gérer les URLs des images
 const getImageUrl = (imagePath: string | string[]) => {
@@ -32,24 +32,23 @@ const getImageUrl = (imagePath: string | string[]) => {
     // Si c'est un tableau, prendre la première image
     const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
     if (!path) return DEFAULT_IMAGE;
-  
+
     // Si c'est déjà une URL complète (http ou https)
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
-  
-    // Si le chemin commence par '/uploads' ou 'uploads'
-    if (path.startsWith('/uploads') || path.startsWith('uploads')) {
-      // Assurez-vous que l'URL de base se termine sans slash
-      const baseUrl = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
-      // Assurez-vous que le chemin commence par un slash
-      const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-      return `${baseUrl}${normalizedPath}`;
+
+    // Nettoyer le chemin de l'image
+    const cleanPath = path.replace(/^\/+/, '').replace(/\\/g, '/');
+
+    // Si nous sommes en développement (localhost)
+    if (BASE_URL.includes('localhost')) {
+      return `http://localhost:5000/${cleanPath}`;
     }
 
-    // Pour tout autre cas, construire l'URL complète
-    const baseUrl = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
-    return `${baseUrl}/uploads/products/${path.replace(/^\/+/, '')}`;
+    // En production
+    return `${BASE_URL}/${cleanPath}`;
+
   } catch (error) {
     console.error('Erreur dans getImageUrl:', error, 'Path:', imagePath);
     return DEFAULT_IMAGE;
@@ -334,20 +333,20 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Produits</h1>
           <p className="text-muted-foreground">
             Gérez votre catalogue de produits
           </p>
         </div>
-        <div className="flex gap-4">
-          <div className="flex gap-2">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-2">
             <Select
               value={filter.status}
               onValueChange={(value) => setFilter(prev => ({ ...prev, status: value }))}
             >
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-full md:w-[150px]">
                 <SelectValue placeholder="Filtrer par statut" />
               </SelectTrigger>
               <SelectContent>
@@ -361,11 +360,10 @@ export default function ProductsPage() {
             <Select
               value={filter.category}
               onValueChange={(value) => {
-                console.log('Selected category:', value);
                 setFilter(prev => ({ ...prev, category: value, subcategory: 'all' }));
               }}
             >
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-full md:w-[150px]">
                 <SelectValue placeholder="Filtrer par catégorie" />
               </SelectTrigger>
               <SelectContent>
@@ -383,7 +381,7 @@ export default function ProductsPage() {
                 value={filter.subcategory}
                 onValueChange={(value) => setFilter(prev => ({ ...prev, subcategory: value }))}
               >
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-full md:w-[150px]">
                   <SelectValue placeholder="Sous-catégorie" />
                 </SelectTrigger>
                 <SelectContent>
@@ -398,20 +396,22 @@ export default function ProductsPage() {
             )}
           </div>
 
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          <Link href="/seller/dashboard/products/add">
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouveau produit
+          <div className="flex gap-2">
+            <Button variant="outline" className="w-full md:w-auto">
+              <Download className="h-4 w-4 mr-2" />
+              Exporter
             </Button>
-          </Link>
+            <Link href="/seller/dashboard/products/add" className="w-full md:w-auto">
+              <Button className="w-full">
+                <Plus className="h-4 w-4 mr-2" />
+                Nouveau produit
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 mb-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
         <Card className="bg-white shadow-sm">
           <CardHeader className="py-1 px-2">
             <CardTitle className="text-xs text-muted-foreground">
@@ -450,13 +450,13 @@ export default function ProductsPage() {
 
       <Card>
         <CardContent className="p-0">
-          <div className="rounded-md border">
+          <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="p-4 text-left">Produit</th>
-                  <th className="p-4 text-left">Catégorie</th>
-                  <th className="p-4 text-left">Sous-catégorie</th>
+                  <th className="p-4 text-left hidden md:table-cell">Catégorie</th>
+                  <th className="p-4 text-left hidden md:table-cell">Sous-catégorie</th>
                   <th className="p-4 text-left">Prix</th>
                   <th className="p-4 text-left">Stock</th>
                   <th className="p-4 text-left">Statut</th>
@@ -466,7 +466,7 @@ export default function ProductsPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center">
+                    <td colSpan={7} className="p-4 text-center">
                       <div className="flex justify-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
                       </div>
@@ -474,7 +474,7 @@ export default function ProductsPage() {
                   </tr>
                 ) : products.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center">
+                    <td colSpan={7} className="p-4 text-center">
                       Aucun produit trouvé
                     </td>
                   </tr>
@@ -484,46 +484,48 @@ export default function ProductsPage() {
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           {product.images?.[0] && (
-                            <img
-                              src={(() => {
-                                const url = getImageUrl(product.images);
-                                console.log('Image URL:', {
-                                  original: product.images,
-                                  processed: url,
-                                  baseUrl: BASE_URL
-                                });
-                                return url;
-                              })()}
-                              alt={product.name}
-                              className="w-[100px] h-[100px] object-cover rounded-md"
-                              loading="lazy"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = DEFAULT_IMAGE;
-                                console.log('Image load error for:', product.images);
-                              }}
-                            />
+                            <div className="relative w-[60px] md:w-[100px] h-[60px] md:h-[100px]">
+                              <img
+                                src={(() => {
+                                  const url = getImageUrl(product.images);
+                                  return url;
+                                })()}
+                                alt={product.name}
+                                className="w-full h-full object-cover rounded-md"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  if (target.src !== DEFAULT_IMAGE) {
+                                    target.src = DEFAULT_IMAGE;
+                                  }
+                                }}
+                              />
+                            </div>
                           )}
                           <div>
                             <div className="font-medium">{product.name}</div>
-                            <div className="text-sm text-muted-foreground">
+                            <div className="text-sm text-muted-foreground hidden md:block">
                               {/* {product.description?.slice(0, 50)}... */}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 hidden md:table-cell">
                         {categories.find(cat => cat.id === product.categoryId)?.name || 'Non catégorisé'}
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 hidden md:table-cell">
                         {subcategories.find(sub => sub.id === product.subcategoryId)?.name || 'Non spécifié'}
                       </td>
                       <td className="p-4">{product.price.toLocaleString()} FCFA</td>
                       <td className="p-4">
                         <Input
                           type="number"
-                          value={product.quantity}
-                          onChange={(e) => handleStockUpdate(product.id, parseInt(e.target.value))}
+                          defaultValue={product.quantity}
+                          onChange={(e) => {
+                            const newValue = parseInt(e.target.value);
+                            if (!isNaN(newValue) && newValue >= 0) {
+                              handleStockUpdate(product.id, newValue);
+                            }
+                          }}
                           className="w-20"
                           min="0"
                         />
@@ -546,9 +548,9 @@ export default function ProductsPage() {
                       <td className="p-4">
                         <div className="flex gap-2">
                           <Link href={`/seller/dashboard/products/${product.id}`}>
-                          <Button variant="ghost" size="icon">
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                            <Button variant="ghost" size="icon">
+                              <Edit className="h-4 w-4" />
+                            </Button>
                           </Link>
                           <Button 
                             variant="ghost" 
