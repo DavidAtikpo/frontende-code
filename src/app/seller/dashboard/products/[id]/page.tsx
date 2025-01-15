@@ -73,21 +73,28 @@ interface Subcategory {
 }
 
 // Fonction utilitaire pour construire l'URL de l'image
+const DEFAULT_IMAGE = '/placeholder.png';
+
 const getImageUrl = (imagePath: string) => {
-  if (!imagePath) return '';
+  if (!imagePath) return DEFAULT_IMAGE;
   
-  // Si c'est déjà une URL complète
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    return imagePath;
+  try {
+    // Si c'est déjà une URL complète
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+
+    // Si le chemin commence par 'uploads'
+    if (imagePath.startsWith('uploads')) {
+      return `${BASE_URL}/${imagePath}`;
+    }
+
+    // Pour tout autre cas
+    return `${BASE_URL}/uploads/products/${imagePath.replace(/^\/+/, '')}`;
+  } catch (error) {
+    console.error('Erreur dans getImageUrl:', error);
+    return DEFAULT_IMAGE;
   }
-  
-  // Nettoyer le chemin de l'image
-  const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-  
-  // S'assurer que l'URL de base ne se termine pas par un slash
-  const baseUrl = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
-  
-  return `${baseUrl}${cleanPath}`;
 };
 
 export default function EditProductPage() {
@@ -565,7 +572,11 @@ export default function EditProductPage() {
                           alt={`Image ${index + 1}`}
                           width={200}
                           height={200}
-                          className="rounded-lg"
+                          className="rounded-lg object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = DEFAULT_IMAGE;
+                          }}
                         />
                         <Button
                           type="button"
