@@ -10,7 +10,7 @@ const { BASE_URL } = API_CONFIG;
 
 interface Product {
   _id: string;
-  title: string;
+  name: string;
   images: string | string[];
   price: number;
   discount?: number;
@@ -26,9 +26,9 @@ const PromotionSection = () => {
   const fetchPromotionalProducts = async () => {
     try {
       // Vérifier que l'URL est correcte
-      console.log('Fetching from:', `${BASE_URL}/api/product/get-all`);
+      console.log('Fetching from:', `${BASE_URL}/api/products/get-all`);
       
-      const response = await fetch(`${BASE_URL}/api/product/get-all`, {
+      const response = await fetch(`${BASE_URL}/api/products/get-all`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -96,7 +96,7 @@ const PromotionSection = () => {
                   src={Array.isArray(promotionalProducts[0].images) 
                     ? promotionalProducts[0].images[0] 
                     : promotionalProducts[0].images}
-                  alt={promotionalProducts[0].title}
+                  alt={promotionalProducts[0].name}
                   width={500}
                   height={300}
                   className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -110,7 +110,7 @@ const PromotionSection = () => {
                     </span>
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-2">
-                    {promotionalProducts[0].title}
+                    {promotionalProducts[0].name}
                   </h3>
                   <p className="text-white/90 mb-4">
                     Prix: {promotionalProducts[0].price} CFA
@@ -148,7 +148,7 @@ const PromotionSection = () => {
                 <div className="relative h-[180px]">
                   <Image
                     src={Array.isArray(product.images) ? product.images[0] : product.images}
-                    alt={product.title}
+                    alt={product.name}
                     width={500}
                     height={300}
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -156,7 +156,7 @@ const PromotionSection = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <h4 className="text-lg font-semibold text-white mb-1">
-                      {product.title}
+                      {product.name}
                     </h4>
                     <p className="text-white/90 text-sm mb-2">
                       -{product.discount}% de réduction

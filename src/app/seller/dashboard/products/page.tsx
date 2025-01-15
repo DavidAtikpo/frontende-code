@@ -486,14 +486,12 @@ export default function ProductsPage() {
                           {product.images?.[0] && (
                             <div className="relative w-[60px] md:w-[100px] h-[60px] md:h-[100px]">
                               <img
-                                src={(() => {
-                                  const url = getImageUrl(product.images);
-                                  return url;
-                                })()}
+                                src={getImageUrl(product.images)}
                                 alt={product.name}
                                 className="w-full h-full object-cover rounded-md"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
+                                  console.error(`Erreur de chargement de l'image: ${target.src}`);
                                   if (target.src !== DEFAULT_IMAGE) {
                                     target.src = DEFAULT_IMAGE;
                                   }

@@ -97,7 +97,7 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     await logout();
-    router.push('/auth/login');
+    router.push('/login');
   };
 
   // Fermer le menu mobile lors du changement de page

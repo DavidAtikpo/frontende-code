@@ -118,6 +118,11 @@ const nextConfig = {
         hostname: 'dubon-server.vercel.app', 
         pathname: '/**', 
       },
+      {
+        protocol: 'https',
+        hostname: 'dubonservice.com', 
+        pathname: '/**', 
+      },
     ],
   },
   async rewrites() {
