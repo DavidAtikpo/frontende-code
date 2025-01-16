@@ -281,6 +281,7 @@ const NavigationBar = () => {
         {/* Liens Desktop */}
         <ul className="hidden md:flex items-center space-x-8">
           {[
+            { href: '/products', label: 'Produits' },
             { href: '/service', label: 'Services' },
             { href: '/events', label: 'Événementiels' },
             { href: '/trainings', label: 'Formations' },
