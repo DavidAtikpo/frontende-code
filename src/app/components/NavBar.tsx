@@ -133,7 +133,7 @@ const NavigationBar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-lg py-3 sticky top-0 z-[100] transition-all duration-300">
+    <nav className="bg-white shadow-lg py-3 sticky top-20 z-[30] transition-all duration-300">
       <div className="max-w-7xl mx-auto flex justify-between items-center px-6">
         {/* Dropdown pour Catégories */}
         <div 
