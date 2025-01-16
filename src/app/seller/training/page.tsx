@@ -41,7 +41,7 @@ const TrainingList = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette formation ?')) {
       try {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/seller/training/${id}`);
+        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/training/${id}`);
         toast.success('Formation supprimée avec succès');
         fetchTrainings();
       } catch (_) {

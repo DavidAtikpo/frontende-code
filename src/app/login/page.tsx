@@ -12,8 +12,8 @@ import Image from "next/image"
 import { setCookie } from "cookies-next";
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from 'next/navigation';
-import { API_CONFIG } from '@/utils/config';
 import { getAndClearRedirectUrl } from "@/utils/auth";
+import { API_CONFIG } from '@/utils/config';
 
 const { BASE_URL } = API_CONFIG;
 

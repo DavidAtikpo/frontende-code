@@ -35,10 +35,13 @@ const AddTraining = () => {
 
       // Ajouter tous les champs au FormData
       Object.keys(data).forEach(key => {
-        if (key === 'image' || key === 'syllabus') {
-          const files = data[key as keyof TrainingForm];
-          if (files instanceof FileList && files.length > 0) {
-            formData.append(key, files[0]);
+        if (key === 'image') {
+          if (data.image instanceof FileList && data.image.length > 0) {
+            formData.append('image', data.image[0]);
+          }
+        } else if (key === 'syllabus') {
+          if (data.syllabus instanceof FileList && data.syllabus.length > 0) {
+            formData.append('syllabus', data.syllabus[0]);
           }
         } else {
           formData.append(key, data[key as keyof TrainingForm].toString());
@@ -46,7 +49,7 @@ const AddTraining = () => {
       });
 
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/seller/training`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/training/create`,
         formData,
         {
           headers: {
@@ -60,8 +63,8 @@ const AddTraining = () => {
         router.push('/seller/training');
       }
     } catch (error) {
+      console.error('Erreur lors de l\'ajout de la formation:', error);
       toast.error('Erreur lors de l\'ajout de la formation');
-      console.error(error);
     } finally {
       setLoading(false);
     }

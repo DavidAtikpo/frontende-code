@@ -27,7 +27,7 @@ export default function TrainingsSection() {
   useEffect(() => {
     const fetchTrainings = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/trainings/featured`);
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/training/get-all`);
         setTrainings(response.data.data);
       } catch (error) {
         console.error('Erreur lors du chargement des formations:', error);

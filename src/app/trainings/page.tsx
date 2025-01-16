@@ -16,8 +16,10 @@ import {
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { API_CONFIG } from '@/utils/config';
 
-const BASE_URL = "https://dubon-server.onrender.com";
+const { BASE_URL } = API_CONFIG;
+
 
 interface Training {
   _id: string;
@@ -52,7 +54,7 @@ const TrainingList = () => {
 
   const fetchTrainings = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/trainings`, {
+      const response = await axios.get(`${BASE_URL}/api/trainings/get-all`, {
         params: filters
       });
       setTrainings(Array.isArray(response.data) ? response.data : []);
