@@ -173,13 +173,24 @@ export const useCartContext = () => {
     throw new Error("useCartContext must be used within a CartProvider");
   }
 
-  const addToCart = (product: CartItem) => {
-    context.dispatch({ type: "ADD_TO_CART", payload: product });
+  const addToCart = (id: string, title: string, price: number, image: string, sellerId: string) => {
+    context.dispatch({ 
+      type: "ADD_TO_CART", 
+      payload: { _id: id, title, finalPrice: price, images: [image], sellerId, quantity: 1 } 
+    });
+  };
+
+  const addToWishlist = (id: string, title: string, price: number, image: string, sellerId: string) => {
+    context.dispatch({ 
+      type: "ADD_TO_WISHLIST", 
+      payload: { _id: id, title, finalPrice: price, images: [image], sellerId } 
+    });
   };
 
   return {
     state: context.state,
     dispatch: context.dispatch,
-    addToCart
+    addToCart,
+    addToWishlist
   } as const;
 };

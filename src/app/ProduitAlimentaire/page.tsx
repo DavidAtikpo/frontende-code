@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FaStar, FaShoppingCart, FaHeart, FaEye } from 'react-icons/fa';
@@ -45,12 +45,10 @@ const getImageUrl = (images: string[] | undefined) => {
   if (!images || images.length === 0) return DEFAULT_IMAGE;
   const imagePath = images[0];
   if (!imagePath) return DEFAULT_IMAGE;
-  return imagePath.startsWith('/') ? `${BASE_URL}${imagePath}` : `${BASE_URL}/${imagePath}`;
-
+  return `${BASE_URL}/${imagePath}`;
 };
 
-export default function CategoryPage() {
-  const params = useParams();
+export default function ProduitAlimentairePage() {
   const router = useRouter();
   const { state, dispatch } = useCartContext();
   const { toast } = useToast();
@@ -69,7 +67,7 @@ export default function CategoryPage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/api/products/category/id/${params.id}`);
+        const response = await fetch(`${BASE_URL}/api/products/category/name/ProduitAlimentaire`);
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération des produits');
         }
@@ -93,10 +91,8 @@ export default function CategoryPage() {
       }
     };
 
-    if (params.id) {
-      fetchProducts();
-    }
-  }, [params.id]);
+    fetchProducts();
+  }, []);
 
   // Appliquer les filtres
   useEffect(() => {
@@ -225,6 +221,8 @@ export default function CategoryPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">Produits Alimentaires</h1>
+      
       {/* Section Filtres */}
       <div className="bg-white p-4 rounded-lg shadow mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

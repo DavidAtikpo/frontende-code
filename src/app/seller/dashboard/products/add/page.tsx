@@ -284,8 +284,7 @@ export default function AddProduct() {
       // Ajouter les informations nutritionnelles
       submitData.append('nutritionalInfo', JSON.stringify(formData.nutritionalInfo));
 
-      console.log('Envoi de la requête à:', `${BASE_URL}/api/products/create`);
-      console.log('Token:', token);
+
 
       const response = await fetch(`${BASE_URL}/api/products/create`, {
         method: 'POST',
