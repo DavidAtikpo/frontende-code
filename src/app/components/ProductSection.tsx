@@ -37,13 +37,13 @@ const ProductSection = ({ products }: ProductSectionProps) => {
             />
             <div className="absolute bottom-0 left-0 right-0 p-4 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
-                onClick={() => addToCart({
-                  ...product,
-                  _id: product.id,
-                  quantity: 1,
-                  finalPrice: product.price || 0,
-                  sellerId: product.seller.id
-                })}
+                onClick={() => addToCart(
+                  product.id,
+                  product.title,
+                  product.price,
+                  product.images[0],
+                  product.seller.id
+                )}
                 className="w-full flex items-center justify-center gap-2 bg-white text-black py-2 rounded-lg hover:bg-gray-100"
               >
                 <FaShoppingCart /> Ajouter au panier
