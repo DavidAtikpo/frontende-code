@@ -24,13 +24,8 @@ const getImageUrl = (imagePath: string | string[]) => {
       return path;
     }
   
-    // Si le chemin commence par 'uploads'
-    if (path.startsWith('uploads')) {
-      return `${BASE_URL}/${path}`;
-    }
-
-    // Pour tout autre cas
-    return `${BASE_URL}/uploads/products/${path.replace(/^\/+/, '')}`;
+    // Construction de l'URL
+    return `http://localhost:5000/uploads/products/${path.replace(/^\/+/, '')}`;
   } catch (error) {
     console.error('Erreur dans getImageUrl:', error);
     return DEFAULT_IMAGE;
@@ -51,13 +46,14 @@ interface Category {
   id: string;
   name: string;
   description?: string;
-  products?: Product[];
-  subcategories?: Category[];
+  products: Product[];
+  subcategories: Category[];
 }
 
 const NavigationBar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<Category | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeLink, setActiveLink] = useState('');
@@ -70,14 +66,31 @@ const NavigationBar = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        console.log('Début du chargement des catégories');
         const response = await fetch(`${BASE_URL}/api/category/all`);
+        
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération des catégories');
         }
+        
         const data = await response.json();
-        setCategories(data.data || []);
+        console.log('Données reçues:', data);
+        
+        if (data.success && data.data) {
+          console.log('Catégories:', data.data);
+          console.log('Première catégorie:', data.data[0]);
+          if (data.data[0]?.subcategories) {
+            console.log('Sous-catégories de la première catégorie:', data.data[0].subcategories);
+            console.log('Produits de la première sous-catégorie:', data.data[0].subcategories[0]?.products);
+          }
+          setCategories(data.data);
+        } else {
+          throw new Error('Format de données invalide');
+        }
+        
         setLoading(false);
       } catch (err) {
+        console.error("Erreur détaillée:", err);
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
         setLoading(false);
       }
@@ -86,35 +99,21 @@ const NavigationBar = () => {
     fetchCategories();
   }, []);
 
-  // Récupération des produits pour une catégorie
-  const fetchProductsByCategory = async (categoryId: string) => {
-    if (!categoryId) return [];
-    try {
-      const response = await fetch(`${BASE_URL}/api/category/${categoryId}/products`);
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des produits');
-      }
-      const data = await response.json();
-      return data.data?.products || [];
-    } catch (err) {
-      console.error('Erreur:', err);
-      return [];
-    }
-  };
-
   const handleCategoryClick = () => {
     setIsDropdownOpen(!isDropdownOpen);
     setSelectedCategory(null);
+    setSelectedSubcategory(null);
     setSelectedProduct(null);
   };
 
-  const handleCategoryHover = async (category: Category) => {
-    if (!category.products) {
-      const products = await fetchProductsByCategory(category.id);
-      setSelectedCategory({ ...category, products });
-    } else {
-      setSelectedCategory(category);
-    }
+  const handleCategoryHover = (category: Category) => {
+    setSelectedCategory(category);
+    setSelectedSubcategory(null);
+    setSelectedProduct(null);
+  };
+
+  const handleSubcategoryHover = (subcategory: Category) => {
+    setSelectedSubcategory(subcategory);
     setSelectedProduct(null);
   };
 
@@ -129,20 +128,23 @@ const NavigationBar = () => {
   const handleDropdownLeave = () => {
     setIsDropdownOpen(false);
     setSelectedCategory(null);
+    setSelectedSubcategory(null);
     setSelectedProduct(null);
   };
 
   return (
-    <nav className="bg-white shadow-lg py-3 sticky top-0 z-10 transition-all duration-300">
+    <nav className="bg-white shadow-lg py-3 sticky top-0 z-[100] transition-all duration-300">
       <div className="max-w-7xl mx-auto flex justify-between items-center px-6">
         {/* Dropdown pour Catégories */}
-        <div className="relative hidden md:block"
-             onMouseEnter={handleDropdownEnter}
-             onMouseLeave={handleDropdownLeave}>
+        <div 
+          className="relative hidden md:block"
+          onMouseEnter={handleDropdownEnter}
+          onMouseLeave={handleDropdownLeave}
+        >
           <button 
             className="flex items-center bg-gradient-to-r from-blue-700 to-blue-800 text-white px-6 py-2.5 rounded-full 
               hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg 
-              focus:outline-none transform hover:scale-105"
+              focus:outline-none transform hover:scale-105 relative z-[101]"
           >
             <span className="font-medium">Catégories</span>
             <AiOutlineCaretDown className={`ml-2 text-sm transform transition-transform duration-300 
@@ -150,73 +152,114 @@ const NavigationBar = () => {
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute left-0 top-[calc(100%_-_2px)] flex bg-white rounded-lg shadow-xl border border-gray-100 z-20">
-              {/* Première colonne - Catégories */}
-              <div className="w-48 border-r border-gray-100">
-                <ul className="py-2">
-                  {categories.map((category) => (
-                    <li
-                      key={category.id}
-                      onMouseEnter={() => handleCategoryHover(category)}
-                      className={`px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors
-                        ${selectedCategory?.id === category.id ? 'bg-blue-50' : ''}`}
-                    >
-                      <span className="font-medium text-sm">{category.name}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            <>
+              {/* Zone tampon invisible pour une navigation fluide */}
+              <div className="absolute w-full h-8 -bottom-8 left-0 z-[101]" />
+              
+              <div 
+                className="absolute left-0 top-full pt-2 z-[102]"
+              >
+                <div className="bg-white rounded-lg shadow-xl border border-gray-100 flex"
+                  style={{ 
+                    minHeight: '300px'
+                  }}
+                >
+                  <div className="flex relative bg-white rounded-lg overflow-hidden">
+                    {/* Première colonne - Catégories principales */}
+                    <div className="w-48 border-r border-gray-100 bg-white">
+                      <ul className="py-2">
+                        {categories.map((category) => (
+                          <li
+                            key={category.id}
+                            onMouseEnter={() => handleCategoryHover(category)}
+                            className={`px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors
+                              ${selectedCategory?.id === category.id ? 'bg-blue-50' : ''}`}
+                          >
+                            <span className="font-medium text-sm">{category.name}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
-              {/* Deuxième colonne - Noms des produits */}
-              {selectedCategory && (
-                <div className="w-56 border-r border-gray-100 max-h-[400px] overflow-y-auto">
-                  <div className="p-3 bg-gray-50 border-b">
-                    <h3 className="font-semibold text-sm text-gray-800">
-                      {selectedCategory.name}
-                    </h3>
-                  </div>
-                  <ul className="py-2">
-                    {selectedCategory.products?.map((product) => (
-                      <li
-                        key={product.id}
-                        onMouseEnter={() => handleProductHover(product)}
-                        className={`px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors
-                          ${selectedProduct?.id === product.id ? 'bg-blue-50' : ''}`}
-                      >
-                        <p className="text-sm text-gray-800">
-                          {product.name}
+                    {/* Deuxième colonne - Sous-catégories */}
+                    {selectedCategory && (
+                      <div className="w-48 border-r border-gray-100 bg-white">
+                        <div className="p-3 bg-gray-50 border-b sticky top-0">
+                          <h3 className="font-semibold text-sm text-gray-800">
+                            {selectedCategory.name}
+                          </h3>
+                        </div>
+                        <ul className="py-2">
+                          {selectedCategory.subcategories?.map((subcategory) => (
+                            <li
+                              key={subcategory.id}
+                              onMouseEnter={() => handleSubcategoryHover(subcategory)}
+                              className={`px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors
+                                ${selectedSubcategory?.id === subcategory.id ? 'bg-blue-50' : ''}`}
+                            >
+                              <span className="text-sm">{subcategory.name}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Troisième colonne - Produits */}
+                    {selectedSubcategory && selectedSubcategory.products && (
+                      <div className="w-48 border-r border-gray-100 bg-white">
+                        <div className="p-3 bg-gray-50 border-b sticky top-0">
+                          <h3 className="font-semibold text-sm text-gray-800">
+                            {selectedSubcategory.name}
+                          </h3>
+                        </div>
+                        <ul className="py-2">
+                          {selectedSubcategory.products.map((product) => (
+                            <li
+                              key={product.id}
+                              onMouseEnter={() => handleProductHover(product)}
+                              className={`px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors
+                                ${selectedProduct?.id === product.id ? 'bg-blue-50' : ''}`}
+                            >
+                              <span className="text-sm">{product.name}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Quatrième colonne - Aperçu du produit */}
+                    {selectedProduct && (
+                      <div className="w-48 p-4 bg-white">
+                        <div className="aspect-square w-full relative mb-3">
+                          <img
+                            src={getImageUrl(selectedProduct.images)}
+                            alt={selectedProduct.name}
+                            className="w-full h-full object-cover rounded-lg shadow-sm"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.onerror = null; // Éviter les boucles infinies
+                              target.src = DEFAULT_IMAGE;
+                            }}
+                          />
+                        </div>
+                        <h3 className="font-medium text-sm text-gray-900 mb-1 truncate">
+                          {selectedProduct.name}
+                        </h3>
+                        <p className="text-sm font-bold text-blue-600 mb-2">
+                          {selectedProduct.price.toLocaleString()} CFA
                         </p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Troisième colonne - Aperçu du produit */}
-              {selectedProduct && (
-                <div className="w-48 p-3">
-                  <div className="w-32 h-32 mx-auto relative mb-2">
-                    <img
-                      src={getImageUrl(selectedProduct.images)}
-                      alt={selectedProduct.name}
-                      className="w-full h-full object-contain rounded-lg"
-                    />
+                        <button
+                          onClick={() => router.push(`/product/${selectedProduct.id}`)}
+                          className="w-full bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 transition-colors"
+                        >
+                          Voir détails
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <h3 className="font-medium text-xs text-gray-900 mb-1 truncate">
-                    {selectedProduct.name}
-                  </h3>
-                  <p className="text-xs font-bold text-blue-600 mb-2">
-                    {selectedProduct.price.toLocaleString()} CFA
-                  </p>
-                  <button
-                    onClick={() => router.push(`/product/${selectedProduct.id}`)}
-                    className="w-full bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
-                  >
-                    Voir détails
-                  </button>
                 </div>
-              )}
-            </div>
+              </div>
+            </>
           )}
         </div>
 
