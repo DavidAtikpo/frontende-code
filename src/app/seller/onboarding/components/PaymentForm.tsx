@@ -31,7 +31,8 @@ interface FedaPayInstance {
 declare global {
   interface Window {
     FedaPay: {
-      init(): void;
+      init(options: any): void;
+      checkout(options: any): void;
     };
   }
 }
