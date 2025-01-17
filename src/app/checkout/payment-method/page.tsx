@@ -60,9 +60,14 @@ const PaymentMethodPage = () => {
   useEffect(() => {
     const loadFedaPayScript = () => {
       const script = document.createElement('script');
-      script.src = 'https://checkout.fedapay.com/js/checkout.js';
+      script.src = 'https://cdn.fedapay.com/checkout.js';
       script.async = true;
-      script.onload = () => setScriptLoaded(true);
+      script.onload = () => {
+        setScriptLoaded(true);
+        if (window.FedaPay) {
+          window.FedaPay.init({});
+        }
+      };
       document.head.appendChild(script);
     };
 
@@ -71,7 +76,7 @@ const PaymentMethodPage = () => {
     }
 
     return () => {
-      const script = document.querySelector('script[src="https://checkout.fedapay.com/js/checkout.js"]');
+      const script = document.querySelector('script[src="https://cdn.fedapay.com/checkout.js"]');
       if (script) {
         document.head.removeChild(script);
       }
@@ -140,23 +145,22 @@ const PaymentMethodPage = () => {
       const data = await response.json();
       
       if (data.success && scriptLoaded && window.FedaPay) {
-        window.FedaPay.checkout({
-          public_key: data.publicKey,
-          transaction: {
-            amount: data.amount,
-            description: data.description,
-            currency: data.currency
-          },
-          customer: {
-            email: shippingAddress?.email,
-            firstname: shippingAddress?.firstName,
-            lastname: shippingAddress?.lastName
-          },
-          widget_description: 'Votre boutique africaine de confiance',
-          widget_image: '/images/logo.png',
-          widget_title: 'DUBON SERVICES',
-          transaction_token: data.token
-        });
+        const fedaPayButton = document.createElement('button');
+        fedaPayButton.setAttribute('data-public-key', data.publicKey);
+        fedaPayButton.setAttribute('data-transaction-token', data.token);
+        fedaPayButton.setAttribute('data-button-text', `Payer ${data.amount} FCFA`);
+        fedaPayButton.setAttribute('data-button-class', 'fedapay-button');
+        fedaPayButton.setAttribute('data-currency-iso', data.currency);
+        fedaPayButton.setAttribute('data-widget-description', 'Votre boutique africaine de confiance');
+        fedaPayButton.setAttribute('data-widget-image', '/images/logo.png');
+        fedaPayButton.setAttribute('data-widget-title', 'DUBON SERVICES');
+
+        const container = document.getElementById('fedapay-container');
+        if (container) {
+          container.innerHTML = '';
+          container.appendChild(fedaPayButton);
+          window.FedaPay.init({});
+        }
       } else {
         throw new Error(data.message || "Erreur d'initialisation du paiement");
       }
@@ -173,45 +177,62 @@ const PaymentMethodPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Méthode de paiement</h1>
-      
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Récapitulatif de la commande</h2>
-        <div className="space-y-4">
-          {(state.cart as CartItem[]).map((item) => (
-            <div key={item._id} className="flex items-center space-x-4">
-              <div className="w-16 h-16 relative">
-                <ProductImage images={item.images} alt={item.title} />
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Récapitulatif de la commande */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold mb-6">Récapitulatif de la commande</h2>
+          
+          {/* Adresse de livraison */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <h3 className="font-semibold mb-2">Adresse de livraison</h3>
+            <p>{shippingAddress?.firstName} {shippingAddress?.lastName}</p>
+            <p>{shippingAddress?.address}</p>
+            <p>{shippingAddress?.city}</p>
+            <p>{shippingAddress?.phone}</p>
+          </div>
+
+          <div className="space-y-4">
+            {(state.cart as CartItem[]).map((item) => (
+              <div key={item._id} className="flex items-center space-x-4 border-b pb-4">
+                <div className="w-16 h-16 relative">
+                  <ProductImage images={item.images} alt={item.title} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium">{item.title}</h3>
+                  <p className="text-gray-600">Quantité: {item.quantity}</p>
+                  <p className="text-gray-600">Prix: {item.finalPrice} FCFA</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="font-medium">{item.title}</h3>
-                <p className="text-gray-600">Quantité: {item.quantity}</p>
-                <p className="text-gray-600">Prix: {item.finalPrice} FCFA</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        <div className="mt-6 border-t pt-4">
-          <div className="flex justify-between items-center">
-            <span className="font-semibold">Total:</span>
-            <span className="font-bold text-xl">{calculateTotal()} FCFA</span>
+            ))}
           </div>
         </div>
-      </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Paiement</h2>
-        <p className="mb-4">Choisissez votre méthode de paiement préférée</p>
-        
-        <button
-          onClick={handlePayment}
-          disabled={isProcessing}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400"
-        >
-          {isProcessing ? "Traitement en cours..." : "Payer maintenant"}
-        </button>
+        {/* Section Paiement */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Paiement</h2>
+          <div className="space-y-4">
+            <div className="flex justify-between">
+              <span>Total</span>
+              <span className="font-bold">{calculateTotal()} FCFA</span>
+            </div>
+
+            {/* Conteneur FedaPay */}
+            <div id="fedapay-container"></div>
+            
+            <button
+              onClick={handlePayment}
+              disabled={isProcessing}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400"
+            >
+              {isProcessing ? "Traitement en cours..." : "Payer maintenant"}
+            </button>
+            
+            <p className="text-sm text-gray-600 text-center mt-2">
+              Paiement sécurisé par FedaPay
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
