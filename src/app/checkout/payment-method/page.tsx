@@ -37,6 +37,17 @@ const PaymentMethodPage = () => {
     setShippingAddress(JSON.parse(savedAddress) as ShippingAddress);
   }, [router]);
 
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.fedapay.com/js/checkout.js';
+    script.async = true;
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
   const calculateTotal = () => {
     return state.cart.reduce((total, item) => {
       const price = typeof item.finalPrice === 'number' ? item.finalPrice : parseFloat(String(item.finalPrice)) || 0;
@@ -82,10 +93,9 @@ const PaymentMethodPage = () => {
   };
 
   const handlePayment = async () => {
+    setIsProcessing(true);
     try {
-      setIsProcessing(true);
       const token = getCookie('token');
-      
       if (!token) {
         toast({
           title: "Erreur",
@@ -99,8 +109,7 @@ const PaymentMethodPage = () => {
       // Créer la commande
       const orderId = await createOrder();
 
-      // Initialiser le paiement
-      const response = await fetch(`${BASE_URL}/api/payment/create`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payment/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -108,27 +117,38 @@ const PaymentMethodPage = () => {
         },
         body: JSON.stringify({
           amount: calculateTotal(),
-          orderId,
           paymentMethod: 'fedapay',
-          currency: 'XOF'
+          orderId: orderId
         })
       });
 
       const data = await response.json();
+      
+      if (data.success) {
+        // Créer le bouton FedaPay
+        const fedaPayButton = document.createElement('button');
+        fedaPayButton.setAttribute('data-public-key', data.publicKey);
+        fedaPayButton.setAttribute('data-transaction-token', data.token);
+        fedaPayButton.setAttribute('data-button-text', `Payer ${data.amount} FCFA`);
+        fedaPayButton.setAttribute('data-button-class', 'fedapay-button');
+        fedaPayButton.setAttribute('data-currency-iso', data.currency);
+        fedaPayButton.setAttribute('data-widget-description', 'Votre boutique africaine de confiance');
+        fedaPayButton.setAttribute('data-widget-image', '/images/logo.png');
+        fedaPayButton.setAttribute('data-widget-title', 'DUBON SERVICES');
 
-      if (data.success && data.paymentUrl) {
-        // Vider le panier après création de la commande
-        dispatch({ type: 'CLEAR_CART' });
-        // Supprimer l'adresse de livraison du localStorage
-        localStorage.removeItem("shippingAddress");
-        localStorage.removeItem("hasShippingAddress");
-        // Rediriger vers la page de paiement
-        window.location.href = data.paymentUrl;
+        // Ajouter le bouton au conteneur
+        const container = document.getElementById('fedapay-container');
+        if (container) {
+          container.innerHTML = '';
+          container.appendChild(fedaPayButton);
+          // @ts-ignore
+          FedaPay?.init();
+        }
       } else {
-        throw new Error(data.message || "Erreur lors de l'initialisation du paiement");
+        throw new Error(data.message);
       }
     } catch (error) {
-      console.error('Erreur paiement:', error);
+      console.error('Erreur de paiement:', error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de l'initialisation du paiement",
