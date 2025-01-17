@@ -89,10 +89,10 @@ export default function SubscriptionPage() {
         amount: plans.find(p => p.id === selectedPlan)?.pricing[billingCycle]
       };
 
-      console.log('📤 Envoi de la requête:', {
-        url: `${BASE_URL}/api/subscription/initiate`,
-        data: requestData
-      });
+      // console.log('📤 Envoi de la requête:', {
+      //   url: `${BASE_URL}/api/subscription/initiate`,
+      //   data: requestData
+      // });
 
       const response = await fetch(`${BASE_URL}/api/subscription/initiate`, {
         method: 'POST',
