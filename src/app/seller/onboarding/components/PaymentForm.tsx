@@ -30,7 +30,9 @@ interface FedaPayInstance {
 
 declare global {
   interface Window {
-    FedaPay: FedaPayInstance;
+    FedaPay: {
+      init(): void;
+    };
   }
 }
 

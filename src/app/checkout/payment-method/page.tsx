@@ -8,8 +8,6 @@ import { API_CONFIG } from '@/utils/config';
 import { useToast } from '@/components/ui/use-toast';
 import ProductImage from '@/app/components/ProductImage';
 
-const { BASE_URL } = API_CONFIG;
-
 interface ShippingAddress {
   firstName: string;
   lastName: string;
@@ -20,82 +18,101 @@ interface ShippingAddress {
   notes?: string;
 }
 
+interface CartItem {
+  _id: string;
+  title: string;
+  finalPrice: number | string;
+  quantity: number;
+  images: string[];
+}
+
+declare global {
+  interface Window {
+    FedaPay: {
+      init(): void;
+    };
+  }
+}
+
 const PaymentMethodPage = () => {
   const router = useRouter();
-  const { state, dispatch } = useCartContext();
+  const { state } = useCartContext();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
 
   useEffect(() => {
-    // Récupérer l'adresse de livraison du localStorage
     const savedAddress = localStorage.getItem("shippingAddress");
     if (!savedAddress) {
       router.push("/checkout/shipping-address");
       return;
     }
-    setShippingAddress(JSON.parse(savedAddress) as ShippingAddress);
+    try {
+      setShippingAddress(JSON.parse(savedAddress));
+    } catch (error) {
+      console.error('Erreur parsing adresse:', error);
+      router.push("/checkout/shipping-address");
+    }
   }, [router]);
 
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.fedapay.com/js/checkout.js';
-    script.async = true;
-    document.head.appendChild(script);
+    const loadFedaPayScript = () => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.fedapay.com/js/checkout.js';
+      script.async = true;
+      script.onload = () => setScriptLoaded(true);
+      document.head.appendChild(script);
+    };
+
+    if (!scriptLoaded) {
+      loadFedaPayScript();
+    }
 
     return () => {
-      document.head.removeChild(script);
+      const script = document.querySelector('script[src="https://checkout.fedapay.com/js/checkout.js"]');
+      if (script) {
+        document.head.removeChild(script);
+      }
     };
-  }, []);
+  }, [scriptLoaded]);
 
-  const calculateTotal = () => {
-    return state.cart.reduce((total, item) => {
-      const price = typeof item.finalPrice === 'number' ? item.finalPrice : parseFloat(String(item.finalPrice)) || 0;
+  const calculateTotal = (): number => {
+    return (state.cart as CartItem[]).reduce((total: number, item: CartItem) => {
+      const price = typeof item.finalPrice === 'number' ? item.finalPrice : parseFloat(item.finalPrice) || 0;
       return total + price * (item.quantity || 1);
     }, 0);
   };
 
-  const createOrder = async () => {
-    try {
-      const response = await fetch(`${BASE_URL}/api/orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getCookie('token')}`
-        },
-        body: JSON.stringify({
-          items: state.cart,
-          total: calculateTotal(),
-          shippingAddress
-        })
-      });
+  const createOrder = async (): Promise<string> => {
+    const token = getCookie('token')?.toString();
+    if (!token) throw new Error('Token non trouvé');
 
-      const data = await response.json();
-      console.log('Réponse création commande:', data);
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        items: state.cart,
+        total: calculateTotal(),
+        shippingAddress
+      })
+    });
 
-      if (!data.success) {
-        throw new Error(data.message || "Erreur lors de la création de la commande");
-      }
-
-      // Extraire l'ID de la première commande du tableau orders
-      const orderId = data.orders?.[0]?.orderId;
-      console.log('OrderId extrait:', orderId);
-
-      if (!orderId) {
-        throw new Error("ID de commande non trouvé dans la réponse");
-      }
-
-      return orderId;
-    } catch (error) {
-      console.error('Erreur création commande:', error);
-      throw error;
+    const data = await response.json();
+    if (!data.success || !data.orders?.[0]?.orderId) {
+      throw new Error(data.message || "Erreur lors de la création de la commande");
     }
+
+    return data.orders[0].orderId;
   };
 
   const handlePayment = async () => {
     setIsProcessing(true);
     try {
-      const token = getCookie('token');
+      const token = getCookie('token')?.toString();
       if (!token) {
         toast({
           title: "Erreur",
@@ -106,10 +123,8 @@ const PaymentMethodPage = () => {
         return;
       }
 
-      // Créer la commande
       const orderId = await createOrder();
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payment/create`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/payment/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,40 +133,43 @@ const PaymentMethodPage = () => {
         body: JSON.stringify({
           amount: calculateTotal(),
           paymentMethod: 'fedapay',
-          orderId: orderId
+          orderId
         })
       });
 
       const data = await response.json();
       
-      if (data.success) {
-        // Créer le bouton FedaPay
-        const fedaPayButton = document.createElement('button');
-        fedaPayButton.setAttribute('data-public-key', data.publicKey);
-        fedaPayButton.setAttribute('data-transaction-token', data.token);
-        fedaPayButton.setAttribute('data-button-text', `Payer ${data.amount} FCFA`);
-        fedaPayButton.setAttribute('data-button-class', 'fedapay-button');
-        fedaPayButton.setAttribute('data-currency-iso', data.currency);
-        fedaPayButton.setAttribute('data-widget-description', 'Votre boutique africaine de confiance');
-        fedaPayButton.setAttribute('data-widget-image', '/images/logo.png');
-        fedaPayButton.setAttribute('data-widget-title', 'DUBON SERVICES');
-
-        // Ajouter le bouton au conteneur
+      if (data.success && scriptLoaded) {
         const container = document.getElementById('fedapay-container');
         if (container) {
+          const fedaPayButton = document.createElement('button');
+          const buttonAttributes = {
+            'data-public-key': data.publicKey,
+            'data-transaction-token': data.token,
+            'data-button-text': `Payer ${data.amount} FCFA`,
+            'data-button-class': 'fedapay-button',
+            'data-currency-iso': data.currency,
+            'data-widget-description': 'Votre boutique africaine de confiance',
+            'data-widget-image': '/images/logo.png',
+            'data-widget-title': 'DUBON SERVICES'
+          };
+
+          Object.entries(buttonAttributes).forEach(([key, value]) => {
+            fedaPayButton.setAttribute(key, value);
+          });
+
           container.innerHTML = '';
           container.appendChild(fedaPayButton);
-          // @ts-ignore
-          FedaPay?.init();
+          window.FedaPay?.init();
         }
       } else {
-        throw new Error(data.message);
+        throw new Error(data.message || "Erreur d'initialisation du paiement");
       }
     } catch (error) {
       console.error('Erreur de paiement:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de l'initialisation du paiement",
+        description: error instanceof Error ? error.message : "Erreur lors du paiement",
         variant: "destructive"
       });
     } finally {
