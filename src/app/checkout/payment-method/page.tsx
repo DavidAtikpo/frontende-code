@@ -147,7 +147,8 @@ const PaymentMethodPage = () => {
       if (data.success && scriptLoaded && window.FedaPay) {
         console.log('🔑 Configuration FedaPay avec:', {
           publicKey: data.publicKey,
-          token: data.token
+          token: data.token,
+          amount: data.amount
         });
 
         const widget = window.FedaPay.init({
@@ -160,7 +161,11 @@ const PaymentMethodPage = () => {
           customer: {
             email: shippingAddress?.email,
             firstname: shippingAddress?.firstName,
-            lastname: shippingAddress?.lastName
+            lastname: shippingAddress?.lastName,
+            phone_number: shippingAddress?.phone
+          },
+          onComplete: function(resp: { type: string; transaction: any }) {
+            console.log('Paiement terminé:', resp);
           }
         });
 
