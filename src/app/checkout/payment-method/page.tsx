@@ -202,44 +202,48 @@ const PaymentMethodPage = () => {
         });
 
         try {
-          // Créer et configurer le conteneur avant l'initialisation
-          const containerId = 'fedapay-payment-container';
-          let container = document.getElementById(containerId);
-          if (!container) {
-            container = document.createElement('div');
-            container.id = containerId;
-            container.style.position = 'fixed';
-            container.style.top = '50%';
-            container.style.left = '50%';
-            container.style.transform = 'translate(-50%, -50%)';
-            container.style.zIndex = '9999';
-            document.body.appendChild(container);
-          }
-
-          console.log('📦 Conteneur FedaPay créé:', containerId);
-
-          const checkout = window.FedaPay.init({
-            public_key: data.publicKey,
-            transaction: {
-              token: data.token
-            },
-            container: `#${containerId}`,
-            mode: 'payment',
-            onComplete: function(resp: any) {
-              console.log('💰 Paiement terminé:', resp);
-              // Rediriger vers la page de succès ou gérer la réponse
-              if (resp.status === 'approved') {
-                router.push('/checkout/success');
+          const paymentUrl = `https://checkout.fedapay.com/${data.token}`;
+          console.log('🔗 URL de paiement:', paymentUrl);
+          
+          // Ouvrir dans une nouvelle fenêtre
+          const paymentWindow = window.open(paymentUrl, '_blank');
+          
+          if (paymentWindow) {
+            console.log('✅ Fenêtre de paiement ouverte');
+            
+            // Vérifier périodiquement le statut du paiement
+            const checkPaymentStatus = setInterval(async () => {
+              try {
+                const statusResponse = await fetch(`${API_CONFIG.BASE_URL}/api/payment/status/${orderId}`, {
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+                const statusData = await statusResponse.json();
+                
+                if (statusData.status === 'paid') {
+                  clearInterval(checkPaymentStatus);
+                  router.push('/checkout/success');
+                }
+              } catch (error) {
+                console.error('❌ Erreur vérification statut:', error);
               }
-            }
-          });
-
-          console.log('🎯 Checkout FedaPay initialisé');
-          checkout.open();
-          console.log('✅ Fenêtre de paiement FedaPay ouverte');
+            }, 5000); // Vérifier toutes les 5 secondes
+            
+            // Nettoyer l'intervalle si la fenêtre est fermée
+            const cleanup = setInterval(() => {
+              if (paymentWindow.closed) {
+                clearInterval(checkPaymentStatus);
+                clearInterval(cleanup);
+              }
+            }, 1000);
+          } else {
+            console.error('❌ Impossible d\'ouvrir la fenêtre de paiement');
+            throw new Error('Impossible d\'ouvrir la fenêtre de paiement');
+          }
         } catch (initError) {
-          console.error('❌ Erreur initialisation FedaPay:', initError);
-          throw new Error("Erreur lors de l'initialisation de FedaPay");
+          console.error('❌ Erreur ouverture paiement:', initError);
+          throw new Error("Erreur lors de l'ouverture du paiement");
         }
       } else {
         throw new Error(data.message || "Erreur d'initialisation du paiement");

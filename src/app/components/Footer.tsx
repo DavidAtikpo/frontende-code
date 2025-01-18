@@ -33,11 +33,11 @@ const socialLinks = [
     href: "https://instagram.com/dubonservices",
     label: "Instagram"
   },
-  { 
-    Icon: FaLinkedinIn, 
-    href: "https://linkedin.com/company/dubonservices",
-    label: "LinkedIn"
-  },
+  // { 
+  //   Icon: FaLinkedinIn, 
+  //   href: "https://linkedin.com/company/dubonservices",
+  //   label: "LinkedIn"
+  // },
   { 
     Icon: FaYoutube, 
     href: "https://youtube.com/@dubonservices",
