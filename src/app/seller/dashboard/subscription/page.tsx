@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +10,15 @@ import { toast } from "react-hot-toast";
 import { API_CONFIG } from "@/utils/config";
 const { BASE_URL } = API_CONFIG;
 
+declare global {
+  interface Window {
+    FedaPay: {
+      init(options: any): {
+        open(): void;
+      };
+    };
+  }
+}
 
 const plans = [
   {
@@ -67,13 +76,38 @@ export default function SubscriptionPage() {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null);
+
+  useEffect(() => {
+    checkSubscriptionStatus();
+  }, []);
+
+  const checkSubscriptionStatus = async () => {
+    try {
+      const token = getCookie('token');
+      if (!token) return;
+
+      const response = await fetch(`${BASE_URL}/api/subscription/status`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSubscriptionStatus(data.data);
+      }
+    } catch (error) {
+      console.error('Erreur vérification statut:', error);
+    }
+  };
 
   const handleSubscribe = async () => {
-    if (!selectedPlan) {
+    if (!selectedPlan && !subscriptionStatus?.hasPendingSubscription) {
       toast.error('Veuillez sélectionner un plan.');
       return;
     }
-    
+
     try {
       setLoading(true);
       const token = getCookie('token');
@@ -83,55 +117,76 @@ export default function SubscriptionPage() {
         return;
       }
 
-      const requestData = { 
-        planId: selectedPlan,
-        billingCycle: billingCycle,
-        amount: plans.find(p => p.id === selectedPlan)?.pricing[billingCycle]
-      };
+      if (subscriptionStatus?.hasActiveSubscription) {
+        toast.error('Vous avez déjà un abonnement actif.');
+        return;
+      }
 
-      // console.log('📤 Envoi de la requête:', {
-      //   url: `${BASE_URL}/api/subscription/initiate`,
-      //   data: requestData
-      // });
+      let response;
+      let data;
 
-      const response = await fetch(`${BASE_URL}/api/subscription/initiate`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestData)
-      });
+      if (subscriptionStatus?.hasPendingSubscription) {
+        // Récupérer les détails de l'abonnement en cours
+        response = await fetch(`${BASE_URL}/api/subscription/payment/${subscriptionStatus.subscription.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        data = await response.json();
+      } else {
+        // Créer un nouvel abonnement
+        const requestData = { 
+          planId: selectedPlan,
+          billingCycle: billingCycle,
+          amount: plans.find(p => p.id === selectedPlan)?.pricing[billingCycle]
+        };
 
-      console.log('📥 Statut de la réponse:', response.status);
-      const data = await response.json();
-      console.log('📥 Données de la réponse:', data);
+        response = await fetch(`${BASE_URL}/api/subscription/initiate`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData)
+        });
+        data = await response.json();
+      }
       
       if (!response.ok) {
         throw new Error(data.message || `Erreur ${response.status}: ${response.statusText}`);
       }
       
-      if (data.success && data.paymentUrl) {
-        // Vérifier que l'URL est valide (production ou sandbox)
-        if (!data.paymentUrl.startsWith('https://checkout.fedapay.com') && 
-            !data.paymentUrl.startsWith('https://sandbox-checkout.fedapay.com')) {
-          console.error('❌ URL de paiement invalide:', data.paymentUrl);
-          throw new Error('URL de paiement invalide');
-        }
-        
-        console.log('✓ Redirection vers:', data.paymentUrl);
-        window.location.href = data.paymentUrl;
-      } else {
-        console.error('❌ Réponse du serveur invalide:', {
-          success: data.success,
-          paymentUrl: data.paymentUrl,
-          message: data.message,
-          fullResponse: data
+      if (data.success) {
+        console.log('🔑 Configuration FedaPay avec:', {
+          publicKey: data.publicKey,
+          token: data.token,
+          amount: data.amount
         });
-        throw new Error(data.message || 'URL de paiement manquante dans la réponse');
+
+        const widget = window.FedaPay.init({
+          public_key: data.publicKey,
+          transaction: {
+            amount: data.amount,
+            description: data.description,
+            token: data.token
+          },
+          customer: {
+            email: data.customerEmail,
+            firstname: data.customerFirstName,
+            lastname: data.customerLastName,
+            phone_number: data.customerPhone
+          }
+        });
+
+        widget.open();
+        
+        console.log('✅ Fenêtre de paiement FedaPay ouverte');
+        
+        // Rafraîchir le statut après l'ouverture de la fenêtre
+        await checkSubscriptionStatus();
       }
     } catch (error: any) {
-      console.error('❌ Erreur complète:', error);
+      console.error('Erreur:', error);
       toast.error(
         error.message || 
         'Erreur lors de l\'initiation du paiement. Veuillez réessayer.'

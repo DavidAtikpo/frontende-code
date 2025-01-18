@@ -29,8 +29,9 @@ interface CartItem {
 declare global {
   interface Window {
     FedaPay: {
-      init(options: any): void;
-      checkout(options: any): void;
+      init(options: any): {
+        open(): void;
+      };
     };
   }
 }
@@ -60,13 +61,10 @@ const PaymentMethodPage = () => {
   useEffect(() => {
     const loadFedaPayScript = () => {
       const script = document.createElement('script');
-      script.src = 'https://cdn.fedapay.com/checkout.js';
+      script.src = 'https://cdn.fedapay.com/checkout.js?v=1.1.7';
       script.async = true;
       script.onload = () => {
         setScriptLoaded(true);
-        if (window.FedaPay) {
-          window.FedaPay.init({});
-        }
       };
       document.head.appendChild(script);
     };
@@ -76,7 +74,7 @@ const PaymentMethodPage = () => {
     }
 
     return () => {
-      const script = document.querySelector('script[src="https://cdn.fedapay.com/checkout.js"]');
+      const script = document.querySelector('script[src="https://cdn.fedapay.com/checkout.js?v=1.1.7"]');
       if (script) {
         document.head.removeChild(script);
       }
@@ -129,38 +127,46 @@ const PaymentMethodPage = () => {
       }
 
       const orderId = await createOrder();
+      const paymentData = {
+        amount: calculateTotal(),
+        paymentMethod: 'fedapay',
+        orderId
+      };
+
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/payment/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          amount: calculateTotal(),
-          paymentMethod: 'fedapay',
-          orderId
-        })
+        body: JSON.stringify(paymentData)
       });
 
       const data = await response.json();
       
       if (data.success && scriptLoaded && window.FedaPay) {
-        const fedaPayButton = document.createElement('button');
-        fedaPayButton.setAttribute('data-public-key', data.publicKey);
-        fedaPayButton.setAttribute('data-transaction-token', data.token);
-        fedaPayButton.setAttribute('data-button-text', `Payer ${data.amount} FCFA`);
-        fedaPayButton.setAttribute('data-button-class', 'fedapay-button');
-        fedaPayButton.setAttribute('data-currency-iso', data.currency);
-        fedaPayButton.setAttribute('data-widget-description', 'Votre boutique africaine de confiance');
-        fedaPayButton.setAttribute('data-widget-image', '/images/logo.png');
-        fedaPayButton.setAttribute('data-widget-title', 'DUBON SERVICES');
+        console.log('🔑 Configuration FedaPay avec:', {
+          publicKey: data.publicKey,
+          token: data.token
+        });
 
-        const container = document.getElementById('fedapay-container');
-        if (container) {
-          container.innerHTML = '';
-          container.appendChild(fedaPayButton);
-          window.FedaPay.init({});
-        }
+        const widget = window.FedaPay.init({
+          public_key: data.publicKey,
+          transaction: {
+            amount: data.amount,
+            description: data.description,
+            token: data.token
+          },
+          customer: {
+            email: shippingAddress?.email,
+            firstname: shippingAddress?.firstName,
+            lastname: shippingAddress?.lastName
+          }
+        });
+
+        widget.open();
+        
+        console.log('✅ Fenêtre de paiement FedaPay ouverte');
       } else {
         throw new Error(data.message || "Erreur d'initialisation du paiement");
       }
