@@ -61,28 +61,24 @@ const PaymentMethodPage = () => {
   useEffect(() => {
     const loadFedaPayScript = async () => {
       try {
-        if (window.FedaPay) {
-          console.log('✅ FedaPay déjà chargé, skip chargement');
-          setScriptLoaded(true);
-          return;
-        }
+        // Supprimer d'abord tout script existant
+        const existingScripts = document.querySelectorAll('script[src*="fedapay"]');
+        existingScripts.forEach((script: Element) => {
+          if (script instanceof HTMLScriptElement) {
+            script.remove();
+          }
+        });
 
         console.log('🔄 Début chargement script FedaPay');
         const script = document.createElement('script');
         script.src = 'https://cdn.fedapay.com/checkout.js?v=1.1.7';
         script.async = true;
-        script.defer = true;
         
         script.onload = () => {
           console.log('✅ Script FedaPay chargé avec succès');
           if (window.FedaPay) {
             console.log('🔍 FedaPay disponible:', {
               methods: Object.keys(window.FedaPay)
-            });
-            window.FedaPay.init({
-              public_key: process.env.NEXT_PUBLIC_FEDAPAY_PUBLIC_KEY,
-              environment: process.env.NEXT_PUBLIC_FEDAPAY_ENVIRONMENT || 'live',
-              supportedPaymentMethods: ['card', 'mobile_money']
             });
             setScriptLoaded(true);
           } else {
@@ -104,7 +100,9 @@ const PaymentMethodPage = () => {
       }
     };
 
-    loadFedaPayScript();
+    if (!scriptLoaded) {
+      loadFedaPayScript();
+    }
 
     return () => {
       const scripts = document.querySelectorAll('script[src*="fedapay"]');
@@ -114,7 +112,7 @@ const PaymentMethodPage = () => {
         }
       });
     };
-  }, []);
+  }, [scriptLoaded]);
 
   const calculateTotal = (): number => {
     return (state.cart as CartItem[]).reduce((total: number, item: CartItem) => {
@@ -194,24 +192,38 @@ const PaymentMethodPage = () => {
           publicKey: data.publicKey,
           token: data.token,
           amount: data.amount,
-          description: data.description
+          description: data.description,
+          customer: {
+            email: data.customerEmail,
+            firstname: data.customerFirstName,
+            lastname: data.customerLastName,
+            phone_number: data.customerPhone
+          }
         });
 
-        const checkout = window.FedaPay.init({
-          public_key: data.publicKey,
-          transaction: {
-            token: data.token
-          },
-          environment: process.env.NEXT_PUBLIC_FEDAPAY_ENVIRONMENT || 'live',
-          supportedPaymentMethods: ['card', 'mobile_money']
-        });
+        try {
+          const checkout = window.FedaPay.init({
+            public_key: data.publicKey,
+            transaction: {
+              token: data.token,
+              amount: data.amount,
+              description: data.description
+            },
+            customer: {
+              email: data.customerEmail,
+              firstname: data.customerFirstName,
+              lastname: data.customerLastName,
+              phone_number: data.customerPhone
+            }
+          });
 
-        console.log('🎯 Checkout FedaPay initialisé');
-        
-        setTimeout(() => {
+          console.log('🎯 Checkout FedaPay initialisé');
           checkout.open();
           console.log('✅ Fenêtre de paiement FedaPay ouverte');
-        }, 100);
+        } catch (initError) {
+          console.error('❌ Erreur initialisation FedaPay:', initError);
+          throw new Error("Erreur lors de l'initialisation de FedaPay");
+        }
       } else {
         throw new Error(data.message || "Erreur d'initialisation du paiement");
       }
