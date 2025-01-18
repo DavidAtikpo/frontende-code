@@ -154,19 +154,7 @@ const PaymentMethodPage = () => {
         const widget = window.FedaPay.init({
           public_key: data.publicKey,
           transaction: {
-            amount: data.amount,
-            description: data.description,
             token: data.token
-          },
-          customer: {
-            email: shippingAddress?.email,
-            firstname: shippingAddress?.firstName,
-            lastname: shippingAddress?.lastName,
-            phone_number: shippingAddress?.phone
-          },
-          container: '#fedapay-container',
-          onComplete: function(resp: { type: string; transaction: any }) {
-            console.log('Paiement terminé:', resp);
           }
         });
 
