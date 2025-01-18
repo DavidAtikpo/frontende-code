@@ -216,14 +216,40 @@ const PaymentMethodPage = () => {
             public_key: data.publicKey,
             transaction: {
               amount: data.amount,
-              description: data.description
+              description: data.description,
+              callback_url: `${window.location.origin}/checkout/success`
             },
             customer: {
               email: data.customerEmail,
               firstname: data.customerFirstName,
               lastname: data.customerLastName
             },
-            selector: '#fedapay-button'
+            environment: 'live',
+            currency: {
+              iso: 'XOF'
+            },
+            button: {
+              class: 'fedapay-button',
+              text: 'Payer maintenant'
+            },
+            container: '#fedapay-button',
+            onComplete: function(response: any) {
+              console.log('💰 Paiement terminé:', response);
+              if (response.status === 'approved') {
+                router.push('/checkout/success');
+              }
+            },
+            onClose: function() {
+              console.log('🚪 Fenêtre de paiement fermée');
+            },
+            onError: function(error: any) {
+              console.error('❌ Erreur paiement:', error);
+              toast({
+                title: "Erreur",
+                description: "Une erreur est survenue lors du paiement",
+                variant: "destructive"
+              });
+            }
           });
 
           console.log('🎯 FedaPay initialisé sur le bouton');
