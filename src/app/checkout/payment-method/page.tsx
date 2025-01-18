@@ -205,19 +205,31 @@ const PaymentMethodPage = () => {
           const checkout = window.FedaPay.init({
             public_key: data.publicKey,
             transaction: {
-              token: data.token,
-              amount: data.amount,
-              description: data.description
+              token: data.token
             },
             customer: {
               email: data.customerEmail,
               firstname: data.customerFirstName,
               lastname: data.customerLastName,
               phone_number: data.customerPhone
+            },
+            container: '#fedapay-button-container',
+            mode: 'payment',
+            onComplete: function(resp: any) {
+              console.log('💰 Paiement terminé:', resp);
             }
           });
 
           console.log('🎯 Checkout FedaPay initialisé');
+          
+          // Créer le conteneur s'il n'existe pas
+          let container = document.getElementById('fedapay-button-container');
+          if (!container) {
+            container = document.createElement('div');
+            container.id = 'fedapay-button-container';
+            document.body.appendChild(container);
+          }
+          
           checkout.open();
           console.log('✅ Fenêtre de paiement FedaPay ouverte');
         } catch (initError) {
