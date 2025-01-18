@@ -164,6 +164,7 @@ const PaymentMethodPage = () => {
             lastname: shippingAddress?.lastName,
             phone_number: shippingAddress?.phone
           },
+          container: '#fedapay-container',
           onComplete: function(resp: { type: string; transaction: any }) {
             console.log('Paiement terminé:', resp);
           }
