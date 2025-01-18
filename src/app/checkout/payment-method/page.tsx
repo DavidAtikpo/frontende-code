@@ -162,26 +162,25 @@ const PaymentMethodPage = () => {
       if (data.success && scriptLoaded && window.FedaPay) {
         console.log('🔑 Configuration FedaPay avec:', {
           publicKey: data.publicKey,
-          token: data.token,
-          amount: data.amount,
-          description: data.description,
-          customer: {
-            email: shippingAddress?.email,
-            firstname: shippingAddress?.firstName,
-            lastname: shippingAddress?.lastName,
-            phone: shippingAddress?.phone
-          }
+          token: data.token
         });
 
         const widget = window.FedaPay.init({
           public_key: data.publicKey,
           transaction: {
+            amount: data.amount,
+            description: data.description,
             token: data.token
+          },
+          customer: {
+            email: shippingAddress?.email,
+            firstname: shippingAddress?.firstName,
+            lastname: shippingAddress?.lastName
           }
         });
 
-        console.log('🎯 Widget FedaPay initialisé');
         widget.open();
+        
         console.log('✅ Fenêtre de paiement FedaPay ouverte');
       } else {
         throw new Error(data.message || "Erreur d'initialisation du paiement");
