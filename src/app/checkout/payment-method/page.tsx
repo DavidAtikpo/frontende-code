@@ -131,12 +131,21 @@ const PaymentMethodPage = () => {
         return;
       }
 
+      console.log('📦 Données panier:', {
+        items: state.cart,
+        total: calculateTotal()
+      });
+
       const orderId = await createOrder();
+      console.log('📝 Commande créée:', orderId);
+
       const paymentData = {
         amount: calculateTotal(),
         paymentMethod: 'fedapay',
         orderId
       };
+
+      console.log('💳 Données paiement envoyées:', paymentData);
 
       const response = await fetch(`${API_CONFIG.BASE_URL}/api/payment/create`, {
         method: 'POST',
@@ -148,35 +157,37 @@ const PaymentMethodPage = () => {
       });
 
       const data = await response.json();
+      console.log('🔄 Réponse du serveur:', data);
       
       if (data.success && scriptLoaded && window.FedaPay) {
         console.log('🔑 Configuration FedaPay avec:', {
           publicKey: data.publicKey,
           token: data.token,
-          amount: data.amount
+          amount: data.amount,
+          description: data.description,
+          customer: {
+            email: shippingAddress?.email,
+            firstname: shippingAddress?.firstName,
+            lastname: shippingAddress?.lastName,
+            phone: shippingAddress?.phone
+          }
         });
 
-        try {
-          const widget = window.FedaPay.init({
-            public_key: data.publicKey,
-            transaction: {
-              token: data.token
-            },
-            lang: 'fr'
-          });
+        const widget = window.FedaPay.init({
+          public_key: data.publicKey,
+          transaction: {
+            token: data.token
+          }
+        });
 
-          setTimeout(() => {
-            widget.open();
-            console.log('✅ Fenêtre de paiement FedaPay ouverte');
-          }, 100);
-        } catch (error) {
-          console.error('❌ Erreur initialisation widget:', error);
-        }
+        console.log('🎯 Widget FedaPay initialisé');
+        widget.open();
+        console.log('✅ Fenêtre de paiement FedaPay ouverte');
       } else {
         throw new Error(data.message || "Erreur d'initialisation du paiement");
       }
     } catch (error) {
-      console.error('Erreur de paiement:', error);
+      console.error('❌ Erreur de paiement:', error);
       toast({
         title: "Erreur",
         description: error instanceof Error ? error.message : "Une erreur est survenue lors du paiement",
