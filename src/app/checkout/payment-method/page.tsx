@@ -202,34 +202,39 @@ const PaymentMethodPage = () => {
         });
 
         try {
+          // Créer et configurer le conteneur avant l'initialisation
+          const containerId = 'fedapay-payment-container';
+          let container = document.getElementById(containerId);
+          if (!container) {
+            container = document.createElement('div');
+            container.id = containerId;
+            container.style.position = 'fixed';
+            container.style.top = '50%';
+            container.style.left = '50%';
+            container.style.transform = 'translate(-50%, -50%)';
+            container.style.zIndex = '9999';
+            document.body.appendChild(container);
+          }
+
+          console.log('📦 Conteneur FedaPay créé:', containerId);
+
           const checkout = window.FedaPay.init({
             public_key: data.publicKey,
             transaction: {
               token: data.token
             },
-            customer: {
-              email: data.customerEmail,
-              firstname: data.customerFirstName,
-              lastname: data.customerLastName,
-              phone_number: data.customerPhone
-            },
-            container: '#fedapay-button-container',
+            container: `#${containerId}`,
             mode: 'payment',
             onComplete: function(resp: any) {
               console.log('💰 Paiement terminé:', resp);
+              // Rediriger vers la page de succès ou gérer la réponse
+              if (resp.status === 'approved') {
+                router.push('/checkout/success');
+              }
             }
           });
 
           console.log('🎯 Checkout FedaPay initialisé');
-          
-          // Créer le conteneur s'il n'existe pas
-          let container = document.getElementById('fedapay-button-container');
-          if (!container) {
-            container = document.createElement('div');
-            container.id = 'fedapay-button-container';
-            document.body.appendChild(container);
-          }
-          
           checkout.open();
           console.log('✅ Fenêtre de paiement FedaPay ouverte');
         } catch (initError) {
