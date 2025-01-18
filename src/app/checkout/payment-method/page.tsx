@@ -59,32 +59,62 @@ const PaymentMethodPage = () => {
   }, [router]);
 
   useEffect(() => {
-    const loadFedaPayScript = () => {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.fedapay.com/checkout.js?v=1.1.7';
-      script.async = true;
-      script.crossOrigin = "anonymous";
-      script.onload = () => {
-        console.log('✅ Script FedaPay chargé');
-        setScriptLoaded(true);
-      };
-      script.onerror = (error) => {
-        console.error('❌ Erreur chargement script FedaPay:', error);
-      };
-      document.head.appendChild(script);
-    };
+    const loadFedaPayScript = async () => {
+      try {
+        if (window.FedaPay) {
+          console.log('✅ FedaPay déjà chargé, skip chargement');
+          setScriptLoaded(true);
+          return;
+        }
 
-    if (!scriptLoaded) {
-      loadFedaPayScript();
-    }
+        console.log('🔄 Début chargement script FedaPay');
+        const script = document.createElement('script');
+        script.src = 'https://cdn.fedapay.com/checkout.js?v=1.1.7';
+        script.async = true;
+        script.defer = true;
+        
+        script.onload = () => {
+          console.log('✅ Script FedaPay chargé avec succès');
+          if (window.FedaPay) {
+            console.log('🔍 FedaPay disponible:', {
+              methods: Object.keys(window.FedaPay)
+            });
+            window.FedaPay.init({
+              public_key: process.env.NEXT_PUBLIC_FEDAPAY_PUBLIC_KEY,
+              environment: process.env.NEXT_PUBLIC_FEDAPAY_ENVIRONMENT || 'live',
+              supportedPaymentMethods: ['card', 'mobile_money']
+            });
+            setScriptLoaded(true);
+          } else {
+            console.error('❌ window.FedaPay non disponible après chargement');
+            setScriptLoaded(false);
+          }
+        };
+        
+        script.onerror = (error) => {
+          console.error('❌ Erreur chargement script FedaPay:', error);
+          setScriptLoaded(false);
+        };
 
-    return () => {
-      const script = document.querySelector('script[src^="https://cdn.fedapay.com/checkout.js"]');
-      if (script) {
-        document.head.removeChild(script);
+        document.body.appendChild(script);
+        console.log('📝 Script ajouté au DOM');
+      } catch (error) {
+        console.error('❌ Erreur inattendue lors du chargement:', error);
+        setScriptLoaded(false);
       }
     };
-  }, [scriptLoaded]);
+
+    loadFedaPayScript();
+
+    return () => {
+      const scripts = document.querySelectorAll('script[src*="fedapay"]');
+      scripts.forEach((script: Element) => {
+        if (script instanceof HTMLScriptElement) {
+          script.remove();
+        }
+      });
+    };
+  }, []);
 
   const calculateTotal = (): number => {
     return (state.cart as CartItem[]).reduce((total: number, item: CartItem) => {
@@ -162,26 +192,26 @@ const PaymentMethodPage = () => {
       if (data.success && scriptLoaded && window.FedaPay) {
         console.log('🔑 Configuration FedaPay avec:', {
           publicKey: data.publicKey,
-          token: data.token
+          token: data.token,
+          amount: data.amount,
+          description: data.description
         });
 
-        const widget = window.FedaPay.init({
+        const checkout = window.FedaPay.init({
           public_key: data.publicKey,
           transaction: {
-            amount: data.amount,
-            description: data.description,
             token: data.token
           },
-          customer: {
-            email: shippingAddress?.email,
-            firstname: shippingAddress?.firstName,
-            lastname: shippingAddress?.lastName
-          }
+          environment: process.env.NEXT_PUBLIC_FEDAPAY_ENVIRONMENT || 'live',
+          supportedPaymentMethods: ['card', 'mobile_money']
         });
 
-        widget.open();
+        console.log('🎯 Checkout FedaPay initialisé');
         
-        console.log('✅ Fenêtre de paiement FedaPay ouverte');
+        setTimeout(() => {
+          checkout.open();
+          console.log('✅ Fenêtre de paiement FedaPay ouverte');
+        }, 100);
       } else {
         throw new Error(data.message || "Erreur d'initialisation du paiement");
       }
