@@ -145,6 +145,8 @@ const Footer = () => {
                 { name: "Documentation", link: "/docs/guide" },
                 { name: "Aide & Support", link: "/help" },
                 { name: "À propos", link: "/about" },
+                { name: "Politique de confidentialité", link: "/privacy-policy" },
+                { name: "Conditions d&apos;utilisation", link: "/terms" },
               ].map((item, index) => (
                 <li key={index}>
                   <Link 
