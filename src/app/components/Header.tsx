@@ -292,7 +292,7 @@ const Header = () => {
           {/* Actions utilisateur */}
           <div className="flex items-center gap-2">
             {/* Panier */}
-            <div ref={cartRef} className="relative">
+            <div ref={cartRef} className="relative inline-block">
               <button 
                 onClick={() => {
                   setIsCartOpen(!isCartOpen);
@@ -310,57 +310,65 @@ const Header = () => {
                 )}
               </button>
               {isCartOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-lg shadow-xl p-4 z-50 border border-gray-100">
-                  <h3 className="font-bold text-lg border-b pb-2">
-                    Votre panier ({state.cart.length})
-                  </h3>
-                  <ul className="divide-y divide-gray-200">
-                    {state.cart.map((item) => (
-                      <li key={item._id} className="flex items-center py-2">
-                        <ProductImage
-                          images={item.images}
-                          alt={item.title}
-                          width={64}
-                          height={64}
-                          className="w-12 h-12 object-cover rounded-md"
-                        />
-                        <div className="ml-3 flex-1">
-                          <h4 className="text-sm font-bold">{item.title}</h4>
-                          <p className="text-sm text-gray-500">
-                            {item.quantity} × {(typeof item.finalPrice === 'number' ? item.finalPrice : parseFloat(String(item.finalPrice)) || 0).toFixed(2)} CFA
-                          </p>
-                        </div>
-                        <button
-                          className="text-red-600 hover:underline text-sm"
-                          onClick={() => dispatch({ type: "REMOVE_FROM_CART", payload: item._id })}
-                        >
-                          ×
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="border-t pt-2 mt-2">
-                    <div className="flex justify-between text-sm font-bold">
-                      <span>Sous-total</span>
+                <div className="absolute right--4 mt-2 w-52 bg-white text-gray-800 rounded-lg shadow-xl z-50 translate-x-0">
+                  <div className="p-3 border-b">
+                    <h3 className="font-medium text-sm">
+                      Panier ({state.cart.length})
+                    </h3>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    <ul className="divide-y divide-gray-100">
+                      {state.cart.map((item) => (
+                        <li key={item._id} className="flex items-center p-2">
+                          <ProductImage
+                            images={item.images}
+                            alt={item.title}
+                            width={40}
+                            height={40}
+                            className="w-10 h-10 object-cover rounded"
+                          />
+                          <div className="ml-2 flex-1 min-w-0">
+                            <h4 className="text-xs font-medium truncate">{item.title}</h4>
+                            <p className="text-xs text-gray-500">
+                              {item.quantity} × {(typeof item.finalPrice === 'number' ? item.finalPrice : parseFloat(String(item.finalPrice)) || 0).toFixed(2)} CFA
+                            </p>
+                          </div>
+                          <button
+                            className="text-red-500 hover:text-red-700 text-sm ml-1 px-1"
+                            onClick={() => dispatch({ type: "REMOVE_FROM_CART", payload: item._id })}
+                          >
+                            ×
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="p-3 border-t bg-gray-50">
+                    <div className="flex justify-between text-xs font-medium mb-2">
+                      <span>Total</span>
                       <span>{calculateSubtotal()} CFA</span>
                     </div>
-                    <div className="mt-3">
-                      <button className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-                        PAYER MAINTENANT →
-                      </button>
-                    </div>
-                    <div className="mt-2 text-center">
-                      <Link href="/cart" className="text-blue-600 hover:underline text-sm">
-                        VOIR LE PANIER
-                      </Link>
-                    </div>
+                    <Link 
+                      href="/checkout/payment-method" 
+                      onClick={() => setIsCartOpen(false)}
+                      className="block w-full bg-blue-600 text-white text-xs py-2 rounded hover:bg-blue-700 text-center mb-1"
+                    >
+                      Payer maintenant
+                    </Link>
+                    <Link 
+                      href="/cart" 
+                      onClick={() => setIsCartOpen(false)}
+                      className="text-blue-600 hover:underline text-xs block text-center"
+                    >
+                      Voir le panier
+                    </Link>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Wishlist */}
-            <div ref={wishlistRef} className="relative">
+            <div ref={wishlistRef} className="relative inline-block">
               <button 
                 onClick={() => {
                   setIsWishlistOpen(!isWishlistOpen);
@@ -378,35 +386,43 @@ const Header = () => {
                 )}
               </button>
               {isWishlistOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-lg shadow-xl p-4 z-50 border border-gray-100">
-                  <h3 className="font-bold text-lg border-b pb-2">
-                    Wishlist ({state.wishlist.length})
-                  </h3>
-                  <ul className="divide-y divide-gray-200">
-                    {state.wishlist.map((item) => (
-                      <li key={item._id} className="flex items-center py-2">
-                        <ProductImage
-                          images={item.images}
-                          alt={item.title}
-                          width={64}
-                          height={64}
-                          className="w-12 h-12 object-cover rounded-md"
-                        />
-                        <div className="ml-3 flex-1">
-                          <h4 className="text-sm font-bold">{item.title}</h4>
+                <div className="absolute right-0 mt-2 w-52 bg-white text-gray-800 rounded-lg shadow-xl z-50 translate-x-0">
+                  <div className="p-3 border-b">
+                    <h3 className="font-medium text-sm">
+                      Wishlist ({state.wishlist.length})
+                    </h3>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    <ul className="divide-y divide-gray-100">
+                      {state.wishlist.map((item) => (
+                        <li key={item._id} className="flex items-center p-2">
+                          <ProductImage
+                            images={item.images}
+                            alt={item.title}
+                            width={40}
+                            height={40}
+                            className="w-10 h-10 object-cover rounded"
+                          />
+                          <div className="ml-2 flex-1 min-w-0">
+                            <h4 className="text-xs font-medium truncate">{item.title}</h4>
+                          </div>
                           <button
-                            className="text-red-600 hover:underline text-sm"
+                            className="text-red-500 hover:text-red-700 text-sm ml-1 px-1"
                             onClick={() => dispatch({ type: "REMOVE_FROM_WISHLIST", payload: item._id })}
                           >
                             ×
                           </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-2 text-center">
-                    <Link href="/wishlist" className="text-blue-600 hover:underline text-sm">
-                      VOIR LA WISHLIST
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="p-3 border-t bg-gray-50">
+                    <Link 
+                      href="/wishlist" 
+                      onClick={() => setIsWishlistOpen(false)}
+                      className="text-blue-600 hover:underline text-xs block text-center"
+                    >
+                      Voir la wishlist
                     </Link>
                   </div>
                 </div>

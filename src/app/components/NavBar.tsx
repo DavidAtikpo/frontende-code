@@ -303,10 +303,7 @@ const NavigationBar = () => {
               </a>
             </li>
           ))}
-          <li className="flex items-center space-x-2 text-gray-800 bg-blue-50 px-4 py-2 rounded-full">
-            <FaPhoneAlt className="text-blue-600" />
-            <span className="font-medium">+229 00 00 00 00</span>
-          </li>
+          
         </ul>
       </div>
 

@@ -182,7 +182,7 @@ const Footer = () => {
             </div>
 
             <h4 className="text-xl font-bold text-white mb-4">Suivez-nous</h4>
-            <div className="flex gap-4">
+            <div className="flex gap-1">
               {socialLinks.map(({ Icon, href, label }) => (
                 <Link 
                   key={label}
@@ -190,7 +190,7 @@ const Footer = () => {
                   aria-label={label}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-gray-800 p-3 rounded-lg hover:bg-blue-600 hover:text-white transition-all transform hover:scale-110"
+                  className="bg-gray-800 p-1 rounded-lg hover:bg-blue-600 hover:text-white transition-all transform hover:scale-110"
                 >
                   <Icon className="text-xl" />
                 </Link>

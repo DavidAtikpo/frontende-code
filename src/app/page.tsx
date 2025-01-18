@@ -20,6 +20,12 @@ export default function Home() {
           <ProductSlider/>
         </div>
       </section>
+      {/* Section Produits */}
+      
+        <div>
+           <HomeProducts />
+        </div>
+      
 
       <section className="py-12">
           <ShopsSection />
@@ -71,12 +77,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section Produits */}
-      <section className="bg-gray-50 py-12">
-        <div className="container mx-auto px-4">
-           <HomeProducts />
-        </div>
-      </section>
+
 
       {/* Section Actualités
       <section className="py-12">
