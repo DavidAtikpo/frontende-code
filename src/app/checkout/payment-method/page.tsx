@@ -202,48 +202,38 @@ const PaymentMethodPage = () => {
         });
 
         try {
-          const paymentUrl = `https://checkout.fedapay.com/${data.token}`;
-          console.log('🔗 URL de paiement:', paymentUrl);
-          
-          // Ouvrir dans une nouvelle fenêtre
-          const paymentWindow = window.open(paymentUrl, '_blank');
-          
-          if (paymentWindow) {
-            console.log('✅ Fenêtre de paiement ouverte');
-            
-            // Vérifier périodiquement le statut du paiement
-            const checkPaymentStatus = setInterval(async () => {
-              try {
-                const statusResponse = await fetch(`${API_CONFIG.BASE_URL}/api/payment/status/${orderId}`, {
-                  headers: {
-                    'Authorization': `Bearer ${token}`
-                  }
-                });
-                const statusData = await statusResponse.json();
-                
-                if (statusData.status === 'paid') {
-                  clearInterval(checkPaymentStatus);
-                  router.push('/checkout/success');
-                }
-              } catch (error) {
-                console.error('❌ Erreur vérification statut:', error);
-              }
-            }, 5000); // Vérifier toutes les 5 secondes
-            
-            // Nettoyer l'intervalle si la fenêtre est fermée
-            const cleanup = setInterval(() => {
-              if (paymentWindow.closed) {
-                clearInterval(checkPaymentStatus);
-                clearInterval(cleanup);
-              }
-            }, 1000);
-          } else {
-            console.error('❌ Impossible d\'ouvrir la fenêtre de paiement');
-            throw new Error('Impossible d\'ouvrir la fenêtre de paiement');
+          // Créer le bouton de paiement s'il n'existe pas
+          let payButton = document.getElementById('fedapay-button');
+          if (!payButton) {
+            payButton = document.createElement('button');
+            payButton.id = 'fedapay-button';
+            payButton.style.display = 'none';
+            document.body.appendChild(payButton);
           }
+
+          // Initialiser FedaPay sur le bouton
+          window.FedaPay.init({
+            public_key: data.publicKey,
+            transaction: {
+              amount: data.amount,
+              description: data.description
+            },
+            customer: {
+              email: data.customerEmail,
+              firstname: data.customerFirstName,
+              lastname: data.customerLastName
+            },
+            selector: '#fedapay-button'
+          });
+
+          console.log('🎯 FedaPay initialisé sur le bouton');
+          
+          // Déclencher le clic sur le bouton
+          payButton.click();
+          console.log('✅ Paiement déclenché');
         } catch (initError) {
-          console.error('❌ Erreur ouverture paiement:', initError);
-          throw new Error("Erreur lors de l'ouverture du paiement");
+          console.error('❌ Erreur initialisation FedaPay:', initError);
+          throw new Error("Erreur lors de l'initialisation de FedaPay");
         }
       } else {
         throw new Error(data.message || "Erreur d'initialisation du paiement");
