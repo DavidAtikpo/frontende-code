@@ -25,7 +25,7 @@ interface Product {
 
 const PRODUCTS_PER_PAGE = 20;
 
-const ProductCategories = () => {
+const ProductVivriere = () => {
   const [produitsFrais, setProduitsFrais] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,17 +42,17 @@ const ProductCategories = () => {
     const fetchProduitsFrais = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${BASE_URL}/api/products/produits-frais`);
+        const response = await fetch(`${BASE_URL}/api/products/produits-vivriere`);
         const data = await response.json();
         
         if (data.success) {
           setProduitsFrais(data.data);
         } else {
-          setError(data.message || "Erreur lors de la récupération des produits frais");
+          setError(data.message || "Erreur lors de la récupération des produits vivriere");
         }
       } catch (error) {
         console.error("Erreur:", error);
-        setError("Erreur lors de la récupération des produits frais");
+        setError("Erreur lors de la récupération des produits vivriere");
       } finally {
         setLoading(false);
       }
@@ -121,7 +121,7 @@ const ProductCategories = () => {
       <div className="max-w-7xl mx-auto px-6 py-10">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Chargement des produits frais...</p>
+          <p className="mt-2 text-gray-600">Chargement des produits vivriere...</p>
         </div>
       </div>
     );
@@ -141,7 +141,7 @@ const ProductCategories = () => {
     return (
       <div className="max-w-7xl mx-auto px-6 py-10">
         <div className="text-center text-gray-600">
-          <p>Aucun produit frais disponible pour le moment.</p>
+          <p>Aucun produit vivriere disponible pour le moment.</p>
         </div>
       </div>
     );
@@ -149,7 +149,7 @@ const ProductCategories = () => {
 
   return (
     <section className="max-w-7xl mx-auto px-6 py-10">
-      <h2 className="text-2xl font-bold mb-8 text-center">Nos Produits Frais</h2>
+      <h2 className="text-2xl font-bold mb-8 text-center">Nos Produits vivriere</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {produitsFrais.slice(0, 20).map((product) => (
           <div key={product.id} className="border-2 border-blue-500 rounded-lg p-3 hover:shadow-lg transition-all duration-300 bg-white relative group">
@@ -227,4 +227,4 @@ const ProductCategories = () => {
   );
 };
 
-export default ProductCategories;
+export default ProductVivriere;

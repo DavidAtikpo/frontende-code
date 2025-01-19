@@ -6,10 +6,11 @@ import ServicesSection from "./components/ServicesSection";
 import EventsSection from "./components/EventsSection";
 import RestaurantsSection from "./components/RestaurantsSection";
 import WhyChooseUsSection from "./components/WhyChooseUsSection";   
-// import LatestNews from "./components/Articles";
+import ProductSuCategory from "./components/ProductCategories"
 import TrainingsSection from "./components/TrainingsSection";
-import TestimonialsSection from "./components/TestimonialsSection";
+import ProductVivriere from "./components/ProductVivriere";
 import ShopsSection from "./components/ShopsSection";
+import ProductCongeles from "./components/ProductCongeles";
 
 export default function Home() {
   return (
@@ -32,26 +33,28 @@ export default function Home() {
       </section>
 
       {/* Section Promotions */}
-      <section className="bg-gray-50 py-12">
+      {/* <section className="bg-gray-50 py-12">
         <div className="container mx-auto px-4">
           <PromotionsSection/>
         </div>
-      </section>
+      </section> */}
 
       {/* Section Catégories */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <CategoriesSection/>
+          <ProductSuCategory/>
         </div>
       </section>
 
       {/* Section Services */}
-      <section className="bg-gray-50 py-12">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Nos Services</h2>
-          <ServicesSection/>
+      
+        <div>
+          <ProductCongeles/>
         </div>
-      </section>
+      
+        <div>
+          <ProductVivriere/>
+        </div>
 
       {/* Section Formations */}
       <section className="py-12">
@@ -62,20 +65,20 @@ export default function Home() {
       </section>
 
       {/* Section Événements */}
-      <section className="bg-gray-50 py-12">
+      {/* <section className="bg-gray-50 py-12">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">Événements à Venir</h2>
           <EventsSection/>
         </div>
-      </section>
+      </section> */}
 
-      {/* Section Restaurants */}
+      {/* Section Restaurants
       <section className="py-12">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">Nos Restaurants Partenaires</h2>
           <RestaurantsSection/>
         </div>
-      </section>
+      </section> */}
 
 
 
@@ -87,11 +90,11 @@ export default function Home() {
       </section> */}
 
       {/* Section Témoignages et Statistiques */}
-      <section className="bg-gray-50 py-12">
+      {/* <section className="bg-gray-50 py-12">
         <div className="container mx-auto px-4">
           <TestimonialsSection />
         </div>
-      </section>
+      </section> */}
 
         {/* Section Pourquoi Nous Choisir */}
         <section className="bg-gray-50">
