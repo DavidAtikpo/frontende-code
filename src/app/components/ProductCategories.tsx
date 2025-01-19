@@ -62,13 +62,28 @@ const ProductCategories = () => {
   }, []);
 
   const getImageUrl = (product: Product) => {
-    if (product.mainImage) {
-      return `${BASE_URL}/${product.mainImage}`;
+    try {
+      if (!product.mainImage && (!product.images || product.images.length === 0)) {
+        console.log('Aucune image trouvée pour le produit:', product.id);
+        return '/placeholder.jpg';
+      }
+
+      const imagePath = product.mainImage || product.images[0];
+      console.log('Chemin d\'image original:', imagePath);
+
+      if (imagePath.startsWith('http')) {
+        return imagePath;
+      }
+
+      // Utiliser l'URL de base de la configuration
+      const fullUrl = `${API_CONFIG.BASE_URL}/${imagePath.replace(/^\/+/, '')}`;
+      console.log('URL complète construite:', fullUrl);
+      return fullUrl;
+
+    } catch (error) {
+      console.error('Erreur dans getImageUrl pour le produit', product.id, ':', error);
+      return '/placeholder.jpg';
     }
-    if (product.images && product.images.length > 0) {
-      return `${BASE_URL}/${product.images[0]}`;
-    }
-    return '/placeholder.jpg';
   };
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {

@@ -2,6 +2,7 @@
 const nextConfig = {
   images: {
     unoptimized: true,
+    domains: ['dubon-server.onrender.com', 'dubonservice.com', 'www.dubonservice.com', 'localhost'],
     remotePatterns: [
       {
         protocol: 'http',
@@ -24,6 +25,12 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'dubonservice.com',
+        port: '',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.dubonservice.com',
         port: '',
         pathname: '/uploads/**',
       }
