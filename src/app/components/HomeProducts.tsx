@@ -244,8 +244,8 @@ const HomeProducts = () => {
                     <Image
                       src={getImageUrl(product)}
                       alt={product.name}
-                      width={2600}
-                      height={1800}
+                      width={200}
+                      height={200}
                       className="w-full h-full object-cover object-center rounded-t-lg"
                       loading="lazy"
                       onError={(e) => {
@@ -254,7 +254,7 @@ const HomeProducts = () => {
                         target.src = DEFAULT_IMAGE;
                         target.onerror = null;
                       }}
-                      sizes="(max-width: 640px) 160px, (max-width: 1024px) 200px, 400px"
+                      sizes="(max-width: 640px) 160px, 200px"
                     />
                   </div>
                   
