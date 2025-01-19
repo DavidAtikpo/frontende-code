@@ -42,16 +42,24 @@ interface Product {
   discount: number | null;
 }
 
-// 1. D'abord, créons une constante pour l'image par défaut
-const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDEwMEM4OC45NTQzIDEwMCA4MCAxMDguOTU0IDgwIDEyMEM4MCAxMzEuMDQ2IDg4Ljk1NDMgMTQwIDEwMCAxNDBDMTExLjA0NiAxNDAgMTIwIDEzMS4wNDYgMTIwIDEyMEMxMjAgMTA4Ljk1NCAxMTEuMDQ2IDEwMCAxMDAgMTAwWk04NSAxMjBDODUgMTExLjcxNiA5MS43MTU3IDEwNSAxMDAgMTA1QzEwOC4yODQgMTA1IDExNSAxMTEuNzE2IDExNSAxMjBDMTE1IDEyOC4yODQgMTA4LjI4NCAxMzUgMTAwIDEzNUM5MS43MTU3IDEzNSA4NSAxMjguMjg0IDg1IDEyMFoiIGZpbGw9IiM5Q0EzQUYiLz48L3N2Zz4=';
-// 2. Modifions la fonction getImageUrl
+// 1. D'abord, créons une constante pour l'image par défaut avec une meilleure qualité
+const DEFAULT_IMAGE = '/placeholder-product.jpg';
+
+// 2. Améliorons la fonction getImageUrl
 const getImageUrl = (imagePath: string | string[]) => {
-  if (!imagePath) return DEFAULT_IMAGE;
-  
   try {
+    // Si pas d'image fournie
+    if (!imagePath) {
+      console.log('Aucune image fournie');
+      return DEFAULT_IMAGE;
+    }
+    
     // Si c'est un tableau, prendre la première image
     const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
-    if (!path) return DEFAULT_IMAGE;
+    if (!path) {
+      console.log('Chemin d\'image invalide');
+      return DEFAULT_IMAGE;
+    }
 
     // Si c'est déjà une URL complète
     if (path.startsWith('http')) {
@@ -64,7 +72,8 @@ const getImageUrl = (imagePath: string | string[]) => {
     }
 
     // Pour tout autre cas
-    return `${BASE_URL}/uploads/products/${path.replace(/^\/+/, '')}`;
+    const cleanPath = path.replace(/^\/+/, '');
+    return `${BASE_URL}/uploads/products/${cleanPath}`;
   } catch (error) {
     console.error('Erreur dans getImageUrl:', error);
     return DEFAULT_IMAGE;
@@ -253,16 +262,23 @@ const HomeProducts = () => {
                   snap-start flex-shrink-0 w-[160px] sm:w-[200px] h-[260px] sm:h-[280px]"
               >
                 <div className="relative h-[140px] sm:h-[160px]">
-                  <img
-                    src={getImageUrl(product.images)}
-                    alt={product.name}
-                    className="w-full h-full object-cover rounded-t-lg"
-                    loading="lazy"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = DEFAULT_IMAGE;
-                    }}
-                  />
+                  <div className="w-full h-full">
+                    <Image
+                      src={getImageUrl(product.images)}
+                      alt={product.name}
+                      width={2600}
+                      height={1800}
+                      className="w-full h-full object-cover object-center rounded-t-lg"
+                      loading="lazy"
+                      onError={(e) => {
+                        console.log('Erreur de chargement d\'image pour:', product.name);
+                        const target = e.target as HTMLImageElement;
+                        target.src = DEFAULT_IMAGE;
+                        target.onerror = null;
+                      }}
+                      sizes="(max-width: 640px) 160px, (max-width: 1024px) 200px, 400px"
+                    />
+                  </div>
                   
                   {/* Badges */}
                   <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
