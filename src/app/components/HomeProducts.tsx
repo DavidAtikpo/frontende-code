@@ -43,39 +43,17 @@ interface Product {
 }
 
 // 1. D'abord, créons une constante pour l'image par défaut avec une meilleure qualité
-const DEFAULT_IMAGE = '/placeholder-product.jpg';
+const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDEwMEM4OC45NTQzIDEwMCA4MCAxMDguOTU0IDgwIDEyMEM4MCAxMzEuMDQ2IDg4Ljk1NDMgMTQwIDEwMCAxNDBDMTExLjA0NiAxNDAgMTIwIDEzMS4wNDYgMTIwIDEyMEMxMjAgMTA4Ljk1NCAxMTEuMDQ2IDEwMCAxMDAgMTAwWk04NSAxMjBDODUgMTExLjcxNiA5MS43MTU3IDEwNSAxMDAgMTA1QzEwOC4yODQgMTA1IDExNSAxMTEuNzE2IDExNSAxMjBDMTE1IDEyOC4yODQgMTA4LjI4NCAxMzUgMTAwIDEzNUM5MS43MTU3IDEzNSA4NSAxMjguMjg0IDg1IDEyMFoiIGZpbGw9IiM5Q0EzQUYiLz48L3N2Zz4=';
 
 // 2. Améliorons la fonction getImageUrl
-const getImageUrl = (imagePath: string | string[]) => {
+const getImageUrl = (product: Product) => {
   try {
-    // Si pas d'image fournie
-    if (!imagePath) {
-      console.log('Aucune image fournie');
+    if (!product?.images?.length) {
       return DEFAULT_IMAGE;
     }
-    
-    // Si c'est un tableau, prendre la première image
-    const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
-    if (!path) {
-      console.log('Chemin d\'image invalide');
-      return DEFAULT_IMAGE;
-    }
-
-    // Si c'est déjà une URL complète
-    if (path.startsWith('http')) {
-      return path;
-    }
-
-    // Si le chemin commence par 'uploads'
-    if (path.startsWith('uploads')) {
-      return `${BASE_URL}/${path}`;
-    }
-
-    // Pour tout autre cas
-    const cleanPath = path.replace(/^\/+/, '');
-    return `${BASE_URL}/uploads/products/${cleanPath}`;
+    const imagePath = product.images[0];
+    return `${BASE_URL}/uploads/products/${imagePath}`;
   } catch (error) {
-    console.error('Erreur dans getImageUrl:', error);
     return DEFAULT_IMAGE;
   }
 };
@@ -264,7 +242,7 @@ const HomeProducts = () => {
                 <div className="relative h-[140px] sm:h-[160px]">
                   <div className="w-full h-full">
                     <Image
-                      src={getImageUrl(product.images)}
+                      src={getImageUrl(product)}
                       alt={product.name}
                       width={2600}
                       height={1800}
