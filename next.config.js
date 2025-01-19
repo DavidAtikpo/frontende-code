@@ -20,6 +20,12 @@ const nextConfig = {
         hostname: 'api.dubonservice.com',
         port: '',
         pathname: '/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'dubonservice.com',
+        port: '',
+        pathname: '/uploads/**',
       }
     ]
   },
