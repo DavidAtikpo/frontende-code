@@ -47,17 +47,36 @@ const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ
 
 // 2. Améliorons la fonction getImageUrl
 const getImageUrl = (product: Product) => {
+  if (!product?.images?.length) return DEFAULT_IMAGE;
+  
   try {
-    if (!product?.images?.length) {
-      return DEFAULT_IMAGE;
+    // Si c'est un tableau, prendre la première image
+    const path = Array.isArray(product.images) ? product.images[0] : product.images;
+    if (!path) return DEFAULT_IMAGE;
+
+    // Si c'est déjà une URL complète (http ou https)
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
     }
-    const imagePath = product.images[0];
-    if (imagePath.startsWith('http')) {
-      return imagePath;
+
+    // Nettoyer le chemin de l'image
+    const cleanPath = path.replace(/^\/+/, '').replace(/\\/g, '/');
+
+    // Si nous sommes en développement (localhost)
+    if (BASE_URL.includes('localhost')) {
+      return `http://localhost:5000/${cleanPath}`;
     }
-    return `${BASE_URL}/uploads/products/${imagePath.replace(/^\/+/, '')}`;
+
+    // En production, s'assurer que le chemin commence par 'uploads'
+    if (!cleanPath.startsWith('uploads/')) {
+      return `${BASE_URL}/uploads/${cleanPath}`;
+    }
+
+    // Si le chemin commence déjà par 'uploads'
+    return `${BASE_URL}/${cleanPath}`;
+
   } catch (error) {
-    console.error('Erreur dans getImageUrl pour le produit:', product.id, error);
+    console.error('Erreur dans getImageUrl:', error, 'Path:', product.images);
     return DEFAULT_IMAGE;
   }
 };
