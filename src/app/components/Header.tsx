@@ -456,7 +456,7 @@ const Header = () => {
                     <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium">
                       {userInfo.name ? userInfo.name.charAt(0).toUpperCase() : 'U'}
                     </div>
-                    <span className="text-sm">{userInfo.name || 'Utilisateur'}</span>
+                    <span className="text-sm">{userInfo.name || 'Connexion'}</span>
                   </div>
                 )}
               </button>

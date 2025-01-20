@@ -9,7 +9,7 @@ const TopBar = () => {
     <div className="bg-customBlue text-white px-6">
       <div className="max-w-7xl mx-auto flex justify-between items-center text-sm">
         {/* Texte de gauche */}
-        <span className="text-lg font-bold">DUBON</span>
+        <span className="text-lg font-bold">E-BON SERVICES</span>
 
         {/* Liens sociaux et "Nous contacter" */}
         <div className="flex items-center space-x-4">

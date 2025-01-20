@@ -54,9 +54,7 @@ const TrainingList = () => {
 
   const fetchTrainings = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/trainings/get-all`, {
-        params: filters
-      });
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/training/get-all`);
       setTrainings(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Erreur:', error);
