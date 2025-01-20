@@ -45,6 +45,11 @@ const navigation = [
     icon: ShoppingBag
   },
   {
+    name: "Mes Formations",
+    href: "/trainings/my-trainings",
+    icon: Clock
+  },
+  {
     name: "Favoris",
     href: "/user/favorites",
     icon: Heart

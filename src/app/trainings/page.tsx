@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import Image from 'next/image';
+import Link from 'next/link';
 import { 
   FaCalendar, 
   FaUsers, 
@@ -15,14 +16,10 @@ import {
   FaFilter 
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
-import { API_CONFIG } from '@/utils/config';
-
-const { BASE_URL } = API_CONFIG;
-
 
 interface Training {
   _id: string;
+  id?: string;  // Pour la compatibilité avec l'API
   title: string;
   description: string;
   price: number;
@@ -34,7 +31,46 @@ interface Training {
   category: string;
   level: string;
   image: string;
+  instructor?: string;
 }
+
+const DEFAULT_IMAGE = '/default-training.jpg';
+
+// Fonction pour gérer les URLs des images
+const getImageUrl = (imagePath: string | string[]) => {
+  if (!imagePath) return DEFAULT_IMAGE;
+  
+  try {
+    // Si c'est un tableau, prendre la première image
+    const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
+    if (!path) return DEFAULT_IMAGE;
+
+    // Si c'est déjà une URL complète (http ou https)
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+
+    // Nettoyer le chemin de l'image
+    const cleanPath = path.replace(/^\/+/, '').replace(/\\/g, '/');
+
+    // Si nous sommes en développement (localhost)
+    if (process.env.NEXT_PUBLIC_API_URL?.includes('localhost')) {
+      return `http://localhost:5000/${cleanPath}`;
+    }
+
+    // En production, s'assurer que le chemin commence par 'uploads'
+    if (!cleanPath.startsWith('uploads/')) {
+      return `${process.env.NEXT_PUBLIC_API_URL}/uploads/${cleanPath}`;
+    }
+
+    // Si le chemin commence déjà par 'uploads'
+    return `${process.env.NEXT_PUBLIC_API_URL}/${cleanPath}`;
+
+  } catch (error) {
+    console.error('Erreur dans getImageUrl:', error, 'Path:', imagePath);
+    return DEFAULT_IMAGE;
+  }
+};
 
 const TrainingList = () => {
   const router = useRouter();
@@ -55,7 +91,17 @@ const TrainingList = () => {
   const fetchTrainings = async () => {
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/training/get-all`);
-      setTrainings(Array.isArray(response.data) ? response.data : []);
+      console.log('Training response:', response.data);
+      const trainingsData = Array.isArray(response.data.data) ? response.data.data : [];
+      trainingsData.forEach((training: Training) => {
+        console.log('Training ID:', training._id || training.id, 'Training:', training);
+      });
+      // Utiliser _id ou id selon ce qui est disponible
+      const validTrainings = trainingsData.map((training: any) => ({
+        ...training,
+        _id: training._id || training.id // Utiliser _id s'il existe, sinon utiliser id
+      }));
+      setTrainings(validTrainings);
     } catch (error) {
       console.error('Erreur:', error);
       setTrainings([]);
@@ -109,7 +155,6 @@ const TrainingList = () => {
       </motion.nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* En-tête et recherche */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
           <motion.h1 
             initial={{ opacity: 0, x: -20 }}
@@ -139,7 +184,6 @@ const TrainingList = () => {
           </div>
         </div>
 
-        {/* Filtres */}
         <AnimatePresence>
           {showFilters && (
             <motion.div 
@@ -204,10 +248,9 @@ const TrainingList = () => {
           )}
         </AnimatePresence>
 
-        {/* Liste des formations */}
         {loading ? (
           <div className="flex justify-center items-center min-h-[400px]">
-            <div className="text-2xl text-gray-600">Chargement...</div>
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -222,7 +265,7 @@ const TrainingList = () => {
                 >
                   <div className="relative h-48">
                     <Image
-                      src={training.image || '/default-training.jpg'}
+                      src={getImageUrl(training.image) || '/default-training.jpg'}
                       alt={training.title}
                       width={500}
                       height={500}
@@ -255,12 +298,12 @@ const TrainingList = () => {
                       <span className="text-2xl font-bold text-blue-600">
                         {training.price.toLocaleString()} CFA
                       </span>
-                      <button
-                        onClick={() => router.push(`/trainings/${training._id}`)}
+                      <Link 
+                        href={`/trainings/${training._id}`}
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors duration-300"
                       >
                         Voir détails
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 </motion.div>

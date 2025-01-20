@@ -91,7 +91,7 @@ const TrainingDetailsClient = ({ params }: TrainingDetailsProps) => {
         <h1 className="text-2xl font-bold">{training.title}</h1>
         <div className="flex space-x-4">
           <button
-            onClick={() => router.push(`/seller/training/edit/${params.id}`)}
+            onClick={() => router.push(`/seller/training/${params.id}/edit`)}
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             <FaEdit className="mr-2" />
