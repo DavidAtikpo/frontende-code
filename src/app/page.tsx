@@ -14,13 +14,13 @@ import ProductCongeles from "./components/ProductCongeles";
 
 export default function Home() {
   return (
-    <div className="space-y-12">
+    <div className="space-y-0">
       {/* Slider principal */}
-      <section className="bg-gray-50 py-12">
-        <div className="container mx-auto px-4">
+      
+        <div>
           <ProductSlider/>
         </div>
-      </section>
+    
       {/* Section Produits */}
       
         <div>
@@ -40,7 +40,7 @@ export default function Home() {
       </section> */}
 
       {/* Section Catégories */}
-      <section className="py-12">
+      <section className="py-0">
         <div className="container mx-auto px-4">
           <ProductSuCategory/>
         </div>
@@ -57,7 +57,7 @@ export default function Home() {
         </div>
 
       {/* Section Formations */}
-      <section className="py-12">
+      <section className="py-0">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-8">Formations Disponibles</h2>
             <TrainingsSection/>
