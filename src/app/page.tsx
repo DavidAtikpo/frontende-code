@@ -49,11 +49,11 @@ export default function Home() {
       {/* Section Services */}
       
         <div>
-          {/* <ProductCongeles/> */}
+          <ProductCongeles/>
         </div>
       
         <div>
-          {/* <ProductVivriere/> */}
+          <ProductVivriere/>
         </div>
 
       {/* Section Formations */}
