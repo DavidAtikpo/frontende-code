@@ -52,8 +52,12 @@ const getImageUrl = (product: Product) => {
       return DEFAULT_IMAGE;
     }
     const imagePath = product.images[0];
-    return `${BASE_URL}/uploads/products/${imagePath}`;
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    return `${BASE_URL}/uploads/products/${imagePath.replace(/^\/+/, '')}`;
   } catch (error) {
+    console.error('Erreur dans getImageUrl pour le produit:', product.id, error);
     return DEFAULT_IMAGE;
   }
 };
