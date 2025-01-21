@@ -10,39 +10,9 @@ import { FaCalendar, FaUsers, FaMapMarkerAlt, FaClock, FaGraduationCap } from 'r
 const DEFAULT_IMAGE = '/default-training.jpg';
 
 // Fonction pour gérer les URLs des images
-const getImageUrl = (imagePath: string | string[]) => {
-  if (!imagePath) return DEFAULT_IMAGE;
-  
-  try {
-    // Si c'est un tableau, prendre la première image
-    const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
-    if (!path) return DEFAULT_IMAGE;
-
-    // Si c'est déjà une URL complète (http ou https)
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
-    }
-
-    // Nettoyer le chemin de l'image
-    const cleanPath = path.replace(/^\/+/, '').replace(/\\/g, '/');
-
-    // Si nous sommes en développement (localhost)
-    if (process.env.NEXT_PUBLIC_API_URL?.includes('localhost')) {
-      return `http://localhost:5000/${cleanPath}`;
-    }
-
-    // En production, s'assurer que le chemin commence par 'uploads'
-    if (!cleanPath.startsWith('uploads/')) {
-      return `${process.env.NEXT_PUBLIC_API_URL}/uploads/${cleanPath}`;
-    }
-
-    // Si le chemin commence déjà par 'uploads'
-    return `${process.env.NEXT_PUBLIC_API_URL}/${cleanPath}`;
-
-  } catch (error) {
-    console.error('Erreur dans getImageUrl:', error, 'Path:', imagePath);
-    return DEFAULT_IMAGE;
-  }
+const getImageUrl = (path: string) => {
+  if (!path) return DEFAULT_IMAGE;
+  return path.startsWith('http') ? path : `${process.env.NEXT_PUBLIC_API_URL}/${path}`;
 };
 
 interface TrainingDetails {

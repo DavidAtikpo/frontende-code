@@ -13,23 +13,9 @@ const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ
 // Fonction pour gérer les URLs des images
 const getImageUrl = (imagePath: string | string[]) => {
   if (!imagePath) return DEFAULT_IMAGE;
-  
-  try {
-    // Si c'est un tableau, prendre la première image
-    const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
-    if (!path) return DEFAULT_IMAGE;
-  
-    // Si c'est déjà une URL complète
-    if (path.startsWith('http')) {
-      return path;
-    }
-  
-    // Construction de l'URL
-    return `http://localhost:5000/uploads/products/${path.replace(/^\/+/, '')}`;
-  } catch (error) {
-    console.error('Erreur dans getImageUrl:', error);
-    return DEFAULT_IMAGE;
-  }
+  const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
+  if (!path) return DEFAULT_IMAGE;
+  return path.startsWith('http') ? path : `${BASE_URL}/${path}`;
 };
 
 // Types mis à jour selon la structure du backend
@@ -99,11 +85,19 @@ const NavigationBar = () => {
     fetchCategories();
   }, []);
 
-  const handleCategoryClick = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-    setSelectedCategory(null);
-    setSelectedSubcategory(null);
-    setSelectedProduct(null);
+  const handleCategoryClick = (categoryId: string) => {
+    router.push(`/category/${categoryId}`);
+    setIsDropdownOpen(false);
+  };
+
+  const handleSubcategoryClick = (categoryId: string, subcategoryId: string) => {
+    router.push(`/category/${categoryId}/subcategory/${subcategoryId}`);
+    setIsDropdownOpen(false);
+  };
+
+  const handleProductClick = (productId: string) => {
+    router.push(`/product/${productId}`);
+    setIsDropdownOpen(false);
   };
 
   const handleCategoryHover = (category: Category) => {
@@ -172,6 +166,7 @@ const NavigationBar = () => {
                           <li
                             key={category.id}
                             onMouseEnter={() => handleCategoryHover(category)}
+                            onClick={() => handleCategoryClick(category.id)}
                             className={`px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors
                               ${selectedCategory?.id === category.id ? 'bg-blue-50' : ''}`}
                           >
@@ -194,6 +189,7 @@ const NavigationBar = () => {
                             <li
                               key={subcategory.id}
                               onMouseEnter={() => handleSubcategoryHover(subcategory)}
+                              onClick={() => handleSubcategoryClick(selectedCategory.id, subcategory.id)}
                               className={`px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors
                                 ${selectedSubcategory?.id === subcategory.id ? 'bg-blue-50' : ''}`}
                             >
@@ -204,7 +200,7 @@ const NavigationBar = () => {
                       </div>
                     )}
 
-                    {/* Troisième colonne - Produits */}
+                    {/* Troisième colonne - Produits (limités à 7) */}
                     {selectedSubcategory && selectedSubcategory.products && (
                       <div className="w-48 border-r border-gray-100 bg-white">
                         <div className="p-3 bg-gray-50 border-b sticky top-0">
@@ -212,32 +208,43 @@ const NavigationBar = () => {
                             {selectedSubcategory.name}
                           </h3>
                         </div>
-                        <ul className="py-2">
-                          {selectedSubcategory.products.map((product) => (
-                            <li
-                              key={product.id}
-                              onMouseEnter={() => handleProductHover(product)}
-                              className={`px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors
-                                ${selectedProduct?.id === product.id ? 'bg-blue-50' : ''}`}
-                            >
-                              <span className="text-sm">{product.name}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        <div className="max-h-[300px] overflow-y-auto">
+                          <ul className="py-2">
+                            {selectedSubcategory.products.slice(0, 7).map((product) => (
+                              <li
+                                key={product.id}
+                                onMouseEnter={() => handleProductHover(product)}
+                                onClick={() => handleProductClick(product.id)}
+                                className={`px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors
+                                  ${selectedProduct?.id === product.id ? 'bg-blue-50' : ''}`}
+                              >
+                                <span className="text-sm">{product.name}</span>
+                              </li>
+                            ))}
+                            {selectedSubcategory.products.length > 7 && (
+                              <li className="px-4 py-2 text-sm text-gray-500 italic">
+                                + {selectedSubcategory.products.length - 7} autres produits
+                              </li>
+                            )}
+                          </ul>
+                        </div>
                       </div>
                     )}
 
                     {/* Quatrième colonne - Aperçu du produit */}
                     {selectedProduct && (
                       <div className="w-48 p-4 bg-white">
-                        <div className="aspect-square w-full relative mb-3">
+                        <div 
+                          className="aspect-square w-full relative mb-3 cursor-pointer"
+                          onClick={() => handleProductClick(selectedProduct.id)}
+                        >
                           <img
                             src={getImageUrl(selectedProduct.images)}
                             alt={selectedProduct.name}
                             className="w-full h-full object-cover rounded-lg shadow-sm"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.onerror = null; // Éviter les boucles infinies
+                              target.onerror = null;
                               target.src = DEFAULT_IMAGE;
                             }}
                           />
@@ -248,12 +255,6 @@ const NavigationBar = () => {
                         <p className="text-sm font-bold text-blue-600 mb-2">
                           {selectedProduct.price.toLocaleString()} CFA
                         </p>
-                        <button
-                          onClick={() => router.push(`/product/${selectedProduct.id}`)}
-                          className="w-full bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 transition-colors"
-                        >
-                          Voir détails
-                        </button>
                       </div>
                     )}
                   </div>

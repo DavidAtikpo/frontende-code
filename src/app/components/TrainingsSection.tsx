@@ -7,6 +7,13 @@ import Link from 'next/link';
 import { FaCalendar, FaGraduationCap, FaUsers } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
+const DEFAULT_IMAGE = '/default-training.jpg';
+
+const getImageUrl = (path: string) => {
+  if (!path) return DEFAULT_IMAGE;
+  return path.startsWith('http') ? path : `${process.env.NEXT_PUBLIC_API_URL}/${path}`;
+};
+
 interface Training {
   id: string;
   title: string;
@@ -86,7 +93,7 @@ export default function TrainingsSection() {
         >
           <div className="relative h-48">
             <Image
-              src={training.image}
+              src={getImageUrl(training.image)}
               alt={training.title}
               width={500}
               height={500}
