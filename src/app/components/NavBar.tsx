@@ -200,7 +200,7 @@ const NavigationBar = () => {
                       </div>
                     )}
 
-                    {/* Troisième colonne - Produits (limités à 7) */}
+                    {/* Troisième colonne - Produits avec défilement */}
                     {selectedSubcategory && selectedSubcategory.products && (
                       <div className="w-48 border-r border-gray-100 bg-white">
                         <div className="p-3 bg-gray-50 border-b sticky top-0">
@@ -208,9 +208,15 @@ const NavigationBar = () => {
                             {selectedSubcategory.name}
                           </h3>
                         </div>
-                        <div className="max-h-[300px] overflow-y-auto">
+                        <div 
+                          className="max-h-[400px] overflow-y-auto hover:overflow-y-auto"
+                          style={{
+                            scrollbarWidth: 'thin',
+                            scrollbarColor: '#CBD5E0 #EDF2F7'
+                          }}
+                        >
                           <ul className="py-2">
-                            {selectedSubcategory.products.slice(0, 7).map((product) => (
+                            {selectedSubcategory.products.map((product) => (
                               <li
                                 key={product.id}
                                 onMouseEnter={() => handleProductHover(product)}
@@ -221,11 +227,6 @@ const NavigationBar = () => {
                                 <span className="text-sm">{product.name}</span>
                               </li>
                             ))}
-                            {selectedSubcategory.products.length > 7 && (
-                              <li className="px-4 py-2 text-sm text-gray-500 italic">
-                                + {selectedSubcategory.products.length - 7} autres produits
-                              </li>
-                            )}
                           </ul>
                         </div>
                       </div>

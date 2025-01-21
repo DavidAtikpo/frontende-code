@@ -1,67 +1,64 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import axios, { AxiosError } from 'axios';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaClock, FaStar, FaUser, FaTools } from 'react-icons/fa';
+import { FaClock, FaStar, FaUser, FaTools, FaTruck, FaBox } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { API_CONFIG } from '@/utils/config';
 const { BASE_URL } = API_CONFIG;
 
-
 interface Service {
-  id: string;
+  _id: string;
   title: string;
   description: string;
-  price: number;
-  image: string;
-  provider: {
-    name: string;
-    rating: number;
-  };
-  duration: string;
   category: string;
+  images?: string[];
+  icon: string;
+  provider?: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
+  status?: string;
 }
 
 export default function ServicesSection() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Fonction pour obtenir l'icône correspondante
+  const getIcon = (iconName: string) => {
+    const icons = {
+      FaTruck: <FaTruck />,
+      FaTools: <FaTools />,
+      FaBox: <FaBox />
+    };
+    return icons[iconName as keyof typeof icons] || <FaTools />;
+  };
+
   useEffect(() => {
     const fetchServices = async () => {
       try {
         setLoading(true);
-        console.log('Fetching services from:', `${BASE_URL}/api/services/featured`);
+        console.log('Fetching services from:', `${BASE_URL}/api/services/public`);
         
-        const response = await axios.get(`${BASE_URL}/api/services/featured`, {
+        const response = await fetch(`${BASE_URL}/api/services/public`, {
           headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Content-Type': 'application/json'
           },
-          withCredentials: true,
-          timeout: 5000,
-          // Ajouter la configuration proxy si nécessaire
-          proxy: {
-            protocol: 'http',
-            host: 'localhost',
-            port: 5000
-          }
+          cache: 'no-store'
         });
 
-        if (response.data) {
-          setServices(response.data.data);
+        const data = await response.json();
+        console.log('Services data:', data);
+
+        if (data.success && Array.isArray(data.data)) {
+          // Prendre les 6 premiers services
+          setServices(data.data.slice(0, 6));
         }
       } catch (error) {
-        if (error instanceof Error) {
-          console.error('Erreur lors du chargement des services:', {
-            name: error.name,
-            message: error.message,
-            stack: error.stack
-          });
-        } else {
-          console.error('Erreur inconnue:', error);
-        }
+        console.error('Erreur lors du chargement des services:', error);
         setServices([]);
       } finally {
         setLoading(false);
@@ -98,7 +95,7 @@ export default function ServicesSection() {
         >
           <FaTools className="text-purple-500 text-3xl" />
         </motion.div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-2">Coming Soon</h3>
+        <h3 className="text-2xl font-bold text-gray-800 mb-2">Bientôt disponible</h3>
         <p className="text-gray-600">
           Nos services seront bientôt disponibles !
         </p>
@@ -110,46 +107,44 @@ export default function ServicesSection() {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {services.map((service, index) => (
         <motion.div
-          key={service.id}
+          key={service._id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
           className="bg-white rounded-lg shadow-lg overflow-hidden"
         >
-          <div className="relative h-48">
-            <Image
-              src={service.image}
-              alt={service.title}
-              width={500}
-              height={500}
-              className="object-cover"
-            />
-          </div>
+          {service.images && service.images.length > 0 ? (
+            <div className="relative h-48">
+              <img
+                src={`${BASE_URL}/${service.images[0]}`}
+                alt={service.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="h-48 bg-blue-50 flex items-center justify-center">
+              <div className="text-4xl text-blue-600">
+                {getIcon(service.icon)}
+              </div>
+            </div>
+          )}
           <div className="p-4">
             <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
             <p className="text-gray-600 mb-4 line-clamp-2">{service.description}</p>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
                 <FaUser className="text-gray-400" />
-                <span className="text-sm">{service.provider.name}</span>
+                <span className="text-sm">{service.provider?.name || 'Dubon Service'}</span>
               </div>
-              <div className="flex items-center space-x-1">
-                <FaStar className="text-yellow-400" />
-                <span className="text-sm">{service.provider.rating}</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <FaClock className="text-gray-400" />
-                <span className="text-sm">{service.duration}</span>
-              </div>
-              <span className="font-bold text-blue-600">{service.price} CFA</span>
+              <span className="text-sm font-medium text-blue-600">
+                {service.category}
+              </span>
             </div>
             <Link 
-              href={`/services/${service.id}`}
+              href={`/service/request`}
               className="mt-4 block text-center bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Voir les détails
+              Demander ce Service
             </Link>
           </div>
         </motion.div>

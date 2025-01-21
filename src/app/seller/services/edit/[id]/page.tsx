@@ -1,4 +1,4 @@
-import EditServiceClient from './EditServiceClient';
+import EditServiceForm from './EditServiceForm';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -7,5 +7,5 @@ interface PageProps {
 
 export default async function EditServicePage({ params }: PageProps) {
   const resolvedParams = await params;
-  return <EditServiceClient params={resolvedParams} />;
+  return <EditServiceForm params={resolvedParams} />;
 } 

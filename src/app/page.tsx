@@ -65,12 +65,12 @@ export default function Home() {
       </section>
 
       {/* Section Événements */}
-      {/* <section className="bg-gray-50 py-12">
+      <section className="bg-gray-50 py-0">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Événements à Venir</h2>
-          <EventsSection/>
+          <h2 className="text-3xl font-bold text-center mb-8">Nos Services</h2>
+          <ServicesSection/>
         </div>
-      </section> */}
+      </section>
 
       {/* Section Restaurants
       <section className="py-12">

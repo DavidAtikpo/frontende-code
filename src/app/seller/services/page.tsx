@@ -7,27 +7,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
-import { API_CONFIG } from '@/utils/config';
 import { getCookie } from "cookies-next";
-import { FaPlus, FaEdit, FaEye, FaTrash, FaClock, FaMapMarkerAlt, FaMoneyBillWave } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaEye, FaTrash } from 'react-icons/fa';
 import Image from 'next/image';
 
+import { API_CONFIG } from '@/utils/config';
 const { BASE_URL } = API_CONFIG;
 
 interface Service {
   id: string;
+  providerId: string;
+  category: string;
+  subCategory: string;
   title: string;
   description: string;
-  category: string;
-  price: number;
-  duration: number;
-  location: string;
-  status: 'draft' | 'published' | 'archived';
-  bookingsCount: number;
-  rating: number;
-  mainImage: string;
+  images: string[];
+  status: 'active' | 'inactive';
   createdAt: string;
 }
+
+const getImageUrl = (path: string) => {
+  if (!path) return '/default-service.jpg';
+  return path.startsWith('http') ? path : `${BASE_URL}/${path}`;
+};
 
 export default function SellerServices() {
   const router = useRouter();
@@ -40,10 +42,10 @@ export default function SellerServices() {
       header: "Service",
       cell: ({ row }: { row: { original: Service } }) => (
         <div className="flex items-center space-x-3">
-          {row.original.mainImage && (
+          {row.original.images && row.original.images.length > 0 && (
             <div className="relative w-12 h-12">
               <Image
-                src={row.original.mainImage}
+                src={getImageUrl(row.original.images[0])}
                 alt={row.original.title}
                 width={500}
                 height={500}
@@ -63,17 +65,14 @@ export default function SellerServices() {
       header: "Détails",
       cell: ({ row }: { row: { original: Service } }) => (
         <div className="space-y-1">
-          <div className="flex items-center text-sm">
-            <FaMoneyBillWave className="mr-2 text-gray-500" />
-            {row.original.price.toLocaleString()} FCFA
+          <div className="text-sm">
+            Catégorie: {row.original.category}
           </div>
-          <div className="flex items-center text-sm">
-            <FaClock className="mr-2 text-gray-500" />
-            {row.original.duration} min
+          <div className="text-sm">
+            Sous-catégorie: {row.original.subCategory}
           </div>
-          <div className="flex items-center text-sm">
-            <FaMapMarkerAlt className="mr-2 text-gray-500" />
-            {row.original.location}
+          <div className="text-sm text-gray-500">
+            {row.original.description}
           </div>
         </div>
       ),
@@ -84,28 +83,22 @@ export default function SellerServices() {
       cell: ({ row }: { row: { original: Service } }) => {
         const status = row.original.status;
         const colors = {
-          draft: "bg-yellow-100 text-yellow-800",
-          published: "bg-green-100 text-green-800",
-          archived: "bg-gray-100 text-gray-800"
+          active: "bg-green-100 text-green-800",
+          inactive: "bg-gray-100 text-gray-800"
         };
         return (
           <Badge className={colors[status]}>
-            {status}
+            {status === 'active' ? 'Actif' : 'Inactif'}
           </Badge>
         );
       },
     },
     {
-      accessorKey: "stats",
-      header: "Statistiques",
+      accessorKey: "date",
+      header: "Date de création",
       cell: ({ row }: { row: { original: Service } }) => (
-        <div className="space-y-1">
-          <div className="text-sm">
-            {row.original.bookingsCount} réservations
-          </div>
-          <div className="text-sm">
-            {row.original.rating.toFixed(1)} / 5 ⭐
-          </div>
+        <div className="text-sm">
+          {new Date(row.original.createdAt).toLocaleDateString('fr-FR')}
         </div>
       ),
     },
@@ -149,20 +142,40 @@ export default function SellerServices() {
   const fetchServices = async () => {
     try {
       const token = getCookie('token');
-      const response = await fetch(`${BASE_URL}/api/seller/services`, {
+      if (!token) {
+        toast.error('Veuillez vous connecter');
+        router.push('/login');
+        return;
+      }
+
+      console.log('Fetching services with token:', token.substring(0, 10) + '...');
+      const response = await fetch(`${BASE_URL}/api/services/get-all`, {
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des services');
-      }
-
+      console.log('Response status:', response.status);
       const data = await response.json();
-      setServices(data.data);
+      console.log('Services data received:', data);
+
+      if (data.success) {
+        if (Array.isArray(data.data)) {
+          console.log(`Setting ${data.data.length} services`);
+          setServices(data.data);
+          if (data.data.length === 0) {
+            toast.success('Créez votre premier service !');
+          }
+        } else {
+          console.error('Data.data is not an array:', data.data);
+          toast.error('Format de données incorrect');
+        }
+      } else {
+        throw new Error(data.message || 'Erreur lors de la récupération des services');
+      }
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('Erreur complète:', error);
       toast.error('Erreur lors du chargement des services');
     } finally {
       setLoading(false);
@@ -176,7 +189,7 @@ export default function SellerServices() {
 
     try {
       const token = getCookie('token');
-      const response = await fetch(`${BASE_URL}/api/seller/services/${serviceId}`, {
+      const response = await fetch(`${BASE_URL}/api/services/${serviceId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -196,7 +209,11 @@ export default function SellerServices() {
   };
 
   if (loading) {
-    return <div>Chargement...</div>;
+    return (
+      <div className="container mx-auto p-6 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+      </div>
+    );
   }
 
   return (
