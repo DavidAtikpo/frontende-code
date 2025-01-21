@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { FaUpload } from 'react-icons/fa';
+import Image from 'next/image';
 
 interface TrainingForm {
   title: string;
@@ -25,8 +26,32 @@ interface TrainingForm {
 
 const AddTraining = () => {
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors } } = useForm<TrainingForm>();
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<TrainingForm>();
   const [loading, setLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [syllabusName, setSyllabusName] = useState<string | null>(null);
+
+  // Surveiller les changements de fichiers
+  const watchImage = watch('image');
+  const watchSyllabus = watch('syllabus');
+
+  // Mettre à jour les aperçus quand les fichiers changent
+  React.useEffect(() => {
+    if (watchImage && watchImage.length > 0) {
+      const file = watchImage[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }, [watchImage]);
+
+  React.useEffect(() => {
+    if (watchSyllabus && watchSyllabus.length > 0) {
+      setSyllabusName(watchSyllabus[0].name);
+    }
+  }, [watchSyllabus]);
 
   const onSubmit = async (data: TrainingForm) => {
     try {
@@ -48,12 +73,21 @@ const AddTraining = () => {
         }
       });
 
+      // Récupérer le token depuis le localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Veuillez vous connecter');
+        router.push('/login');
+        return;
+      }
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/training/create`,
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -174,14 +208,40 @@ const AddTraining = () => {
                 accept="image/*"
                 className="hidden"
                 id="image"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                      if (e.target?.result) {
+                        setImagePreview(e.target.result as string);
+                      }
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                  }
+                }}
               />
               <label htmlFor="image" className="cursor-pointer">
-                <FaUpload className="mx-auto h-8 w-8 text-gray-400" />
-                <span className="mt-2 block text-sm text-gray-600">
-                  Cliquez pour sélectionner une image
-                </span>
+                {imagePreview ? (
+                  <div className="relative w-full h-48">
+                    <Image
+                      src={imagePreview}
+                      alt="Aperçu"
+                      width={200}
+                      height={200}
+                      className="rounded object-cover"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <FaUpload className="mx-auto h-8 w-8 text-gray-400" />
+                    <span className="mt-2 block text-sm text-gray-600">
+                      Cliquez pour sélectionner une image
+                    </span>
+                  </>
+                )}
               </label>
             </div>
+            {errors.image && <span className="text-red-500">Une image est requise</span>}
           </div>
 
           <div>
@@ -195,10 +255,18 @@ const AddTraining = () => {
                 id="syllabus"
               />
               <label htmlFor="syllabus" className="cursor-pointer">
-                <FaUpload className="mx-auto h-8 w-8 text-gray-400" />
-                <span className="mt-2 block text-sm text-gray-600">
-                  Cliquez pour sélectionner un fichier PDF
-                </span>
+                {syllabusName ? (
+                  <div className="p-4">
+                    <p className="text-sm text-gray-600 break-all">{syllabusName}</p>
+                  </div>
+                ) : (
+                  <>
+                    <FaUpload className="mx-auto h-8 w-8 text-gray-400" />
+                    <span className="mt-2 block text-sm text-gray-600">
+                      Cliquez pour sélectionner un fichier PDF
+                    </span>
+                  </>
+                )}
               </label>
             </div>
           </div>

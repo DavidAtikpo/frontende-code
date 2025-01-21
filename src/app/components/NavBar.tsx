@@ -209,7 +209,7 @@ const NavigationBar = () => {
                           </h3>
                         </div>
                         <div 
-                          className="max-h-[400px] overflow-y-auto hover:overflow-y-auto"
+                          className="max-h-[280px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
                           style={{
                             scrollbarWidth: 'thin',
                             scrollbarColor: '#CBD5E0 #EDF2F7'
