@@ -7,10 +7,13 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { FaArrowLeft, FaSave } from 'react-icons/fa';
 
+interface Params {
+  id: string;
+}
+
 interface TrainingEditProps {
-  params: {
-    id: string;
-  };
+  params: Params;
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 interface TrainingFormData {
@@ -30,7 +33,7 @@ interface TrainingFormData {
   instructor: string;
 }
 
-const TrainingEditClient = ({ params }: TrainingEditProps) => {
+const TrainingEditClient = ({ params, searchParams }: TrainingEditProps) => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);

@@ -64,9 +64,10 @@ interface TrainingDetails {
 
 interface TrainingDetailsClientProps {
   trainingId: string;
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-const TrainingDetailsClient = ({ trainingId }: TrainingDetailsClientProps) => {
+const TrainingDetailsClient = ({ trainingId, searchParams }: TrainingDetailsClientProps) => {
   const router = useRouter();
   const [training, setTraining] = useState<TrainingDetails | null>(null);
   const [loading, setLoading] = useState(true);

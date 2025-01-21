@@ -3,12 +3,14 @@
 import TrainingDetailsClient from './TrainingDetailsClient';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default function TrainingDetailsPage({ params }: PageProps) {
-  console.log('Page params:', params);
-  return <TrainingDetailsClient params={params} />;
+export default async function TrainingDetailsPage({ params, searchParams }: PageProps) {
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  return <TrainingDetailsClient params={resolvedParams} searchParams={resolvedSearchParams} />;
 } 

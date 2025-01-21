@@ -31,9 +31,10 @@ interface TrainingDetailsProps {
   params: {
     id: string;
   };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-const TrainingDetailsClient = ({ params }: TrainingDetailsProps) => {
+const TrainingDetailsClient = ({ params, searchParams }: TrainingDetailsProps) => {
   const router = useRouter();
   const [training, setTraining] = useState<Training | null>(null);
   const [loading, setLoading] = useState(true);

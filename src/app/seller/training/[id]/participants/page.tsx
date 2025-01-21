@@ -3,12 +3,14 @@
 import ParticipantsClient from './ParticipantsClient';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default function ParticipantsPage({ params }: PageProps) {
-  console.log('Participants page params:', params);
-  return <ParticipantsClient params={params} />;
+export default async function ParticipantsPage({ params, searchParams }: PageProps) {
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  return <ParticipantsClient params={resolvedParams} searchParams={resolvedSearchParams} />;
 } 

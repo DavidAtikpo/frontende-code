@@ -8,10 +8,13 @@ import { FaEdit, FaTrash, FaUsers } from 'react-icons/fa';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+interface Params {
+  id: string;
+}
+
 interface TrainingDetailsProps {
-  params: {
-    id: string;
-  };
+  params: Params;
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 interface Training {
@@ -33,14 +36,20 @@ interface Training {
   instructor: string;
 }
 
-const TrainingDetailsClient = ({ params }: TrainingDetailsProps) => {
+const TrainingDetailsClient = ({ params, searchParams }: TrainingDetailsProps) => {
   const router = useRouter();
   const [training, setTraining] = useState<Training | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!params?.id) {
+      console.error('No ID provided');
+      toast.error('ID de formation manquant');
+      router.push('/seller/training');
+      return;
+    }
     fetchTrainingDetails();
-  }, [params.id]);
+  }, [params?.id]);
 
   const fetchTrainingDetails = async () => {
     try {
