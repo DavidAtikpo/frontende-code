@@ -62,13 +62,19 @@ const ProductVivriere = () => {
   }, []);
 
   const getImageUrl = (product: Product) => {
-    if (product.mainImage) {
-      return `${BASE_URL}/${product.mainImage}`;
+    if (!product.images) return DEFAULT_IMAGE;
+    
+    try {
+      // Si c'est un tableau, prendre la première image
+      const path = Array.isArray(product.images) ? product.images[0] : product.images;
+      if (!path) return DEFAULT_IMAGE;
+    
+      // Retourner l'URL Cloudinary directement
+      return path;
+    } catch (error) {
+      console.error('Erreur dans getImageUrl:', error);
+      return DEFAULT_IMAGE;
     }
-    if (product.images && product.images.length > 0) {
-      return `${BASE_URL}/${product.images[0]}`;
-    }
-    return '/placeholder.jpg';
   };
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {

@@ -26,18 +26,8 @@ const getImageUrl = (imagePath: string | string[]) => {
     const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
     if (!path) return DEFAULT_IMAGE;
   
-    // Si c'est déjà une URL complète
-    if (path.startsWith('http')) {
-      return path;
-    }
-  
-    // Si le chemin commence par 'uploads'
-    if (path.startsWith('uploads')) {
-      return `${BASE_URL}/${path}`;
-    }
-
-    // Pour tout autre cas
-    return `${BASE_URL}/uploads/products/${path.replace(/^\/+/, '')}`;
+    // Retourner l'URL Cloudinary directement
+    return path;
   } catch (error) {
     console.error('Erreur dans getImageUrl:', error);
     return DEFAULT_IMAGE;
