@@ -8,6 +8,8 @@ import { motion } from 'framer-motion';
 import { API_CONFIG } from '@/utils/config';
 const { BASE_URL } = API_CONFIG;
 
+const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDEwMEM4OC45NTQzIDEwMCA4MCAxMDguOTU0IDgwIDEyMEM4MCAxMzEuMDQ2IDg4Ljk1NDMgMTQwIDEwMCAxNDBDMTExLjA0NiAxNDAgMTIwIDEzMS4wNDYgMTIwIDEyMEMxMjAgMTA4Ljk1NCAxMTEuMDQ2IDEwMCAxMDAgMTAwWk04NSAxMjBDODUgMTExLjcxNiA5MS43MTU3IDEwNSAxMDAgMTA1QzEwOC4yODQgMTA1IDExNSAxMTEuNzE2IDExNSAxMjBDMTE1IDEyOC4yODQgMTA4LjI4NCAxMzUgMTAwIDEzNUM5MS43MTU3IDEzNSA4NSAxMjguMjg0IDg1IDEyMFoiIGZpbGw9IiM5Q0EzQUYiLz48L3N2Zz4=';
+
 interface Service {
   _id: string;
   title: string;
@@ -35,6 +37,23 @@ export default function ServicesSection() {
       FaBox: <FaBox />
     };
     return icons[iconName as keyof typeof icons] || <FaTools />;
+  };
+
+  // Fonction pour gérer les URLs des images
+  const getImageUrl = (imagePath: string | string[]) => {
+    if (!imagePath) return DEFAULT_IMAGE;
+    
+    try {
+      // Si c'est un tableau, prendre la première image
+      const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
+      if (!path) return DEFAULT_IMAGE;
+    
+      // Retourner l'URL Cloudinary directement
+      return path;
+    } catch (error) {
+      console.error('Erreur dans getImageUrl:', error);
+      return DEFAULT_IMAGE;
+    }
   };
 
   useEffect(() => {
@@ -116,7 +135,7 @@ export default function ServicesSection() {
           {service.images && service.images.length > 0 ? (
             <div className="relative h-48">
               <img
-                src={`${BASE_URL}/${service.images[0]}`}
+                src={getImageUrl(service.images)}
                 alt={service.title}
                 className="w-full h-full object-cover"
               />

@@ -44,30 +44,11 @@ const getImageUrl = (imagePath: string | string[]) => {
     // Si c'est un tableau, prendre la première image
     const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
     if (!path) return DEFAULT_IMAGE;
-
-    // Si c'est déjà une URL complète (http ou https)
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
-    }
-
-    // Nettoyer le chemin de l'image
-    const cleanPath = path.replace(/^\/+/, '').replace(/\\/g, '/');
-
-    // Si nous sommes en développement (localhost)
-    if (process.env.NEXT_PUBLIC_API_URL?.includes('localhost')) {
-      return `http://localhost:5000/${cleanPath}`;
-    }
-
-    // En production, s'assurer que le chemin commence par 'uploads'
-    if (!cleanPath.startsWith('uploads/')) {
-      return `${process.env.NEXT_PUBLIC_API_URL}/uploads/${cleanPath}`;
-    }
-
-    // Si le chemin commence déjà par 'uploads'
-    return `${process.env.NEXT_PUBLIC_API_URL}/${cleanPath}`;
-
+  
+    // Retourner l'URL Cloudinary directement
+    return path;
   } catch (error) {
-    console.error('Erreur dans getImageUrl:', error, 'Path:', imagePath);
+    console.error('Erreur dans getImageUrl:', error);
     return DEFAULT_IMAGE;
   }
 };

@@ -11,7 +11,7 @@ const DEFAULT_IMAGE = '/default-training.jpg';
 
 const getImageUrl = (path: string) => {
   if (!path) return DEFAULT_IMAGE;
-  return path.startsWith('http') ? path : `${process.env.NEXT_PUBLIC_API_URL}/${path}`;
+  return path;
 };
 
 interface Training {

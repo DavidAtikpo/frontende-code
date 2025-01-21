@@ -43,9 +43,18 @@ interface FilterState {
 
 const getImageUrl = (images: string[] | undefined) => {
   if (!images || images.length === 0) return DEFAULT_IMAGE;
-  const imagePath = images[0];
-  if (!imagePath) return DEFAULT_IMAGE;
-  return `${BASE_URL}/${imagePath}`;
+  
+  try {
+    // Si c'est un tableau, prendre la première image
+    const path = images[0];
+    if (!path) return DEFAULT_IMAGE;
+  
+    // Retourner l'URL Cloudinary directement
+    return path;
+  } catch (error) {
+    console.error('Erreur dans getImageUrl:', error);
+    return DEFAULT_IMAGE;
+  }
 };
 
 export default function ProduitAlimentairePage() {
