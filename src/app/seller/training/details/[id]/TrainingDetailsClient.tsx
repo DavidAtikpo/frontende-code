@@ -8,12 +8,6 @@ import { FaEdit, FaTrash, FaUsers } from 'react-icons/fa';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-interface TrainingDetailsProps {
-  params: {
-    id: string;
-  };
-}
-
 interface Training {
   id: string;
   title: string;
@@ -33,19 +27,39 @@ interface Training {
   instructor: string;
 }
 
+interface TrainingDetailsProps {
+  params: {
+    id: string;
+  };
+}
+
 const TrainingDetailsClient = ({ params }: TrainingDetailsProps) => {
   const router = useRouter();
   const [training, setTraining] = useState<Training | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('Client params:', params);
+    if (!params?.id) {
+      console.error('No ID provided');
+      toast.error('ID de formation manquant');
+      router.push('/seller/training');
+      return;
+    }
     fetchTrainingDetails();
-  }, [params.id]);
+  }, [params?.id]);
 
   const fetchTrainingDetails = async () => {
+    if (!params?.id) return;
+    
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/training/${params.id}`);
-      setTraining(response.data.data);
+      console.log('Fetching training details for ID:', params.id);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/training/details/${params.id}`);
+      if (response.data.success) {
+        setTraining(response.data.data);
+      } else {
+        toast.error('Formation non trouvée');
+      }
     } catch (error) {
       console.error('Erreur lors de la récupération des détails:', error);
       toast.error('Erreur lors de la récupération des détails de la formation');
@@ -60,7 +74,7 @@ const TrainingDetailsClient = ({ params }: TrainingDetailsProps) => {
     }
 
     try {
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/training/${params.id}`);
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/training/delete/${params.id}`);
       toast.success('Formation supprimée avec succès');
       router.push('/seller/training');
     } catch (error) {

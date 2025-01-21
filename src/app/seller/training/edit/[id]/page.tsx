@@ -1,13 +1,14 @@
+'use client';
+
 import TrainingEditClient from './TrainingEditClient';
 
-interface TrainingEditPageProps {
+interface PageProps {
   params: {
     id: string;
   };
 }
 
-const TrainingEditPage = ({ params }: TrainingEditPageProps) => {
+export default function TrainingEditPage({ params }: PageProps) {
+  console.log('Edit page params:', params);
   return <TrainingEditClient params={params} />;
-};
-
-export default TrainingEditPage; 
+} 

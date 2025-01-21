@@ -1,13 +1,14 @@
+'use client';
+
 import ParticipantsClient from './ParticipantsClient';
 
-interface ParticipantsPageProps {
+interface PageProps {
   params: {
     id: string;
   };
 }
 
-const ParticipantsPage = ({ params }: ParticipantsPageProps) => {
+export default function ParticipantsPage({ params }: PageProps) {
+  console.log('Participants page params:', params);
   return <ParticipantsClient params={params} />;
-};
-
-export default ParticipantsPage; 
+} 

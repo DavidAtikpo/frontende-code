@@ -1,13 +1,14 @@
+'use client';
+
 import TrainingDetailsClient from './TrainingDetailsClient';
 
-interface TrainingDetailsPageProps {
+interface PageProps {
   params: {
     id: string;
   };
 }
 
-const TrainingDetailsPage = ({ params }: TrainingDetailsPageProps) => {
+export default function TrainingDetailsPage({ params }: PageProps) {
+  console.log('Page params:', params);
   return <TrainingDetailsClient params={params} />;
-};
-
-export default TrainingDetailsPage; 
+} 

@@ -4,101 +4,170 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { FaArrowLeft, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaArrowLeft, FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-interface ParticipantsClientProps {
-  params: {
-    id: string;
-  };
-}
-
 interface Participant {
   id: string;
+  userId: string;
   fullName: string;
   email: string;
   phone: string;
-  address: string;
-  message?: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: string;
+  paymentStatus: string;
+  paymentDate: string | null;
   createdAt: string;
 }
 
 interface Training {
   id: string;
   title: string;
-  maxParticipants: number;
   participantsCount: number;
+  maxParticipants: number;
 }
 
-const ParticipantsClient = ({ params }: ParticipantsClientProps) => {
+interface ParticipantsProps {
+  params: {
+    id: string;
+  };
+}
+
+const ParticipantsClient = ({ params }: ParticipantsProps) => {
   const router = useRouter();
-  const [participants, setParticipants] = useState<Participant[]>([]);
-  const [training, setTraining] = useState<Training | null>(null);
   const [loading, setLoading] = useState(true);
+  const [training, setTraining] = useState<Training | null>(null);
+  const [participants, setParticipants] = useState<Participant[]>([]);
 
   useEffect(() => {
-    fetchParticipants();
-    fetchTrainingDetails();
-  }, [params.id]);
-
-  const fetchTrainingDetails = async () => {
-    try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/training/${params.id}`);
-      setTraining(response.data.data);
-    } catch (error) {
-      console.error('Erreur lors de la récupération des détails de la formation:', error);
-      toast.error('Erreur lors de la récupération des détails de la formation');
+    console.log('Participants client params:', params);
+    if (!params?.id) {
+      console.error('No training ID provided');
+      toast.error('ID de formation manquant');
+      router.push('/seller/training');
+      return;
     }
+    fetchData();
+  }, [params?.id]);
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return null;
+    }
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
   };
 
-  const fetchParticipants = async () => {
+  const fetchData = async () => {
+    if (!params?.id) return;
+    
+    const config = getAuthHeaders();
+    if (!config) return;
+    
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/training/${params.id}/participants`);
-      setParticipants(response.data.data);
+      console.log('Fetching training and participants data for ID:', params.id);
+      
+      // Récupérer les détails de la formation
+      const trainingResponse = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/training/details/${params.id}`,
+        config
+      );
+      
+      if (!trainingResponse.data.success) {
+        toast.error('Formation non trouvée');
+        router.push('/seller/training');
+        return;
+      }
+      
+      setTraining(trainingResponse.data.data);
+
+      // Récupérer la liste des participants
+      const participantsResponse = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/training/${params.id}/participants`,
+        config
+      );
+      
+      if (participantsResponse.data.success) {
+        setParticipants(participantsResponse.data.data);
+      }
     } catch (error) {
-      console.error('Erreur lors de la récupération des participants:', error);
-      toast.error('Erreur lors de la récupération des participants');
+      console.error('Erreur lors de la récupération des données:', error);
+      toast.error('Erreur lors de la récupération des données');
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        router.push('/login');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStatusChange = async (participantId: string, newStatus: 'approved' | 'rejected') => {
+  const updateParticipantStatus = async (participantId: string, newStatus: string) => {
+    const config = getAuthHeaders();
+    if (!config) return;
+
     try {
-      await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/training/${params.id}/participants/${participantId}`, {
-        status: newStatus
-      });
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/training/participant/${participantId}/status`,
+        { status: newStatus },
+        config
+      );
       
-      toast.success(`Inscription ${newStatus === 'approved' ? 'approuvée' : 'refusée'} avec succès`);
-      fetchParticipants(); // Refresh the list
-      fetchTrainingDetails(); // Update training details (participant count)
+      if (response.data.success) {
+        toast.success('Statut mis à jour avec succès');
+        fetchData(); // Rafraîchir les données
+      } else {
+        toast.error('Erreur lors de la mise à jour du statut');
+      }
     } catch (error) {
       console.error('Erreur lors de la mise à jour du statut:', error);
       toast.error('Erreur lors de la mise à jour du statut');
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        router.push('/login');
+      }
+    }
+  };
+
+  const updatePaymentStatus = async (participantId: string, newStatus: string) => {
+    const config = getAuthHeaders();
+    if (!config) return;
+
+    try {
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/training/participant/${participantId}/payment`,
+        { paymentStatus: newStatus },
+        config
+      );
+      
+      if (response.data.success) {
+        toast.success('Statut de paiement mis à jour avec succès');
+        fetchData(); // Rafraîchir les données
+      } else {
+        toast.error('Erreur lors de la mise à jour du statut de paiement');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut de paiement:', error);
+      toast.error('Erreur lors de la mise à jour du statut de paiement');
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        router.push('/login');
+      }
     }
   };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'approved':
+      case 'confirmed':
         return 'bg-green-100 text-green-800';
-      case 'rejected':
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled':
         return 'bg-red-100 text-red-800';
       default:
-        return 'bg-yellow-100 text-yellow-800';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'Approuvé';
-      case 'rejected':
-        return 'Refusé';
-      default:
-        return 'En attente';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -110,8 +179,16 @@ const ParticipantsClient = ({ params }: ParticipantsClientProps) => {
     );
   }
 
+  if (!training) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">Formation non trouvée</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-4">
           <button
@@ -121,29 +198,30 @@ const ParticipantsClient = ({ params }: ParticipantsClientProps) => {
             <FaArrowLeft className="mr-2" />
             Retour
           </button>
-          <h1 className="text-2xl font-bold">
-            Participants - {training?.title}
-          </h1>
+          <h1 className="text-2xl font-bold">Participants - {training.title}</h1>
         </div>
         <div className="text-sm text-gray-600">
-          {training?.participantsCount}/{training?.maxParticipants} participants
+          {participants.length} / {training.maxParticipants} participants
         </div>
       </div>
 
       {participants.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-lg p-6 text-center text-gray-500">
+        <div className="bg-white rounded-lg shadow-md p-6 text-center text-gray-500">
           Aucun participant inscrit pour le moment
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white shadow-md rounded-lg">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Nom complet
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contact
+                  Email
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Téléphone
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date d'inscription
@@ -152,50 +230,66 @@ const ParticipantsClient = ({ params }: ParticipantsClientProps) => {
                   Statut
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Paiement
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200">
               {participants.map((participant) => (
-                <tr key={participant.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                <tr key={participant.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">
                     <div className="text-sm font-medium text-gray-900">
                       {participant.fullName}
                     </div>
-                    <div className="text-sm text-gray-500">{participant.address}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4">
                     <div className="text-sm text-gray-900">{participant.email}</div>
-                    <div className="text-sm text-gray-500">{participant.phone}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {format(new Date(participant.createdAt), 'PPP', { locale: fr })}
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900">{participant.phone}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(participant.status)}`}>
-                      {getStatusText(participant.status)}
+                    <div className="text-sm text-gray-900">
+                      {format(new Date(participant.createdAt), 'dd MMMM yyyy', { locale: fr })}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(participant.status)}`}>
+                      {participant.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {participant.status === 'pending' && (
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleStatusChange(participant.id, 'approved')}
-                          className="text-green-600 hover:text-green-900"
-                          title="Approuver"
-                        >
-                          <FaCheck />
-                        </button>
-                        <button
-                          onClick={() => handleStatusChange(participant.id, 'rejected')}
-                          className="text-red-600 hover:text-red-900"
-                          title="Refuser"
-                        >
-                          <FaTimes />
-                        </button>
-                      </div>
-                    )}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(participant.paymentStatus)}`}>
+                      {participant.paymentStatus}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => updateParticipantStatus(participant.id, 'confirmed')}
+                        className="text-green-600 hover:text-green-900"
+                        title="Confirmer"
+                      >
+                        <FaCheck />
+                      </button>
+                      <button
+                        onClick={() => updateParticipantStatus(participant.id, 'cancelled')}
+                        className="text-red-600 hover:text-red-900"
+                        title="Annuler"
+                      >
+                        <FaTimes />
+                      </button>
+                      <button
+                        onClick={() => updatePaymentStatus(participant.id, 'paid')}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="Marquer comme payé"
+                      >
+                        <FaSpinner />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

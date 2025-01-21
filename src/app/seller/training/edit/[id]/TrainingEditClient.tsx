@@ -38,30 +38,44 @@ const TrainingEditClient = ({ params }: TrainingEditProps) => {
   const [previewImage, setPreviewImage] = useState<string>('');
 
   useEffect(() => {
+    console.log('Edit client params:', params);
+    if (!params?.id) {
+      console.error('No ID provided');
+      toast.error('ID de formation manquant');
+      router.push('/seller/training');
+      return;
+    }
     fetchTrainingDetails();
-  }, [params.id]);
+  }, [params?.id]);
 
   const fetchTrainingDetails = async () => {
+    if (!params?.id) return;
+    
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/training/${params.id}`);
-      const training = response.data.data;
-      
-      // Set form values
-      Object.keys(training).forEach((key) => {
-        if (key !== 'image' && key !== 'syllabus') {
-          setValue(key as keyof TrainingFormData, training[key]);
+      console.log('Fetching training details for ID:', params.id);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/training/details/${params.id}`);
+      if (response.data.success) {
+        const training = response.data.data;
+        // Set form values
+        Object.keys(training).forEach((key) => {
+          if (key !== 'image' && key !== 'syllabus') {
+            setValue(key as keyof TrainingFormData, training[key]);
+          }
+        });
+        
+        if (training.image) {
+          setPreviewImage(training.image);
         }
-      });
-      
-      if (training.image) {
-        setPreviewImage(training.image);
+      } else {
+        toast.error('Formation non trouvée');
+        router.push('/seller/training');
       }
-      
-      setLoading(false);
     } catch (error) {
       console.error('Erreur lors de la récupération des détails:', error);
       toast.error('Erreur lors de la récupération des détails de la formation');
       router.push('/seller/training');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -85,9 +99,17 @@ const TrainingEditClient = ({ params }: TrainingEditProps) => {
     }
 
     try {
-      await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/training/${params.id}`, formData, {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Veuillez vous connecter');
+        router.push('/login');
+        return;
+      }
+
+      await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/training/update/${params.id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
         },
       });
       
