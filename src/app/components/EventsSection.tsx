@@ -4,19 +4,24 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaCalendar, FaMapMarkerAlt, FaTicketAlt } from 'react-icons/fa';
+import { FaCalendar } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { API_CONFIG } from '@/utils/config';
+const { BASE_URL } = API_CONFIG;
 
 interface Event {
   id: string;
   title: string;
   description: string;
-  image: string;
+  type: 'upcoming' | 'past';
   date: string;
-  location: string;
-  price: number;
-  availableTickets: number;
-  category: string;
+  images: string[];
+  sellerId: string;
+  seller?: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 export default function EventsSection() {
@@ -26,8 +31,18 @@ export default function EventsSection() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/events/featured`);
-        setEvents(response.data.data);
+        console.log('Fetching events...');
+        const response = await axios.get(`${BASE_URL}/api/events/public?type=all`);
+        console.log('Response:', response.data);
+        
+        if (response.data.success) {
+          const sortedEvents = response.data.data.sort((a: Event, b: Event) => {
+            return new Date(b.date).getTime() - new Date(a.date).getTime();
+          });
+          setEvents(sortedEvents);
+        } else {
+          console.error('Erreur API:', response.data.message);
+        }
       } catch (error) {
         console.error('Erreur lors du chargement des événements:', error);
       } finally {
@@ -65,9 +80,9 @@ export default function EventsSection() {
         >
           <FaCalendar className="text-yellow-500 text-3xl" />
         </motion.div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-2">Coming Soon</h3>
+        <h3 className="text-2xl font-bold text-gray-800 mb-2">Aucun événement</h3>
         <p className="text-gray-600">
-          Nos événements seront bientôt disponibles !
+          Aucun événement n'est disponible pour le moment.
         </p>
       </motion.div>
     );
@@ -85,14 +100,14 @@ export default function EventsSection() {
         >
           <div className="relative h-48">
             <Image
-              src={event.image}
+              src={event.images[0] || '/placeholder-event.jpg'}
               alt={event.title}
               width={400}
               height={300}
               className="object-cover w-full h-full"
             />
             <div className="absolute top-2 right-2 bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
-              {event.category}
+              {event.type === 'upcoming' ? 'À venir' : 'Passé'}
             </div>
           </div>
           <div className="p-4">
@@ -101,25 +116,18 @@ export default function EventsSection() {
             <div className="space-y-2 mb-4">
               <div className="flex items-center space-x-2">
                 <FaCalendar className="text-gray-400" />
-                <span className="text-sm">{new Date(event.date).toLocaleDateString()}</span>
+                <span className="text-sm">{new Date(event.date).toLocaleDateString('fr-FR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <FaMapMarkerAlt className="text-gray-400" />
-                <span className="text-sm">{event.location}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <FaTicketAlt className="text-gray-400" />
-                <span className="text-sm">{event.availableTickets} billets disponibles</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between mb-4">
-              <span className="font-bold text-blue-600">{event.price} CFA</span>
             </div>
             <Link 
               href={`/events/${event.id}`}
               className="block text-center bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Réserver
+              Voir les détails
             </Link>
           </div>
         </motion.div>

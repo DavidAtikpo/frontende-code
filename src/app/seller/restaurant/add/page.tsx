@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { FaUpload } from 'react-icons/fa';
+import { FaUpload, FaMapMarkerAlt } from 'react-icons/fa';
 import { API_CONFIG } from '@/utils/config';
 import Image from 'next/image';
 
@@ -33,6 +33,7 @@ interface RestaurantForm {
   minOrderAmount: number;
   deliveryFee: number;
   preparationTime: number;
+  location: string;
 }
 
 const AddRestaurant = () => {
@@ -71,13 +72,14 @@ const AddRestaurant = () => {
           }
         }
       });
-
+      const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${BASE_URL}/api/seller/restaurant/add`,
+        `${BASE_URL}/api/restaurants/add`,
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
           }
         }
       );
@@ -206,6 +208,31 @@ const AddRestaurant = () => {
               {...register('phoneNumber', { required: true })}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+          <div>
+            <label className="block mb-2">Lien Google Maps</label>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                {...register('location', { required: true })}
+                placeholder="https://maps.google.com/..."
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open('https://www.google.com/maps', '_blank');
+                }}
+                className="px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                title="Ouvrir Google Maps"
+              >
+                <FaMapMarkerAlt />
+              </a>
+            </div>
+            {errors.location && (
+              <span className="text-red-500 text-sm">Le lien Google Maps est requis</span>
+            )}
           </div>
         </div>
 

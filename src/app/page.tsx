@@ -72,13 +72,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section Restaurants
+      {/* Section Restaurants */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Nos Restaurants Partenaires</h2>
-          <RestaurantsSection/>
+          <h2 className="text-3xl font-bold text-center mb-8">Nos Événements</h2>
+          <EventsSection/>
         </div>
-      </section> */}
+      </section>
 
 
 

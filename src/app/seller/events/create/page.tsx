@@ -12,7 +12,7 @@ const { BASE_URL } = API_CONFIG;
 
 interface EventFormData {
   title: string;
-  eventType: 'past' | 'upcoming';
+  type: 'past' | 'upcoming';
   description: string;
   date: string;
 }
@@ -24,7 +24,7 @@ const CreateEventPage = () => {
   const [imagesPreviews, setImagesPreviews] = useState<string[]>([]);
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
-    eventType: 'upcoming',
+    type: 'upcoming',
     description: '',
     date: '',
   });
@@ -59,28 +59,12 @@ const CreateEventPage = () => {
         title: formData.title,
         description: formData.description,
         date: formData.date,
-        type: formData.eventType,
-        // Champs requis par le contrôleur mais avec des valeurs par défaut
-        startTime: '00:00',
-        endTime: '23:59',
-        location: 'À déterminer',
-        capacity: 0,
-        price: 0,
-        services: [],
-        requirements: '',
-        includedServices: [],
-        additionalServices: [],
-        cancellationPolicy: '',
-        tags: []
+        type: formData.type
       };
 
       // Ajouter tous les champs au FormData
       Object.entries(mappedData).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          formDataToSend.append(key, JSON.stringify(value));
-        } else {
-          formDataToSend.append(key, value.toString());
-        }
+        formDataToSend.append(key, value.toString());
       });
 
       // Ajouter les images
@@ -88,12 +72,14 @@ const CreateEventPage = () => {
         formDataToSend.append('images', image);
       });
 
+      const token = localStorage.getItem('token');
       const response = await axios.post(
         `${BASE_URL}/api/events/create`,
         formDataToSend,
         {
           headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
           }
         }
       );
@@ -144,8 +130,8 @@ const CreateEventPage = () => {
             <div>
               <label className="block text-sm font-medium mb-1">Type d'événement</label>
               <select
-                name="eventType"
-                value={formData.eventType}
+                name="type"
+                value={formData.type}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded"
                 required
