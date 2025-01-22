@@ -6,19 +6,35 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FaCalendar, FaGraduationCap, FaUsers } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { API_CONFIG } from '@/utils/config';
+const { BASE_URL } = API_CONFIG;
 
 const DEFAULT_IMAGE = '/default-training.jpg';
 
-const getImageUrl = (path: string) => {
-  if (!path) return DEFAULT_IMAGE;
-  return path;
+const getImageUrl = (imagePath: string | string[]) => {
+  try {
+    // Si c'est un tableau, prendre la première image
+    const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
+    
+    if (!path) return DEFAULT_IMAGE;
+
+    // Si c'est une URL complète, la retourner directement
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+
+    // Pour tous les autres cas, retourner l'image par défaut
+    return DEFAULT_IMAGE;
+  } catch (error) {
+    return DEFAULT_IMAGE;
+  }
 };
 
 interface Training {
   id: string;
   title: string;
   description: string;
-  image: string;
+  image: string[];
   instructor: string;
   startDate: string;
   duration: string;
@@ -34,7 +50,7 @@ export default function TrainingsSection() {
   useEffect(() => {
     const fetchTrainings = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/training/get-all`);
+        const response = await axios.get(`${BASE_URL}/api/training/get-all`);
         setTrainings(response.data.data);
       } catch (error) {
         console.error('Erreur lors du chargement des formations:', error);
@@ -96,8 +112,9 @@ export default function TrainingsSection() {
               src={getImageUrl(training.image)}
               alt={training.title}
               width={500}
-              height={500}
-              className="object-cover"
+              height={300}
+              className="object-cover w-full h-full"
+              priority
             />
           </div>
           <div className="p-4">

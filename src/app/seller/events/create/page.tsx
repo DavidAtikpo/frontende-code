@@ -6,25 +6,15 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { FaUpload, FaTrash } from 'react-icons/fa';
 import Image from 'next/image';
+import { API_CONFIG } from '@/utils/config';
+const { BASE_URL } = API_CONFIG;
+
 
 interface EventFormData {
   title: string;
+  eventType: 'past' | 'upcoming';
   description: string;
-  type: string;
   date: string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  capacity: number;
-  price: number;
-  requirements: string;
-  includedServices: string[];
-  additionalServices: Array<{
-    name: string;
-    price: number;
-  }>;
-  cancellationPolicy: string;
-  tags: string[];
 }
 
 const CreateEventPage = () => {
@@ -34,19 +24,9 @@ const CreateEventPage = () => {
   const [imagesPreviews, setImagesPreviews] = useState<string[]>([]);
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
+    eventType: 'upcoming',
     description: '',
-    type: '',
     date: '',
-    startTime: '',
-    endTime: '',
-    location: '',
-    capacity: 0,
-    price: 0,
-    requirements: '',
-    includedServices: [],
-    additionalServices: [],
-    cancellationPolicy: '',
-    tags: []
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +53,29 @@ const CreateEventPage = () => {
 
     try {
       const formDataToSend = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
+      
+      // Mapper les champs pour correspondre au contrôleur
+      const mappedData = {
+        title: formData.title,
+        description: formData.description,
+        date: formData.date,
+        type: formData.eventType,
+        // Champs requis par le contrôleur mais avec des valeurs par défaut
+        startTime: '00:00',
+        endTime: '23:59',
+        location: 'À déterminer',
+        capacity: 0,
+        price: 0,
+        services: [],
+        requirements: '',
+        includedServices: [],
+        additionalServices: [],
+        cancellationPolicy: '',
+        tags: []
+      };
+
+      // Ajouter tous les champs au FormData
+      Object.entries(mappedData).forEach(([key, value]) => {
         if (Array.isArray(value)) {
           formDataToSend.append(key, JSON.stringify(value));
         } else {
@@ -81,12 +83,13 @@ const CreateEventPage = () => {
         }
       });
 
+      // Ajouter les images
       images.forEach(image => {
         formDataToSend.append('images', image);
       });
 
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/events`,
+        `${BASE_URL}/api/events/create`,
         formDataToSend,
         {
           headers: {
@@ -117,20 +120,6 @@ const CreateEventPage = () => {
     }));
   };
 
-  const addService = () => {
-    setFormData(prev => ({
-      ...prev,
-      additionalServices: [...prev.additionalServices, { name: '', price: 0 }]
-    }));
-  };
-
-  const removeService = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      additionalServices: prev.additionalServices.filter((_, i) => i !== index)
-    }));
-  };
-
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-8">Créer un événement</h1>
@@ -153,6 +142,32 @@ const CreateEventPage = () => {
             </div>
 
             <div>
+              <label className="block text-sm font-medium mb-1">Type d'événement</label>
+              <select
+                name="eventType"
+                value={formData.eventType}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded"
+                required
+              >
+                <option value="upcoming">Événement à venir</option>
+                <option value="past">Événement passé</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Date de l'événement</label>
+              <input
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded"
+                required
+              />
+            </div>
+
+            <div>
               <label className="block text-sm font-medium mb-1">Description</label>
               <textarea
                 name="description"
@@ -162,65 +177,6 @@ const CreateEventPage = () => {
                 className="w-full p-2 border rounded"
                 required
               />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Type d'événement</label>
-                <select
-                  name="type"
-                  value={formData.type}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                  required
-                >
-                  <option value="">Sélectionner un type</option>
-                  <option value="mariage">Mariage</option>
-                  <option value="anniversaire">Anniversaire</option>
-                  <option value="conference">Conférence</option>
-                  <option value="seminaire">Séminaire</option>
-                  <option value="concert">Concert</option>
-                  <option value="autre">Autre</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Date</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Heure de début</label>
-                <input
-                  type="time"
-                  name="startTime"
-                  value={formData.startTime}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Heure de fin</label>
-                <input
-                  type="time"
-                  name="endTime"
-                  value={formData.endTime}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
             </div>
           </div>
         </div>
@@ -264,85 +220,6 @@ const CreateEventPage = () => {
                   </button>
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Détails et tarifs */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Détails et tarifs</h2>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Capacité</label>
-                <input
-                  type="number"
-                  name="capacity"
-                  value={formData.capacity}
-                  onChange={handleInputChange}
-                  min="1"
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Prix par personne</label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  min="0"
-                  step="0.01"
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Services inclus</label>
-              <input
-                type="text"
-                placeholder="Appuyez sur Entrée pour ajouter"
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const value = e.currentTarget.value.trim();
-                    if (value) {
-                      setFormData(prev => ({
-                        ...prev,
-                        includedServices: [...prev.includedServices, value]
-                      }));
-                      e.currentTarget.value = '';
-                    }
-                  }
-                }}
-                className="w-full p-2 border rounded"
-              />
-              <div className="flex flex-wrap gap-2 mt-2">
-                {formData.includedServices.map((service, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm flex items-center"
-                  >
-                    {service}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData(prev => ({
-                          ...prev,
-                          includedServices: prev.includedServices.filter((_, i) => i !== index)
-                        }));
-                      }}
-                      className="ml-2 text-blue-600 hover:text-blue-800"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
             </div>
           </div>
         </div>

@@ -7,6 +7,8 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { FaUpload } from 'react-icons/fa';
 import Image from 'next/image';
+import { API_CONFIG } from '@/utils/config';
+const { BASE_URL } = API_CONFIG;
 
 interface TrainingForm {
   title: string;
@@ -17,7 +19,7 @@ interface TrainingForm {
   maxParticipants: number;
   location: string;
   category: string;
-  level: 'beginner' | 'intermediate' | 'advanced';
+  level: 'debutant' | 'intermediaire' | 'avance';
   prerequisites: string;
   objectives: string;
   image: FileList;
@@ -30,6 +32,7 @@ const AddTraining = () => {
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [syllabusName, setSyllabusName] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
   // Surveiller les changements de fichiers
   const watchImage = watch('image');
@@ -39,6 +42,7 @@ const AddTraining = () => {
   React.useEffect(() => {
     if (watchImage && watchImage.length > 0) {
       const file = watchImage[0];
+      setSelectedImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -54,24 +58,9 @@ const AddTraining = () => {
   }, [watchSyllabus]);
 
   const onSubmit = async (data: TrainingForm) => {
+    console.log("Début de la soumission du formulaire", data);
     try {
       setLoading(true);
-      const formData = new FormData();
-
-      // Ajouter tous les champs au FormData
-      Object.keys(data).forEach(key => {
-        if (key === 'image') {
-          if (data.image instanceof FileList && data.image.length > 0) {
-            formData.append('image', data.image[0]);
-          }
-        } else if (key === 'syllabus') {
-          if (data.syllabus instanceof FileList && data.syllabus.length > 0) {
-            formData.append('syllabus', data.syllabus[0]);
-          }
-        } else {
-          formData.append(key, data[key as keyof TrainingForm].toString());
-        }
-      });
 
       // Récupérer le token depuis le localStorage
       const token = localStorage.getItem('token');
@@ -81,8 +70,60 @@ const AddTraining = () => {
         return;
       }
 
+      const formData = new FormData();
+
+      // Vérifier si l'image est présente
+      if (!selectedImage) {
+        toast.error("Une image est requise");
+        setLoading(false);
+        return;
+      }
+
+      // Vérifier si le syllabus est présent
+      if (!data.syllabus || data.syllabus.length === 0) {
+        toast.error("Le syllabus est requis");
+        setLoading(false);
+        return;
+      }
+
+      // Ajouter les fichiers
+      formData.append('image', selectedImage);
+      formData.append('syllabus', data.syllabus[0]);
+
+      // Log des fichiers
+      console.log('Image à envoyer:', selectedImage);
+      console.log('Syllabus à envoyer:', data.syllabus[0]);
+
+      // Ajouter les autres champs
+      const fieldsToAdd = {
+        title: data.title,
+        description: data.description,
+        price: Number(data.price),
+        duration: data.duration,
+        startDate: data.startDate,
+        maxParticipants: Number(data.maxParticipants),
+        location: data.location,
+        category: data.category,
+        level: data.level,
+        prerequisites: data.prerequisites,
+        objectives: data.objectives
+      };
+
+      // Log des données avant l'ajout au FormData
+      console.log("Données à envoyer:", fieldsToAdd);
+
+      Object.entries(fieldsToAdd).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value.toString());
+          console.log(`Ajout au FormData - ${key}:`, value.toString());
+        }
+      });
+
+      console.log("Token utilisé:", token);
+      console.log("Envoi de la requête au serveur...");
+
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/training/create`,
+        `${BASE_URL}/api/training/create`,
         formData,
         {
           headers: {
@@ -92,13 +133,31 @@ const AddTraining = () => {
         }
       );
 
+      console.log("Réponse du serveur:", response.data);
+
       if (response.data.success) {
         toast.success('Formation ajoutée avec succès');
         router.push('/seller/training');
+      } else {
+        toast.error(response.data.message || 'Erreur lors de l\'ajout de la formation');
       }
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout de la formation:', error);
-      toast.error('Erreur lors de l\'ajout de la formation');
+    } catch (error: any) {
+      console.error('Erreur complète:', error);
+      if (error.response) {
+        console.error('Données de réponse:', error.response.data);
+        console.error('Status:', error.response.status);
+        console.error('Headers:', error.response.headers);
+        
+        // Afficher le message d'erreur spécifique du serveur
+        const errorMessage = error.response.data.message || error.response.data.error;
+        toast.error(errorMessage || 'Erreur lors de l\'ajout de la formation');
+      } else if (error.request) {
+        console.error('Pas de réponse reçue:', error.request);
+        toast.error('Erreur de connexion au serveur');
+      } else {
+        console.error('Erreur de configuration:', error.message);
+        toast.error('Erreur de configuration de la requête');
+      }
     } finally {
       setLoading(false);
     }
@@ -108,21 +167,29 @@ const AddTraining = () => {
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Créer une nouvelle formation</h1>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form 
+        onSubmit={handleSubmit(onSubmit)} 
+        className="space-y-6"
+        encType="multipart/form-data"
+      >
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <label className="block mb-2">Titre de la formation</label>
+            <label className="block mb-2">Titre de la formation*</label>
             <input
-              {...register('title', { required: true })}
+              {...register('title', { 
+                required: 'Le titre est requis',
+                minLength: { value: 3, message: 'Le titre doit faire au moins 3 caractères' }
+              })}
               className="w-full p-2 border rounded"
+              placeholder="Titre de la formation"
             />
-            {errors.title && <span className="text-red-500">Ce champ est requis</span>}
+            {errors.title && <span className="text-red-500">{errors.title.message}</span>}
           </div>
 
           <div>
-            <label className="block mb-2">Catégorie</label>
+            <label className="block mb-2">Catégorie*</label>
             <select
-              {...register('category', { required: true })}
+              {...register('category', { required: 'La catégorie est requise' })}
               className="w-full p-2 border rounded"
             >
               <option value="">Sélectionner une catégorie</option>
@@ -132,15 +199,45 @@ const AddTraining = () => {
               <option value="marketing">Marketing</option>
               <option value="personal">Développement personnel</option>
             </select>
+            {errors.category && <span className="text-red-500">{errors.category.message}</span>}
           </div>
 
           <div>
-            <label className="block mb-2">Prix (CFA)</label>
+            <label className="block mb-2">Prix (CFA)*</label>
             <input
               type="number"
-              {...register('price', { required: true, min: 0 })}
+              {...register('price', { 
+                required: 'Le prix est requis',
+                min: { value: 0, message: 'Le prix ne peut pas être négatif' }
+              })}
               className="w-full p-2 border rounded"
+              placeholder="Prix en CFA"
             />
+            {errors.price && <span className="text-red-500">{errors.price.message}</span>}
+          </div>
+
+          <div>
+            <label className="block mb-2">Niveau*</label>
+            <select
+              {...register('level', { required: 'Le niveau est requis' })}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">Sélectionner un niveau</option>
+              <option value="debutant">Débutant</option>
+              <option value="intermediaire">Intermédiaire</option>
+              <option value="avance">Avancé</option>
+            </select>
+            {errors.level && <span className="text-red-500">{errors.level.message}</span>}
+          </div>
+
+          <div>
+            <label className="block mb-2">Lieu*</label>
+            <input
+              {...register('location', { required: 'Le lieu est requis' })}
+              className="w-full p-2 border rounded"
+              placeholder="Lieu de la formation"
+            />
+            {errors.location && <span className="text-red-500">{errors.location.message}</span>}
           </div>
 
           <div>
@@ -204,19 +301,23 @@ const AddTraining = () => {
             <div className="border-2 border-dashed rounded-lg p-4 text-center">
               <input
                 type="file"
-                {...register('image', { required: true })}
+                {...register('image', { 
+                  required: 'Une image est requise'
+                })}
                 accept="image/*"
                 className="hidden"
                 id="image"
                 onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    setSelectedImage(file);
                     const reader = new FileReader();
                     reader.onload = (e) => {
                       if (e.target?.result) {
                         setImagePreview(e.target.result as string);
                       }
                     };
-                    reader.readAsDataURL(e.target.files[0]);
+                    reader.readAsDataURL(file);
                   }
                 }}
               />
@@ -249,7 +350,9 @@ const AddTraining = () => {
             <div className="border-2 border-dashed rounded-lg p-4 text-center">
               <input
                 type="file"
-                {...register('syllabus')}
+                {...register('syllabus', { 
+                  required: 'Le syllabus est requis'
+                })}
                 accept=".pdf"
                 className="hidden"
                 id="syllabus"
@@ -275,10 +378,25 @@ const AddTraining = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:bg-gray-400"
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          onClick={() => console.log("Bouton cliqué", errors)}
         >
           {loading ? 'Création en cours...' : 'Créer la formation'}
         </button>
+
+        {/* Afficher les erreurs de validation */}
+        {Object.keys(errors).length > 0 && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded">
+            <p className="text-red-600 font-medium">Erreurs de validation :</p>
+            <ul className="list-disc list-inside mt-2">
+              {Object.entries(errors).map(([field, error]) => (
+                <li key={field} className="text-red-500">
+                  {field}: {error.message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </form>
     </div>
   );

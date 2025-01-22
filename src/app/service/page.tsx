@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTruck, FaTools, FaHandshake, FaChartLine, FaShieldAlt, FaHeadset, FaHome, FaChevronRight, FaSearch, FaFilter, FaBolt, FaBox, FaGlobeAfrica } from 'react-icons/fa';
+import Image from 'next/image';
 
 import Link from 'next/link';
 
@@ -162,6 +163,24 @@ const defaultServices = [
     availability: "available"
   }
 ];
+
+const DEFAULT_IMAGE = '/default-service.jpg';
+
+const getImageUrl = (images?: string[]) => {
+  if (!images || !Array.isArray(images) || images.length === 0) {
+    return DEFAULT_IMAGE;
+  }
+
+  const firstImage = images[0];
+  if (!firstImage) return DEFAULT_IMAGE;
+
+  // Si c'est une URL complète, la retourner
+  if (firstImage.startsWith('http://') || firstImage.startsWith('https://')) {
+    return firstImage;
+  }
+
+  return DEFAULT_IMAGE;
+};
 
 const ServicesPage: React.FC = () => {
   console.log('Initializing ServicesPage');
@@ -481,17 +500,16 @@ const ServicesPage: React.FC = () => {
                   viewport={{ once: true }}
                   className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  {service.images && service.images.length > 0 ? (
-                    <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden">
-                      <img
-                        src={`${BASE_URL}/${service.images[0]}`}
+                  {service.images && service.images.length > 0 && (
+                    <div className="relative h-48 mb-4">
+                      <Image
+                        src={getImageUrl(service.images)}
                         alt={service.title}
-                        className="w-full h-full object-cover"
+                        width={500}
+                        height={300}
+                        className="object-cover w-full h-full rounded-lg"
+                        priority
                       />
-                    </div>
-                  ) : (
-                    <div className="text-4xl text-blue-600 mb-4 bg-blue-50 p-4 rounded-full w-16 h-16 flex items-center justify-center">
-                      {getIcon(service.icon)}
                     </div>
                   )}
                   <h3 className="text-xl font-semibold mb-3 text-gray-800">{service.title}</h3>

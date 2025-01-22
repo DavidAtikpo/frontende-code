@@ -7,6 +7,8 @@ import { toast } from 'react-hot-toast';
 import { FaArrowLeft, FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { API_CONFIG } from '@/utils/config';
+const { BASE_URL } = API_CONFIG;
 
 interface Participant {
   id: string;
@@ -89,7 +91,7 @@ const ParticipantsClient = ({ params, searchParams }: ParticipantsProps) => {
 
       // Récupérer la liste des participants
       const participantsResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/training/${params.id}/participants`,
+        `${BASE_URL}/api/training/${params.id}/participants`,
         config
       );
       
@@ -113,7 +115,7 @@ const ParticipantsClient = ({ params, searchParams }: ParticipantsProps) => {
 
     try {
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/training/participant/${participantId}/status`,
+        `${BASE_URL}/api/training/participant/${participantId}/status`,
         { status: newStatus },
         config
       );
@@ -139,7 +141,7 @@ const ParticipantsClient = ({ params, searchParams }: ParticipantsProps) => {
 
     try {
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/training/participant/${participantId}/payment`,
+        `${BASE_URL}/api/training/participant/${participantId}/payment`,
         { paymentStatus: newStatus },
         config
       );

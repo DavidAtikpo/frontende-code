@@ -176,14 +176,14 @@ const TrainingList = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-3">
                       <button
-                        onClick={() => router.push(`/seller/training/details/${training.id}`)}
+                        onClick={() => router.push(`/seller/training/${training.id}/details`)}
                         className="text-blue-600 hover:text-blue-900"
                         title="Voir détails"
                       >
                         <FaEye />
                       </button>
                       <button
-                        onClick={() => router.push(`/seller/training/${training.id}`)}
+                        onClick={() => router.push(`/seller/training/${training.id}/details`)}
                         className="text-yellow-600 hover:text-yellow-900"
                         title="Modifier"
                       >
