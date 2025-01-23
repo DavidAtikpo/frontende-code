@@ -288,7 +288,7 @@ const NavigationBar = () => {
             { href: '/events', label: 'Événementiels' },
             { href: '/trainings', label: 'Formations' },
             { href: '/restaurant', label: 'E-Restaurant' },
-            { href: '/autres', label: 'Autres' },
+            { href: '/dubon-resto', label: 'Dubon-Resto' },
           ].map((link) => (
             <li key={link.href}>
               <a

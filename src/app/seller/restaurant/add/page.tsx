@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { FaUpload, FaMapMarkerAlt } from 'react-icons/fa';
@@ -20,62 +19,80 @@ interface RestaurantForm {
   email: string;
   logo: FileList;
   coverImage: FileList;
-  cuisine: string[];
-  openingHours: {
-    [key: string]: { open: string; close: string };
-  };
-  priceRange: string;
-  deliveryOptions: {
-    delivery: boolean;
-    takeaway: boolean;
-    dineIn: boolean;
-  };
-  minOrderAmount: number;
-  deliveryFee: number;
-  preparationTime: number;
   location: string;
 }
 
 const AddRestaurant = () => {
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors } } = useForm<RestaurantForm>();
   const [loading, setLoading] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [coverPreview, setCoverPreview] = useState<string>('');
+  const [formData, setFormData] = useState<RestaurantForm>({
+    name: '',
+    description: '',
+    address: '',
+    city: '',
+    phoneNumber: '',
+    email: '',
+    logo: undefined as unknown as FileList,
+    coverImage: undefined as unknown as FileList,
+    location: ''
+  });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, setPreview: (value: string) => void) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'coverImage') => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreview(reader.result as string);
+        if (type === 'logo') {
+          setLogoPreview(reader.result as string);
+        } else {
+          setCoverPreview(reader.result as string);
+        }
       };
       reader.readAsDataURL(file);
+      setFormData(prev => ({
+        ...prev,
+        [type]: e.target.files as FileList
+      }));
     }
   };
 
-  const onSubmit = async (data: RestaurantForm) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.description || !formData.address || !formData.city || !formData.phoneNumber) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
     try {
       setLoading(true);
-      const formData = new FormData();
+      const submitData = new FormData();
 
       // Ajouter les fichiers
-      if (data.logo[0]) formData.append('logo', data.logo[0]);
-      if (data.coverImage[0]) formData.append('coverImage', data.coverImage[0]);
+      if (formData.logo[0]) submitData.append('logo', formData.logo[0]);
+      if (formData.coverImage[0]) submitData.append('coverImage', formData.coverImage[0]);
 
       // Ajouter les autres données
-      Object.keys(data).forEach(key => {
-        if (key !== 'logo' && key !== 'coverImage') {
-          const value = data[key as keyof RestaurantForm];
-          if (value !== undefined) {
-            formData.append(key, typeof value === 'object' ? JSON.stringify(value) : value.toString());
-          }
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key !== 'logo' && key !== 'coverImage' && value) {
+          submitData.append(key, value);
         }
       });
+
       const token = localStorage.getItem('token');
       const response = await axios.post(
         `${BASE_URL}/api/restaurants/add`,
-        formData,
+        submitData,
         {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -86,12 +103,10 @@ const AddRestaurant = () => {
 
       if (response.data.success) {
         toast.success('Restaurant créé avec succès');
-        // Rediriger vers la page d'ajout de plats avec l'ID du restaurant
         router.push(`/seller/restaurant/dishes/add?restaurantId=${response.data.restaurantId}`);
       }
-    } catch (error) {
-      toast.error('Erreur lors de la création du restaurant');
-      console.error(error);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }
@@ -101,47 +116,38 @@ const AddRestaurant = () => {
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Créer un nouveau restaurant</h1>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Informations de base */}
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <label className="block mb-2">Nom du restaurant</label>
+            <label className="block mb-2">Nom du restaurant <span className="text-red-500">*</span></label>
             <input
-              {...register('name', { required: true })}
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              required
             />
-            {errors.name && <span className="text-red-500">Ce champ est requis</span>}
           </div>
 
           <div>
-            <label className="block mb-2">Email</label>
-            <input
-              type="email"
-              {...register('email', { required: true })}
+            <label className="block mb-2">Description <span className="text-red-500">*</span></label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              required
+              rows={3}
             />
           </div>
-        </div>
 
-        {/* Description */}
-        <div>
-          <label className="block mb-2">Description</label>
-          <textarea
-            {...register('description', { required: true })}
-            rows={3}
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Images */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Logo */}
           <div>
             <label className="block mb-2">Logo</label>
             <input
               type="file"
-              {...register('logo')}
-              onChange={(e) => handleImageChange(e, setLogoPreview)}
+              onChange={(e) => handleImageChange(e, 'logo')}
               accept="image/*"
               className="hidden"
               id="logo-upload"
@@ -155,18 +161,16 @@ const AddRestaurant = () => {
             </label>
             {logoPreview && (
               <div className="mt-2">
-                <Image src={logoPreview} alt="Logo preview" width={100} height={100}  className="w-32 h-32 object-cover rounded" />
+                <Image src={logoPreview} alt="Logo preview" width={100} height={100} className="rounded" />
               </div>
             )}
           </div>
 
-          {/* Image de couverture */}
           <div>
             <label className="block mb-2">Image de couverture</label>
             <input
               type="file"
-              {...register('coverImage')}
-              onChange={(e) => handleImageChange(e, setCoverPreview)}
+              onChange={(e) => handleImageChange(e, 'coverImage')}
               accept="image/*"
               className="hidden"
               id="cover-upload"
@@ -180,7 +184,7 @@ const AddRestaurant = () => {
             </label>
             {coverPreview && (
               <div className="mt-2">
-                <Image src={coverPreview} alt="Cover preview" width={100} height={100}  className="w-full h-32 object-cover rounded" />
+                <Image src={coverPreview} alt="Cover preview" width={100} height={100} className="w-full h-32 object-cover rounded" />
               </div>
             )}
           </div>
@@ -189,32 +193,60 @@ const AddRestaurant = () => {
         {/* Adresse et contact */}
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <label className="block mb-2">Adresse</label>
+            <label className="block mb-2">Adresse <span className="text-red-500">*</span></label>
             <input
-              {...register('address', { required: true })}
+              type="text"
+              name="address"
+              value={formData.address}
+              onChange={handleInputChange}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
+
           <div>
-            <label className="block mb-2">Ville</label>
+            <label className="block mb-2">Ville <span className="text-red-500">*</span></label>
             <input
-              {...register('city', { required: true })}
+              type="text"
+              name="city"
+              value={formData.city}
+              onChange={handleInputChange}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
+
           <div>
-            <label className="block mb-2">Téléphone</label>
+            <label className="block mb-2">Téléphone <span className="text-red-500">*</span></label>
             <input
-              {...register('phoneNumber', { required: true })}
+              type="tel"
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-2">Email</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
           <div>
             <label className="block mb-2">Lien Google Maps</label>
             <div className="flex gap-2">
               <input
                 type="url"
-                {...register('location', { required: true })}
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
                 placeholder="https://maps.google.com/..."
                 className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
               />
@@ -230,9 +262,6 @@ const AddRestaurant = () => {
                 <FaMapMarkerAlt />
               </a>
             </div>
-            {errors.location && (
-              <span className="text-red-500 text-sm">Le lien Google Maps est requis</span>
-            )}
           </div>
         </div>
 
