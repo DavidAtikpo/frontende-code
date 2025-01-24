@@ -13,7 +13,10 @@ import {
   FaBars,
   FaSearch,
   FaFilter,
-  FaTools
+  FaTools,
+  FaUsers,
+  FaAward,
+  FaCity
 } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,8 +24,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-
-const BASE_URL = "https://dubon-server.onrender.com";
+import { API_CONFIG } from "@/utils/config";
+const { BASE_URL } = API_CONFIG;
 
 interface Dish {
   _id: string;
@@ -44,33 +47,29 @@ interface Dish {
 }
 
 interface Restaurant {
-  _id: string;
+  id: string;
   name: string;
   description: string;
-  category: string;
-  price: number;
+  address: string;
+  city: string;
+  phoneNumber: string;
+  email: string | null;
+  logo: string | null;
+  coverImage: string | null;
+  location: string | null;
+  status: string;
   rating: number;
-  onSale: boolean;
-  image: string;
-  isDubonResto?: boolean;
-  cuisine?: string[];
-  address?: string;
-  openingHours?: string;
-  dishes: Dish[];
-  phoneNumber?: string;
-  email?: string;
-  website?: string;
-  socialMedia?: {
-    facebook?: string;
-    instagram?: string;
-    twitter?: string;
+  seller: {
+    id: string;
+    name: string;
+    email: string;
   };
 }
 
 interface Category {
-  _id: string;
   name: string;
-  description?: string;
+  count: number;
+  image: string;
 }
 
 const RestaurantPage = () => {
@@ -80,66 +79,76 @@ const RestaurantPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
-    restaurantType: '',
-    dishCategory: '',
-    priceRange: '',
-    rating: '',
-    onSale: false
+    city: '',
+    rating: ''
   });
   const [dubonResto, setDubonResto] = useState<Restaurant | null>(null);
   const [_selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [_cartItems, setCartItems] = useState<Dish[]>([]);
   const [_wishlist, setWishlist] = useState<Dish[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories] = useState<Category[]>([
+    {
+      name: "Restaurants Traditionnels",
+      count: 15,
+      image: "https://res.cloudinary.com/dubonservice/image/upload/v1737727910/dubon/restaurants/u8cam6yikjddpr5pqpkn.jpg"
+    },
+    {
+      name: "Fast Food",
+      count: 12,
+      image: "https://res.cloudinary.com/dubonservice/image/upload/v1737727910/dubon/restaurants/mrttdujebggqj2n5h9mx.jpg"
+    },
+    {
+      name: "Cafés & Desserts",
+      count: 8,
+      image: "https://res.cloudinary.com/dubonservice/image/upload/v1737728156/dubon/restaurants/wcosk4c2isrsobvucidg.jpg"
+    }
+  ]);
+
+  // Informations statiques
+  const stats = {
+    restaurantsPartenaires: "50+",
+    villesCouvertes: "10+",
+    clientsSatisfaits: "5000+",
+    noteGlobale: "4.5"
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchRestaurants = async () => {
       try {
         setLoading(true);
-        const [restaurantsRes, categoriesRes] = await Promise.all([
-          axios.get(`${BASE_URL}/api/restaurants`),
-          axios.get(`${BASE_URL}/api/restaurants/categories`)
-        ]);
-
-        if (Array.isArray(restaurantsRes.data)) {
-          const dubonRestoData = restaurantsRes.data.find((r: Restaurant) => r.isDubonResto);
-          const otherRestaurants = restaurantsRes.data.filter((r: Restaurant) => !r.isDubonResto);
-          
-          setDubonResto(dubonRestoData || null);
-          setRestaurants(otherRestaurants);
-          setSelectedRestaurant(dubonRestoData || null);
-        }
-
-        if (Array.isArray(categoriesRes.data)) {
-          setCategories(categoriesRes.data);
+        console.log('Fetching restaurants...');
+        const response = await axios.get(`${BASE_URL}/api/restaurants`);
+        console.log('API Response:', response.data);
+        
+        if (response.data.success) {
+          const restaurantsData = response.data.data.map((restaurant: Restaurant) => ({
+            ...restaurant,
+            rating: restaurant.rating || 0
+          }));
+          console.log('Processed restaurants:', restaurantsData);
+          setRestaurants(restaurantsData);
+        } else {
+          toast.error('Erreur: ' + response.data.message);
         }
       } catch (error) {
-        console.error('Erreur:', error);
-        toast.error('Erreur lors du chargement des données');
+        console.error('Erreur complète:', error);
+        toast.error('Erreur lors du chargement des restaurants');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchRestaurants();
   }, []);
 
   const filteredRestaurants = restaurants.filter(restaurant => {
-    const matchesSearch = restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      restaurant.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = restaurant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      restaurant.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesType = !filters.restaurantType || restaurant.category === filters.restaurantType;
-    
-    const matchesPrice = !filters.priceRange || (() => {
-      const [min, max] = filters.priceRange.split('-').map(Number);
-      return restaurant.price >= min && (!max || restaurant.price <= max);
-    })();
-
+    const matchesCity = !filters.city || restaurant.city === filters.city;
     const matchesRating = !filters.rating || restaurant.rating >= Number(filters.rating);
 
-    const matchesSale = !filters.onSale || restaurant.onSale;
-
-    return matchesSearch && matchesType && matchesPrice && matchesRating && matchesSale;
+    return matchesSearch && matchesCity && matchesRating;
   });
 
   const _handleAddToCart = (dish: Dish) => {
@@ -173,7 +182,7 @@ const RestaurantPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-2xl text-gray-600">Chargement...</div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
@@ -191,18 +200,115 @@ const RestaurantPage = () => {
           Accueil
         </Link>
         <FaChevronRight className="text-gray-400 text-xs" />
-        <span className="text-blue-600 font-medium">Restaurant</span>
+        <span className="text-blue-600 font-medium">Restaurants</span>
       </motion.nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* En-tête et recherche */}
+        {/* Hero Section */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+          <div className="relative h-96">
+            <Image
+              src="https://res.cloudinary.com/dubonservice/image/upload/v1737727556/dubon/restaurants/btsib5cllpqflqfaauvv.jpg"
+              alt="Restaurants"
+              width={1920}
+              height={1080}
+              className="object-cover w-full h-full"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              <div className="text-center text-white px-4">
+                <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                  Découvrez les Meilleurs Restaurants
+                </h1>
+                <p className="text-xl mb-8">
+                  Une sélection unique de restaurants pour tous les goûts
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Statistiques */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white p-6 rounded-lg shadow text-center"
+          >
+            <FaUtensils className="text-3xl text-blue-500 mx-auto mb-2" />
+            <div className="text-2xl font-bold text-gray-800">{stats.restaurantsPartenaires}</div>
+            <div className="text-sm text-gray-500">Restaurants Partenaires</div>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className="bg-white p-6 rounded-lg shadow text-center"
+          >
+            <FaCity className="text-3xl text-blue-500 mx-auto mb-2" />
+            <div className="text-2xl font-bold text-gray-800">{stats.villesCouvertes}</div>
+            <div className="text-sm text-gray-500">Villes Couvertes</div>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className="bg-white p-6 rounded-lg shadow text-center"
+          >
+            <FaUsers className="text-3xl text-blue-500 mx-auto mb-2" />
+            <div className="text-2xl font-bold text-gray-800">{stats.clientsSatisfaits}</div>
+            <div className="text-sm text-gray-500">Clients Satisfaits</div>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.3 }}
+            className="bg-white p-6 rounded-lg shadow text-center"
+          >
+            <FaStar className="text-3xl text-blue-500 mx-auto mb-2" />
+            <div className="text-2xl font-bold text-gray-800">{stats.noteGlobale}</div>
+            <div className="text-sm text-gray-500">Note Globale</div>
+          </motion.div>
+        </div>
+
+        {/* Catégories populaires */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Catégories Populaires</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {categories.map((category, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+                className="relative h-48 rounded-lg overflow-hidden group"
+              >
+                <Image
+                  src={category.image}
+                  alt={category.name}
+                  width={500}
+                  height={300}
+                  className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-50 transition-all duration-300">
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <h3 className="text-xl font-semibold mb-1">{category.name}</h3>
+                    <p className="text-sm">{category.count} restaurants</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Recherche et filtres existants */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
           <motion.h1 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="text-3xl font-bold text-gray-800 mb-4 md:mb-0"
           >
-            Nos Restaurants
+            Restaurants
           </motion.h1>
           <div className="flex items-center space-x-4 w-full md:w-auto">
             <div className="relative flex-1 md:flex-none">
@@ -235,37 +341,20 @@ const RestaurantPage = () => {
               className="mb-8 overflow-hidden"
             >
               <div className="bg-white p-6 rounded-lg shadow">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Type de restaurant
+                      Ville
                     </label>
                     <select
-                      value={filters.restaurantType}
-                      onChange={(e) => setFilters(prev => ({ ...prev, restaurantType: e.target.value }))}
+                      value={filters.city}
+                      onChange={(e) => setFilters(prev => ({ ...prev, city: e.target.value }))}
                       className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      <option value="">Tous les types</option>
-                      {categories.map(cat => (
-                        <option key={cat._id} value={cat._id}>{cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Fourchette de prix
-                    </label>
-                    <select
-                      value={filters.priceRange}
-                      onChange={(e) => setFilters(prev => ({ ...prev, priceRange: e.target.value }))}
-                      className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Tous les prix</option>
-                      <option value="0-5000">0 - 5,000 CFA</option>
-                      <option value="5000-10000">5,000 - 10,000 CFA</option>
-                      <option value="10000-20000">10,000 - 20,000 CFA</option>
-                      <option value="20000">20,000+ CFA</option>
+                      <option value="">Toutes les villes</option>
+                      <option value="Abidjan">Abidjan</option>
+                      <option value="Yamoussoukro">Yamoussoukro</option>
+                      <option value="Bouaké">Bouaké</option>
                     </select>
                   </div>
 
@@ -290,84 +379,12 @@ const RestaurantPage = () => {
           )}
         </AnimatePresence>
 
-        {/* Dubon Restaurant */}
-        {dubonResto ? (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-12"
-          >
-            <h2 className="text-2xl font-bold mb-6">Notre Restaurant</h2>
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-2 rounded-xl">
-              <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                <div className="md:flex">
-                  <div className="md:w-1/3 relative h-64 md:h-auto">
-                    <Image
-                      src={dubonResto.image || '/default-restaurant.jpg'}
-                      alt={dubonResto.name}
-                      width={500}
-                      height={300}
-                      className="object-cover w-full h-full"
-                    />
-                  </div>
-                  <div className="p-6 md:w-2/3">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-2xl font-bold text-blue-600">{dubonResto.name}</h3>
-                      <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                        Restaurant Officiel
-                      </span>
-                    </div>
-                    <p className="text-gray-600 mb-6">{dubonResto.description}</p>
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      {dubonResto.cuisine && (
-                        <div className="flex items-center text-gray-600">
-                          <FaUtensils className="mr-2" />
-                          <span>{dubonResto.cuisine.join(', ')}</span>
-                        </div>
-                      )}
-                      {dubonResto.address && (
-                        <div className="flex items-center text-gray-600">
-                          <FaMapMarkerAlt className="mr-2" />
-                          <span>{dubonResto.address}</span>
-                        </div>
-                      )}
-                      {dubonResto.openingHours && (
-                        <div className="flex items-center text-gray-600">
-                          <FaClock className="mr-2" />
-                          <span>{dubonResto.openingHours}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center">
-                        <div className="flex text-yellow-400 mr-2">
-                          {[...Array(5)].map((_, i) => (
-                            <FaStar
-                              key={i}
-                              className={i < Math.round(dubonResto.rating) ? 'text-yellow-400' : 'text-gray-300'}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-gray-600">({dubonResto.rating})</span>
-                      </div>
-                    </div>
-                    <Link 
-                      href={`/restaurant/${dubonResto._id}`}
-                      className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      Voir le menu
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ) : null}
-
         {/* Liste des restaurants */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredRestaurants.length > 0 ? (
             filteredRestaurants.map((restaurant) => (
               <motion.div
-                key={restaurant._id}
+                key={restaurant.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -376,22 +393,36 @@ const RestaurantPage = () => {
               >
                 <div className="relative h-48">
                   <Image
-                    src={restaurant.image || '/default-restaurant.jpg'}
+                    src={restaurant.coverImage || '/images/default-restaurant.jpg'}
                     alt={restaurant.name}
                     width={500}
                     height={300}
                     className="object-cover w-full h-full"
                   />
-                  {restaurant.onSale && (
+                  {restaurant.status === 'featured' && (
                     <div className="absolute top-2 left-2">
-                      <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">
-                        Promotion
+                      <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                        Recommandé
                       </span>
                     </div>
                   )}
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-2">{restaurant.name}</h3>
+                  <div className="flex items-center mb-2">
+                    {restaurant.logo && (
+                      <Image
+                        src={restaurant.logo}
+                        alt={`${restaurant.name} logo`}
+                        width={40}
+                        height={40}
+                        className="rounded-full mr-3"
+                      />
+                    )}
+                    <div>
+                      <h3 className="text-xl font-semibold">{restaurant.name}</h3>
+                      <p className="text-sm text-gray-500">{restaurant.city}</p>
+                    </div>
+                  </div>
                   <p className="text-gray-600 mb-4 line-clamp-2">{restaurant.description}</p>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex text-yellow-400">
@@ -402,12 +433,13 @@ const RestaurantPage = () => {
                         />
                       ))}
                     </div>
-                    <span className="text-sm text-gray-500">
-                      {restaurant.cuisine?.join(', ')}
-                    </span>
+                    <div className="flex items-center text-gray-500">
+                      <FaMapMarkerAlt className="mr-1" />
+                      <span className="text-sm">{restaurant.city}</span>
+                    </div>
                   </div>
                   <Link
-                    href={`/restaurant/${restaurant._id}`}
+                    href={`/restaurant/${restaurant.id}`}
                     className="block text-center bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     Voir le menu
@@ -416,7 +448,9 @@ const RestaurantPage = () => {
               </motion.div>
             ))
           ) : (
-            <ComingSoonCard />
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-500 text-lg">Aucun restaurant trouvé</p>
+            </div>
           )}
         </div>
       </div>

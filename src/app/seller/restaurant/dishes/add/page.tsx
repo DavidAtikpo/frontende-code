@@ -14,12 +14,10 @@ interface DishForm {
   name: string;
   description: string;
   price: number;
-  category: string;
   image: FileList;
   isAvailable: boolean;
   preparationTime: string;
   ingredients: string;
-  allergens: string;
   specialDiet?: string[];
   isSpicy: boolean;
   isVegetarian: boolean;
@@ -33,7 +31,6 @@ const AddDish = () => {
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const { register, handleSubmit, watch, formState: { errors } } = useForm<DishForm>();
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<{ id: string; name: string; }[]>([]);
   const [imagePreview, setImagePreview] = useState<string>('');
   const isPromoted = watch('isPromoted');
 
@@ -47,22 +44,6 @@ const AddDish = () => {
       router.push('/seller/restaurant/add');
     }
   }, [router]);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/api/restaurants/categories`);
-        if (response.data.success) {
-          setCategories(response.data.data);
-        }
-      } catch (error) {
-        console.error('Erreur:', error);
-        toast.error('Erreur lors du chargement des catégories');
-      }
-    };
-
-    fetchCategories();
-  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -100,20 +81,21 @@ const AddDish = () => {
           }
         }
       });
-
+      const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${BASE_URL}/api/seller/dishes/add`,
+        `${BASE_URL}/api/restaurants/${restaurantId}/dishes`,
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
           }
         }
       );
 
       if (response.data.success) {
         toast.success('Plat ajouté avec succès');
-        router.push(`/seller/restaurant/dishes?restaurantId=${restaurantId}`);
+        router.push(`/seller/restaurant?restaurantId=${restaurantId}`);
       }
     } catch (error) {
       toast.error('Erreur lors de l\'ajout du plat');
@@ -148,23 +130,6 @@ const AddDish = () => {
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
             />
             {errors.price && <span className="text-red-500">Prix invalide</span>}
-          </div>
-
-          {/* Catégorie */}
-          <div>
-            <label className="block mb-2">Catégorie</label>
-            <select
-              {...register('category', { required: true })}
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Sélectionner une catégorie</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-            {errors.category && <span className="text-red-500">Ce champ est requis</span>}
           </div>
 
           {/* Temps de préparation */}

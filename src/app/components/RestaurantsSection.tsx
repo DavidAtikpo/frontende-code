@@ -6,6 +6,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FaStar, FaUtensils, FaMapMarkerAlt, FaClock } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { API_CONFIG } from '@/utils/config';
+
+const { BASE_URL } = API_CONFIG;
 
 interface Restaurant {
   id: string;
@@ -28,7 +31,7 @@ export default function RestaurantsSection() {
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/restaurants/featured`);
+        const response = await axios.get(`${BASE_URL}/api/restaurants`);
         setRestaurants(response.data.data);
       } catch (error) {
         console.error('Erreur lors du chargement des restaurants:', error);
@@ -111,7 +114,7 @@ export default function RestaurantsSection() {
             <div className="space-y-2 mb-4">
               <div className="flex items-center space-x-2">
                 <FaUtensils className="text-gray-400" />
-                <span className="text-sm">{restaurant.cuisine.join(', ')}</span>
+              
               </div>
               <div className="flex items-center space-x-2">
                 <FaMapMarkerAlt className="text-gray-400" />

@@ -33,11 +33,11 @@ export default function Home() {
       </section>
 
       {/* Section Promotions */}
-      {/* <section className="bg-gray-50 py-12">
+      <section className="bg-gray-50 py-12">
         <div className="container mx-auto px-4">
-          <PromotionsSection/>
+          <RestaurantsSection/>
         </div>
-      </section> */}
+      </section>
 
       {/* Section Catégories */}
       <section className="py-0">
