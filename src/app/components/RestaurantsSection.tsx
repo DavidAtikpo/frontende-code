@@ -31,36 +31,19 @@ interface Restaurant {
   };
 }
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
-
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
-};
-
 export default function RestaurantsSection() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [key, setKey] = useState(0); // Pour forcer le rechargement
+  const [key, setKey] = useState(0);
 
   const fetchRestaurants = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Fetching restaurants...');
       const response = await axios.get(`${BASE_URL}/api/restaurants`);
       
       if (response.data.success) {
-        console.log('Restaurants loaded:', response.data.data);
         setRestaurants(response.data.data);
       } else {
         setError(response.data.message);
@@ -76,170 +59,153 @@ export default function RestaurantsSection() {
   }, []);
 
   useEffect(() => {
-    console.log('Component mounted, fetching restaurants...');
     fetchRestaurants();
   }, [fetchRestaurants, key]);
 
   const handleRefresh = () => {
-    console.log('Refreshing restaurants...');
-    setKey(prev => prev + 1); // Force le rechargement
+    setKey(prev => prev + 1);
   };
 
   if (loading) {
     return (
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex flex-col justify-center items-center h-64"
-      >
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4" />
-        <p className="text-gray-600">Chargement des restaurants...</p>
-      </motion.div>
+      <div className="min-h-[200px] flex flex-col items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p className="mt-4 text-gray-600">Chargement des restaurants...</p>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-lg shadow-lg p-8 text-center"
-      >
-        <h3 className="text-xl font-bold text-red-600 mb-2">Erreur</h3>
-        <p className="text-gray-600 mb-4">{error}</p>
-        <button
+      <div className="min-h-[200px] flex flex-col items-center justify-center bg-gray-50">
+        <div className="text-red-500 text-5xl mb-4">⚠️</div>
+        <p className="text-gray-600">{error}</p>
+        <button 
           onClick={handleRefresh}
-          className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
-          <FaSync className="mr-2" />
           Réessayer
         </button>
-      </motion.div>
-    );
-  }
-
-  if (!restaurants || restaurants.length === 0) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-lg shadow-lg p-8 text-center"
-      >
-        <h3 className="text-2xl font-bold text-gray-800 mb-2">Bientôt disponible</h3>
-        <p className="text-gray-600 mb-4">
-          Nos restaurants partenaires seront bientôt disponibles !
-        </p>
-        <button
-          onClick={handleRefresh}
-          className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <FaSync className="mr-2" />
-          Rafraîchir
-        </button>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end">
-        <button
-          onClick={handleRefresh}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+    <motion.section 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="py-0 bg-gradient-to-b from-gray-50 to-white"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="relative bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl shadow-lg p-8 mb-8 text-center"
         >
-          <FaSync className="mr-2" />
-          Rafraîchir
-        </button>
-      </div>
-      
-      <AnimatePresence mode="wait">
-        <motion.div 
-          key={key}
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          {restaurants.map((restaurant) => (
-            <motion.div
-              key={restaurant.id}
-              variants={item}
-              className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
-            >
-              <div className="relative h-48">
-                <Image
-                  src={restaurant.coverImage || '/images/default-restaurant.jpg'}
-                  alt={restaurant.name}
-                  width={500}
-                  height={300}
-                  className="object-cover w-full h-full"
-                  priority
-                />
-                {restaurant.status === 'featured' && (
-                  <div className="absolute top-2 right-2 bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
-                    Recommandé
-                  </div>
-                )}
-              </div>
-              <div className="p-6">
-                <div className="flex items-center mb-4">
-                  {restaurant.logo && (
-                    <Image
-                      src={restaurant.logo}
-                      alt={`${restaurant.name} logo`}
-                      width={40}
-                      height={40}
-                      className="rounded-full mr-3"
-                    />
-                  )}
-                  <div>
-                    <h3 className="text-xl font-semibold">{restaurant.name}</h3>
-                    <div className="flex items-center mt-1">
-                      <div className="flex text-yellow-400">
-                        {[...Array(5)].map((_, i) => (
-                          <FaStar
-                            key={i}
-                            className={i < Math.round(restaurant.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}
-                          />
-                        ))}
-                      </div>
-                      <span className="ml-2 text-sm text-gray-600">({restaurant.rating || 0})</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <p className="text-gray-600 mb-4 line-clamp-2">{restaurant.description}</p>
-                
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-gray-600">
-                    <FaMapMarkerAlt className="w-4 h-4 mr-2" />
-                    <span className="text-sm">{restaurant.address}</span>
-                  </div>
-                  {restaurant.phoneNumber && (
-                    <div className="flex items-center text-gray-600">
-                      <FaPhone className="w-4 h-4 mr-2" />
-                      <span className="text-sm">{restaurant.phoneNumber}</span>
-                    </div>
-                  )}
-                  {restaurant.email && (
-                    <div className="flex items-center text-gray-600">
-                      <FaEnvelope className="w-4 h-4 mr-2" />
-                      <span className="text-sm">{restaurant.email}</span>
-                    </div>
-                  )}
-                </div>
-
-                <Link 
-                  href={`/restaurant/${restaurant.id}`}
-                  className="block text-center bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Voir le menu
-                </Link>
-              </div>
-            </motion.div>
-          ))}
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            Nos Restaurants Partenaires
+          </h2>
+          <p className="text-blue-100 max-w-2xl mx-auto">
+            Découvrez notre sélection de restaurants et profitez des meilleurs plats
+          </p>
         </motion.div>
-      </AnimatePresence>
-    </div>
+
+        {!restaurants || restaurants.length === 0 ? (
+          <div className="text-center py-8">
+            <FaSync className="mx-auto text-gray-400 text-5xl mb-4" />
+            <p className="text-gray-500">Aucun restaurant disponible pour le moment.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {restaurants.map((restaurant, index) => (
+              <motion.div
+                key={restaurant.id}
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ 
+                  duration: 0.5,
+                  delay: index * 0.1,
+                  type: "spring",
+                  stiffness: 100
+                }}
+                whileHover={{ 
+                  scale: 1.05,
+                  transition: { duration: 0.2 }
+                }}
+                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
+              >
+                <div className="relative h-40">
+                  <Image
+                    src={restaurant.coverImage || '/images/default-restaurant.jpg'}
+                    alt={restaurant.name}
+                    width={500}
+                    height={300}
+                    className="object-cover w-full h-full"
+                    priority
+                  />
+                  {restaurant.status === 'featured' && (
+                    <div className="absolute top-2 right-2 bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
+                      Recommandé
+                    </div>
+                  )}
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center mb-3">
+                    {restaurant.logo && (
+                      <Image
+                        src={restaurant.logo}
+                        alt={`${restaurant.name} logo`}
+                        width={40}
+                        height={40}
+                        className="rounded-full mr-3"
+                      />
+                    )}
+                    <div>
+                      <h3 className="text-lg font-semibold truncate">{restaurant.name}</h3>
+                      <div className="flex items-center mt-1">
+                        <div className="flex text-yellow-400">
+                          {[...Array(5)].map((_, i) => (
+                            <FaStar
+                              key={i}
+                              className={`w-3 h-3 ${i < Math.round(restaurant.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
+                            />
+                          ))}
+                        </div>
+                        <span className="ml-2 text-xs text-gray-600">({restaurant.rating || 0})</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">{restaurant.description}</p>
+                  
+                  <div className="space-y-1 mb-3">
+                    <div className="flex items-center text-gray-600">
+                      <FaMapMarkerAlt className="w-3 h-3 mr-2" />
+                      <span className="text-xs truncate">{restaurant.address}</span>
+                    </div>
+                    {restaurant.phoneNumber && (
+                      <div className="flex items-center text-gray-600">
+                        <FaPhone className="w-3 h-3 mr-2" />
+                        <span className="text-xs">{restaurant.phoneNumber}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <Link 
+                    href={`/restaurant/${restaurant.id}`}
+                    className="block text-center bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    Voir le menu
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+    </motion.section>
   );
 }

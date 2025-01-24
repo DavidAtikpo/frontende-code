@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { API_CONFIG } from '@/utils/config';
 import axios from 'axios';
-import { FaStar, FaMapMarkerAlt, FaStore, FaSearch } from 'react-icons/fa';
+import { FaStar, FaMapMarkerAlt, FaStore } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
 const { BASE_URL } = API_CONFIG;
@@ -48,7 +48,6 @@ const ShopsSection = () => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -75,14 +74,9 @@ const ShopsSection = () => {
     fetchShops();
   }, []);
 
-  const filteredShops = shops.filter(shop => 
-    shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    shop.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   if (loading) {
     return (
-      <div className="min-h-[400px] flex flex-col items-center justify-center bg-gray-50">
+      <div className="min-h-[200px] flex flex-col items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         <p className="mt-4 text-gray-600">Chargement des boutiques...</p>
       </div>
@@ -91,7 +85,7 @@ const ShopsSection = () => {
 
   if (error) {
     return (
-      <div className="min-h-[400px] flex flex-col items-center justify-center bg-gray-50">
+      <div className="min-h-[200px] flex flex-col items-center justify-center bg-gray-50">
         <div className="text-red-500 text-5xl mb-4">⚠️</div>
         <p className="text-gray-600">{error}</p>
         <button 
@@ -105,43 +99,52 @@ const ShopsSection = () => {
   }
 
   return (
-    <section className="py-12 bg-gradient-to-b from-gray-50 to-white">
+    <motion.section 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="py-0 bg-gradient-to-b from-gray-50 to-white"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="relative bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl shadow-lg p-8 mb-8 text-center"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
             Nos Boutiques Partenaires
           </h2>
-          <p className="text-lg text-gray-600 mb-8">
+          <p className="text-blue-100 max-w-2xl mx-auto">
             Découvrez notre sélection de boutiques de confiance et trouvez les meilleurs produits
           </p>
-          
-          {/* Barre de recherche */}
-          <div className="max-w-xl mx-auto relative">
-            <input
-              type="text"
-              placeholder="Rechercher une boutique..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-3 pl-12 rounded-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-            />
-            <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          </div>
-        </div>
+        </motion.div>
 
-        {filteredShops.length === 0 ? (
-          <div className="text-center py-12">
+        {shops.length === 0 ? (
+          <div className="text-center py-8">
             <FaStore className="mx-auto text-gray-400 text-5xl mb-4" />
-            <p className="text-gray-500">Aucune boutique ne correspond à votre recherche.</p>
+            <p className="text-gray-500">Aucune boutique disponible pour le moment.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {filteredShops.map((shop, index) => (
+            {shops.map((shop, index) => (
               <motion.div 
                 key={shop._id}
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1 * index }}
-                className="bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ 
+                  duration: 0.5,
+                  delay: index * 0.1,
+                  type: "spring",
+                  stiffness: 100
+                }}
+                whileHover={{ 
+                  scale: 1.05,
+                  transition: { duration: 0.2 }
+                }}
+                className="bg-white rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
+                onClick={() => router.push(`/shop/${shop._id}`)}
               >
                 <div className="relative h-24 sm:h-28 w-full">
                   <img
@@ -168,14 +171,17 @@ const ShopsSection = () => {
                       {shop.status === 'verified' ? 'Ouvert' : 'Fermé'}
                     </span>
                   </div>
-                  <p className="text-[10px] text-gray-500 mt-1">{shop.location}</p>
+                  <p className="text-[10px] text-gray-500 mt-1 truncate">
+                    <FaMapMarkerAlt className="inline mr-1" />
+                    {shop.location || 'Emplacement non spécifié'}
+                  </p>
                 </div>
               </motion.div>
             ))}
           </div>
         )}
       </div>
-    </section>
+    </motion.section>
   );
 };
 

@@ -234,33 +234,47 @@ const HomeProducts = () => {
   }
 
   return (
-    <section className="py-16 bg-gray-50">
+    <motion.section 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="py-0 bg-gradient-to-b from-gray-50 to-white"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="relative bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl shadow-lg p-8 mb-8 text-center"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
             Produits Populaires
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-blue-100 max-w-2xl mx-auto">
             Découvrez notre sélection des produits les plus appréciés
           </p>
         </motion.div>
 
         <div className="relative">
-          <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory hide-scrollbar">
+          <div className="flex overflow-x-auto gap-1 pb-4 snap-x snap-mandatory hide-scrollbar">
             {products.map((product, index) => (
               <motion.div
                 key={product.id}
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ 
+                  duration: 0.5, 
+                  delay: index * 0.1,
+                  type: "spring",
+                  stiffness: 100
+                }}
+                whileHover={{ 
+                  scale: 1.05,
+                  transition: { duration: 0.2 }
+                }}
                 className="bg-white rounded-xl shadow-lg overflow-hidden group relative border-2 border-blue-500 
-                  snap-start flex-shrink-0 w-[160px] sm:w-[200px] h-[260px] sm:h-[280px]"
+                  snap-start flex-shrink-0 w-[160px] sm:w-[200px] h-[260px] sm:h-[280px] transform transition-all duration-300"
               >
                 <div className="relative h-[140px] sm:h-[160px]">
                   <div className="w-full h-full">
@@ -399,19 +413,22 @@ const HomeProducts = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-12 text-center"
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mt-8 text-center"
         >
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => router.push('/products')}
             className="inline-flex items-center justify-center space-x-2 bg-blue-600 text-white px-8 py-3 rounded-xl 
-              hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
+              hover:bg-blue-700 transition-all duration-300"
           >
             <span className="font-medium">Voir tous les produits</span>
             <FaShoppingCart className="ml-2" />
-          </button>
+          </motion.button>
         </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 };
 
