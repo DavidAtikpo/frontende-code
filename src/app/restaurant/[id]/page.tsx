@@ -163,13 +163,14 @@ export default function RestaurantDetailsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* En-tête du restaurant */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
-          <div className="relative h-64 md:h-96">
+          <div className="relative h-[400px] w-full">
             <Image
               src={restaurant.coverImage || '/images/default-restaurant.jpg'}
               alt={restaurant.name}
-              width={1000}
-              height={100} 
-              className="object-cover"
+              width={1920}
+              height={1080}
+              className="object-cover w-full h-full"
+              priority
             />
             {restaurant.status === 'featured' && (
               <div className="absolute top-4 left-4">
@@ -178,44 +179,45 @@ export default function RestaurantDetailsPage() {
                 </span>
               </div>
             )}
-          </div>
-          
-          <div className="p-8">
-            <div className="flex items-center mb-6">
-              {restaurant.logo && (
-                <Image
-                  src={restaurant.logo}
-                  alt={`${restaurant.name} logo`}
-                  width={80}
-                  height={80}
-                  className="rounded-full mr-6"
-                />
-              )}
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{restaurant.name}</h1>
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center">
-                    <div className="flex text-yellow-400 mr-2">
-                      {[...Array(5)].map((_, i) => (
-                        <FaStar
-                          key={i}
-                          className={i < Math.round(restaurant.rating) ? 'text-yellow-400' : 'text-gray-300'}
-                        />
-                      ))}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-8">
+              <div className="flex items-center mb-4">
+                {restaurant.logo && (
+                  <Image
+                    src={restaurant.logo}
+                    alt={`${restaurant.name} logo`}
+                    width={80}
+                    height={80}
+                    className="rounded-full mr-6 border-2 border-white"
+                  />
+                )}
+                <div>
+                  <h1 className="text-3xl font-bold text-white mb-2">{restaurant.name}</h1>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center">
+                      <div className="flex text-yellow-400 mr-2">
+                        {[...Array(5)].map((_, i) => (
+                          <FaStar
+                            key={i}
+                            className={i < Math.round(restaurant.rating) ? 'text-yellow-400' : 'text-gray-300'}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-white">({restaurant.rating})</span>
                     </div>
-                    <span className="text-gray-600">({restaurant.rating})</span>
+                    <span className="text-white/60">|</span>
+                    <span className="text-white">{restaurant.city}</span>
                   </div>
-                  <span className="text-gray-400">|</span>
-                  <span className="text-gray-600">{restaurant.city}</span>
                 </div>
               </div>
             </div>
-
+          </div>
+          
+          <div className="p-8">
             <p className="text-gray-700 text-lg mb-8">{restaurant.description}</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Informations</h2>
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-gray-900">Informations</h2>
                 <div className="flex items-center text-gray-600">
                   <FaMapMarkerAlt className="w-5 h-5 mr-3" />
                   <span>{restaurant.address}</span>
@@ -241,7 +243,7 @@ export default function RestaurantDetailsPage() {
                     href={restaurant.location}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                    className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
                   >
                     <FaMapMarkerAlt className="mr-2" />
                     Voir sur Google Maps
