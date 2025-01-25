@@ -12,30 +12,13 @@ const { BASE_URL } = API_CONFIG;
 
 const DEFAULT_IMAGE = '/default-training.jpg';
 
-const getImageUrl = (imagePath: string | string[]) => {
-  try {
-    // Si c'est un tableau, prendre la première image
-    const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
-    
-    if (!path) return DEFAULT_IMAGE;
 
-    // Si c'est une URL complète, la retourner directement
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
-    }
-
-    // Pour tous les autres cas, retourner l'image par défaut
-    return DEFAULT_IMAGE;
-  } catch (error) {
-    return DEFAULT_IMAGE;
-  }
-};
 
 interface Training {
   id: string;
   title: string;
   description: string;
-  image: string[];
+  image: string;
   instructor: string;
   startDate: string;
   duration: string;
@@ -140,13 +123,13 @@ export default function TrainingsSection() {
               className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300"
             >
               <div className="relative h-48">
-                <Image
-                  src={getImageUrl(training.image)}
+                <img
+                  src={training.image ||'/default-training.jpg' }
                   alt={training.title}
-                  width={500}
-                  height={300}
+                  // width={500}
+                  // height={300}
                   className="object-cover w-full h-full"
-                  priority={index < 3}
+                  // priority={index < 3}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4">

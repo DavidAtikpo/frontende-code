@@ -8,6 +8,7 @@ import ProductImage from "./ProductImage";
 import { useCartContext } from "../context/CartContext";
 import { API_CONFIG } from '@/utils/config';
 import { useRouter } from 'next/navigation';
+import { deleteCookie } from "cookies-next";
 
 // Hook personnalisé pour gérer le clic extérieur
 const useClickOutside = (handler: () => void) => {
@@ -153,29 +154,36 @@ const Header = () => {
     return state.cart.reduce((acc, item) => acc + item.quantity * item.finalPrice, 0);
   };
 
-  const handleLogout = async () => {
-    try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/user/logout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+  // const handleLogout = async () => {
+  //   try {
+  //     const response = await fetch(`${API_CONFIG.BASE_URL}/user/logout`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //       },
+  //     });
 
-      if (response.ok) {
-        localStorage.removeItem("token");
-        setIsAuthenticated(false);
-        setUserInfo({ name: '', email: '', profilePhotoURL: null });
-        window.location.href = "/";
-      } else {
-        const errorData = await response.json();
-        alert(`Erreur de déconnexion : ${errorData.message}`);
-      }
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion :", error);
-      alert("Impossible de se déconnecter. Veuillez réessayer.");
-    }
+  //     if (response.ok) {
+  //       localStorage.removeItem("token");
+  //       setIsAuthenticated(false);
+  //       setUserInfo({ name: '', email: '', profilePhotoURL: null });
+  //       window.location.href = "/";
+  //     } else {
+  //       const errorData = await response.json();
+  //       alert(`Erreur de déconnexion : ${errorData.message}`);
+  //     }
+  //   } catch (error) {
+  //     console.error("Erreur lors de la déconnexion :", error);
+  //     alert("Impossible de se déconnecter. Veuillez réessayer.");
+  //   }
+  // };
+
+  const handleLogout = () => {
+    deleteCookie('token');
+    localStorage.removeItem('token')
+    localStorage.removeItem("userData")
+    window.location.href = "/login";
   };
 
   const handleNavigate = (path: string) => {

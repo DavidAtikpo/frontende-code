@@ -33,11 +33,11 @@ export default function Home() {
       </section>
 
       {/* Section Promotions */}
-      <section className="bg-gray-50 py-12">
-        <div className="container mx-auto px-4">
+      
+        <div>
           <RestaurantsSection/>
         </div>
-      </section>
+      
 
       {/* Section Catégories */}
       <section className="py-0">
@@ -59,7 +59,7 @@ export default function Home() {
       {/* Section Formations */}
       <section className="py-0">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Formations Disponibles</h2>
+          
             <TrainingsSection/>
         </div>
       </section>
@@ -67,18 +67,18 @@ export default function Home() {
       {/* Section Événements */}
       <section className="bg-gray-50 py-0">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Nos Services</h2>
+        
           <ServicesSection/>
         </div>
       </section>
 
       {/* Section Restaurants */}
-      <section className="py-12">
+    
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Nos Événements</h2>
+        
           <EventsSection/>
         </div>
-      </section>
+      
 
 
 

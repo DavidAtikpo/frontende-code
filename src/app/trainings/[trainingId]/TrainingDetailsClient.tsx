@@ -13,10 +13,7 @@ const { BASE_URL } = API_CONFIG;
 const DEFAULT_IMAGE = '/default-training.jpg';
 
 // Fonction pour gérer les URLs des images
-const getImageUrl = (path: string) => {
-  if (!path) return DEFAULT_IMAGE;
-  return path.startsWith('http') ? path : `${BASE_URL}/${path}`;
-};
+
 
 interface TrainingDetails {
   _id: string;
@@ -114,7 +111,7 @@ const TrainingDetailsClient = ({ trainingId, searchParams }: TrainingDetailsClie
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="relative h-64 md:h-96">
           <Image
-            src={getImageUrl(training.image) || '/default-training.jpg'}
+            src={training.image || '/default-training.jpg'}
             alt={training.title}
             width={1200}
             height={800}

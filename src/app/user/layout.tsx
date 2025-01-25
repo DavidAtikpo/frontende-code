@@ -50,6 +50,11 @@ const navigation = [
     icon: Clock
   },
   {
+    name: "Demande d'organisation",
+    href: "/dashboard/requests",
+    icon: Clock
+  },
+  {
     name: "Favoris",
     href: "/user/favorites",
     icon: Heart
