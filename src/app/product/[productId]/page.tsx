@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { FaHeart, FaShareAlt, FaStar, FaShoppingCart, FaCreditCard, FaHome, FaChevronRight } from "react-icons/fa";
+import { FaHeart, FaShareAlt, FaStar, FaShoppingCart, FaCreditCard, FaHome, FaChevronRight, FaShieldAlt, FaTruck, FaUndo, FaClock, FaCheckCircle, FaLock } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -352,11 +352,18 @@ const ProductDetailPage = () => {
           </div>
         </div>
 
-        {/* Right Column - Details */}
+        {/* Right Column - Information Sections */}
         <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{product?.name}</h1>
-            <div className="flex items-center space-x-4 mb-4">
+          {/* En-tête du produit */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex justify-between items-start mb-4">
+              <h1 className="text-2xl font-bold text-gray-900">{product?.name}</h1>
+              <button className="p-2 text-gray-500 hover:text-red-500 transition-colors">
+                <FaHeart size={24} />
+              </button>
+            </div>
+
+            <div className="flex items-center mb-4">
               <div className="flex items-center">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <FaStar
@@ -366,26 +373,16 @@ const ProductDetailPage = () => {
                   />
                 ))}
                 <span className="ml-2 text-sm text-gray-500">(4 avis vérifiés)</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button className="text-gray-500 hover:text-gray-700">
-                  <FaHeart size={16} />
-                </button>
-                <button className="text-gray-500 hover:text-gray-700">
-                  <FaShareAlt size={16} />
-                </button>
-              </div>
             </div>
-            <div className="space-y-1 text-sm text-gray-600">
+          </div>
+
+            <div className="space-y-1 text-sm text-gray-600 mb-4">
               <p>SKU: <span className="font-medium">{product.sku}</span></p>
               <p>Vendeur: <span className="font-medium">{product.seller?.businessInfo?.companyName}</span></p>
               <p>Catégorie: <Link href={`/category/${product.category?.id}`} className="text-blue-600 hover:underline cursor-pointer">{product.category?.name}</Link></p>
             </div>
-          </div>
 
-          {/* Prix et stock */}
-          <div className="space-y-4">
-            <div className="flex items-baseline space-x-3">
+            <div className="flex items-baseline space-x-3 mb-4">
               <span className="text-3xl font-bold text-blue-600">
                 {product?.price?.toLocaleString()} FCFA
               </span>
@@ -395,14 +392,13 @@ const ProductDetailPage = () => {
                 </span>
               )}
             </div>
-            
-            {/* Barre de progression du stock */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
+
+            {/* Stock Status */}
+            <div className="mb-6">
+              <div className="flex justify-between text-sm mb-2">
                 <span className={product.quantity > 0 ? 'text-blue-600' : 'text-red-600'}>
                   {product.quantity > 0 ? `${product.quantity} en stock` : 'Rupture de stock'}
                 </span>
-                <span className="text-gray-500">Stock max: 100</span>
               </div>
               <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
                 <div 
@@ -411,98 +407,81 @@ const ProductDetailPage = () => {
                 />
               </div>
             </div>
-          </div>
 
-          {/* Livraison et garanties */}
-          <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-            {product.shippingInfo?.map((info, index) => (
-              <div key={index} className="flex items-center space-x-3">
-              <FaHome className="text-blue-600" />
-              <div>
-                  <h3 className="font-medium">{info.type}</h3>
-                  <p className="text-sm text-gray-500">{info.details}</p>
-              </div>
-            </div>
-            ))}
-          </div>
-
-          {/* Actions */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center border rounded-lg">
-                <button
-                  onClick={() => handleQuantityChange(-1)}
-                  className="px-3 py-1 text-gray-600 hover:bg-gray-100"
-                  disabled={quantity <= 1}
-                >
-                  -
-                </button>
-                <span className="px-3 py-1 border-x">{quantity}</span>
-                <button
-                  onClick={() => handleQuantityChange(1)}
-                  className="px-3 py-1 text-gray-600 hover:bg-gray-100"
-                >
-                  +
-                </button>
-              </div>
+            {/* Actions */}
+            <div className="space-y-4">
+              <button
+                onClick={() => handleBuyNow(product)}
+                disabled={product.quantity === 0}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <img src="/images/fedapay.png" alt="FedaPay" className="h-5" />
+                Payer avec FedaPay
+              </button>
               
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleAddToCart(product)}
-                  disabled={product.quantity === 0}
-                  className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                >
-                  <FaShoppingCart size={14} />
-                </button>
-                <button
-                  onClick={() => handleBuyNow(product)}
-                  disabled={product.quantity === 0}
-                  className="p-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                >
-                  <FaCreditCard size={14} />
-                </button>
+              <button
+                onClick={() => handleAddToCart(product)}
+                disabled={product.quantity === 0}
+                className="w-full bg-gray-100 text-gray-800 py-3 rounded-lg font-medium hover:bg-gray-200 transition-all duration-300"
+              >
+                Ajouter au panier
+              </button>
+            </div>
+          </div>
+
+          {/* Informations de livraison */}
+          <div className="bg-gray-50 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Livraison Express</h3>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3 pb-4 border-b border-gray-200">
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Livraison Standard</p>
+                  <p className="text-sm text-gray-600">Livraison en 24-48h</p>
+                </div>
+                <span className="text-blue-600 font-medium">Gratuit</span>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Suivi en temps réel</p>
+                  <p className="text-sm text-gray-600">Suivez votre commande à tout moment</p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Caractéristiques techniques */}
-          <div className="border rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <tbody>
-                {product.dimensions && (
-                  <tr className="border-b">
-                    <td className="px-4 py-2 bg-gray-50 font-medium">Dimensions</td>
-                    <td className="px-4 py-2">
-                      {product.dimensions.length} x {product.dimensions.width} x {product.dimensions.height} {product.dimensions.unit}
-                    </td>
-                  </tr>
-                )}
-                {product.temperature && (
-                <tr className="border-b">
-                    <td className="px-4 py-2 bg-gray-50 font-medium">Température</td>
-                    <td className="px-4 py-2">
-                      {product.temperature.min}°{product.temperature.unit} à {product.temperature.max}°{product.temperature.unit}
-                    </td>
-                </tr>
-                )}
-                {product.weight && (
-                <tr className="border-b">
-                    <td className="px-4 py-2 bg-gray-50 font-medium">Poids</td>
-                    <td className="px-4 py-2">{product.weight}</td>
-                </tr>
-                )}
-                {product.brand && (
-                <tr className="border-b">
-                    <td className="px-4 py-2 bg-gray-50 font-medium">Marque</td>
-                    <td className="px-4 py-2">{product.brand}</td>
-                </tr>
-                )}
-                <tr>
-                  <td className="px-4 py-2 bg-gray-50 font-medium">Garantie</td>
-                  <td className="px-4 py-2">12 mois</td>
-                </tr>
-              </tbody>
-            </table>
+          {/* Garanties et Retours */}
+          <div className="bg-gray-50 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Garanties et Retours</h3>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3 pb-4 border-b border-gray-200">
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Garantie satisfaction</p>
+                  <p className="text-sm text-gray-600">Retour gratuit sous 7 jours</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Produits authentiques</p>
+                  <p className="text-sm text-gray-600">Tous nos produits sont vérifiés</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Service Client */}
+          <div className="bg-gray-50 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Besoin d'aide ?</h3>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Service client disponible</p>
+                  <p className="text-sm text-gray-600">Notre équipe est là pour vous aider 24/7</p>
+                  <button className="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    Contactez-nous →
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

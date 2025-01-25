@@ -1,16 +1,15 @@
 'use client';
 
+import { useParams } from 'next/navigation';
 import TrainingDetailsClient from './TrainingDetailsClient';
 
-interface PageProps {
-  params: Promise<{
-    trainingId: string;
-  }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
+export default function TrainingDetailsPage() {
+  const params = useParams();
+  const trainingId = params?.trainingId as string;
 
-export default async function TrainingDetailsPage({ params, searchParams }: PageProps) {
-  const resolvedParams = await params;
-  const resolvedSearchParams = await searchParams;
-  return <TrainingDetailsClient trainingId={resolvedParams.trainingId} searchParams={resolvedSearchParams} />;
+  if (!trainingId) {
+    return <div>Formation non trouvée</div>;
+  }
+
+  return <TrainingDetailsClient trainingId={trainingId} searchParams={{}} />;
 } 

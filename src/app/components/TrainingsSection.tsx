@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { FaCalendar, FaGraduationCap, FaUsers, FaClock } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { API_CONFIG } from '@/utils/config';
+import { useRouter } from 'next/navigation';
 const { BASE_URL } = API_CONFIG;
 
 const DEFAULT_IMAGE = '/default-training.jpg';
@@ -44,6 +45,7 @@ interface Training {
 }
 
 export default function TrainingsSection() {
+  const router = useRouter();
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -61,6 +63,14 @@ export default function TrainingsSection() {
 
     fetchTrainings();
   }, []);
+
+  const handleTrainingClick = (trainingId: string) => {
+    try {
+      router.push(`/trainings/${trainingId}`);
+    } catch (error) {
+      console.error('Erreur de navigation:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -170,12 +180,15 @@ export default function TrainingsSection() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <Link 
-                    href={`/trainings/${training.id}`}
-                    className="block text-center bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleTrainingClick(training.id);
+                    }}
+                    className="w-full text-center bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                   >
                     S'inscrire à la formation
-                  </Link>
+                  </button>
                 </motion.div>
               </div>
             </motion.div>

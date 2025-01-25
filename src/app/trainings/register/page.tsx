@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import { API_CONFIG } from '@/utils/config';
+
+const { BASE_URL } = API_CONFIG;
 import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
 
 interface RegisterFormData {
@@ -59,7 +62,7 @@ export default function TrainingRegisterPage() {
 
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/training/${trainingId}/register`,
+        `${BASE_URL}/api/training/${trainingId}/register`,
         formData,
         {
           headers: {

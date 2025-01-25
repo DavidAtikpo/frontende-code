@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaStar, FaShoppingCart, FaHeart, FaEye } from 'react-icons/fa';
+import { FaStar, FaShoppingCart, FaHeart, FaEye, FaShieldAlt, FaTruck, FaCreditCard, FaUndo, FaClock, FaCheckCircle } from 'react-icons/fa';
 import { Slider } from "@/components/ui/slider";
 import { useCartContext } from "@/app/context/CartContext";
 import { getCookie } from 'cookies-next';
@@ -12,7 +12,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDEwMEM4OC45NTQzIDEwMCA4MCAxMDguOTU0IDgwIDEyMEM4MCAxMzEuMDQ2IDg4Ljk1NDMgMTQwIDEwMCAxNDBDMTExLjA0NiAxNDAgMTIwIDEzMS4wNDYgMTIwIDEyMEMxMjAgMTA4Ljk1NCAxMTEuMDQ2IDEwMCAxMDAgMTAwWk04NSAxMjBDODUgMTExLjcxNiA5MS43MTU3IDEwNSAxMDAgMTA1QzEwOC4yODQgMTA1IDExNSAxMTEuNzE2IDExNSAxMjBDMTE1IDEyOC4yODQgMTA4LjI4NCAxMzUgMTAwIDEzNUM5MS43MTU3IDEzNSA4NSAxMjguMjg0IDg1IDEyMFoiIGZpbGw9IiM5Q0EzQUYiLz48L3N2Zz4=';
+const DEFAULT_IMAGE = '/placeholder.jpg';
 
 interface Product {
   id: string;
@@ -43,10 +43,27 @@ interface FilterState {
 
 const getImageUrl = (images: string[] | undefined) => {
   if (!images || images.length === 0) return DEFAULT_IMAGE;
-  const imagePath = images[0];
-  if (!imagePath) return DEFAULT_IMAGE;
-  return imagePath.startsWith('/') ? `${BASE_URL}${imagePath}` : `${BASE_URL}/${imagePath}`;
+  
+  try {
+    // Si c'est un tableau, prendre la première image
+    const path = Array.isArray(images) ? images[0] : images;
+    if (!path) return DEFAULT_IMAGE;
+  
+    // Si c'est une URL Cloudinary, la retourner directement
+    if (path.startsWith('http')) {
+      return path;
+    }
 
+    // Si c'est un chemin relatif, construire l'URL complète
+    if (path.startsWith('/')) {
+      return `${BASE_URL}${path}`;
+    }
+
+    return `${BASE_URL}/${path}`;
+  } catch (error) {
+    console.error('Erreur dans getImageUrl:', error);
+    return DEFAULT_IMAGE;
+  }
 };
 
 export default function CategoryPage() {
@@ -224,9 +241,19 @@ export default function CategoryPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="container mx-auto px-4 py-8"
+    >
       {/* Section Filtres */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="bg-white p-4 rounded-lg shadow mb-6"
+      >
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Filtre par sous-catégorie */}
           <div>
@@ -285,103 +312,158 @@ export default function CategoryPage() {
             </select>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Grille de produits */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {filteredProducts.map((product) => (
-          <motion.div
-            key={product.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-lg shadow-sm overflow-hidden group relative border hover:border-blue-500 transition-colors"
-          >
-            <Link href={`/product/${product.id}`}>
-              <div className="relative h-40 sm:h-48">
-                <Image
-                  src={getImageUrl(product.images)}
-                  alt={product.name}
-                  width={200}
-                  height={200}
-                  className="w-full h-full object-contain p-2"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.onerror = null;
-                    target.src = DEFAULT_IMAGE;
-                  }}
-                />
-                
-                {/* Actions Overlay */}
-                <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleAddToCart(product);
-                    }}
-                    className="p-2 bg-white rounded-full shadow-lg hover:bg-blue-500 hover:text-white transition-colors"
-                    title="Ajouter au panier"
-                  >
-                    <FaShoppingCart size={16} />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleToggleWishlist(product);
-                    }}
-                    className="p-2 bg-white rounded-full shadow-lg hover:bg-red-500 hover:text-white transition-colors"
-                    title="Ajouter aux favoris"
-                  >
-                    <FaHeart 
-                      className={state.wishlist.find((item) => item._id === product.id) ? "text-red-500" : ""} 
-                      size={16} 
-                    />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      router.push(`/product/${product.id}`);
-                    }}
-                    className="p-2 bg-white rounded-full shadow-lg hover:bg-green-500 hover:text-white transition-colors"
-                    title="Voir le produit"
-                  >
-                    <FaEye size={16} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-gray-500">{product.subcategory?.name}</span>
-                  <div className="flex items-center">
-                    <FaStar className="text-yellow-400 w-4 h-4" />
-                    <span className="text-xs text-gray-500 ml-1">4.5</span>
-                  </div>
-                </div>
-                <h3 className="font-medium text-gray-900 mb-1 truncate">{product.name}</h3>
-                <p className="text-sm text-gray-500 mb-2 line-clamp-2">{product.shortDescription}</p>
-                <div className="flex items-center justify-between">
-                  <p className="text-blue-600 font-bold">{product.price.toLocaleString()} CFA</p>
-                </div>
-              </div>
-            </Link>
-
-            {/* Bouton Acheter avec effet diagonal */}
-            <div className="absolute bottom-0 right-0 w-20 h-20 overflow-hidden">
-              <div 
-                className="absolute bottom-0 right-0 w-28 h-28 bg-blue-600 transform rotate-45 translate-x-14 translate-y-6 hover:bg-blue-700 transition-colors cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (product.quantity > 0) {
-                    handleBuyNow(product);
-                  }
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Grille de produits */}
+        <div className="lg:w-3/4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filteredProducts.map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ 
+                  duration: 0.5,
+                  delay: index * 0.1,
+                  type: "spring",
+                  stiffness: 100
                 }}
+                whileHover={{ 
+                  scale: 1.03,
+                  transition: { duration: 0.2 }
+                }}
+                className="bg-white rounded-lg shadow-sm overflow-hidden group relative border hover:border-blue-500 transition-all duration-300"
               >
-                <div className="absolute bottom-6 right-14 transform -rotate-45 flex flex-col items-center top-12">
-                  <button
-                    type="button"
+                <Link href={`/product/${product.id}`}>
+                  <div className="relative h-40 sm:h-48">
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Image
+                        src={getImageUrl(product.images)}
+                        alt={product.name}
+                        width={200}
+                        height={200}
+                        className="w-full h-full object-contain p-2"
+                        priority={true}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = DEFAULT_IMAGE;
+                        }}
+                      />
+                    </motion.div>
+                    
+                    {/* Actions Overlay */}
+                    <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleAddToCart(product);
+                        }}
+                        className="p-2 bg-white rounded-full shadow-lg hover:bg-blue-500 hover:text-white transition-all duration-300"
+                        title="Ajouter au panier"
+                      >
+                        <FaShoppingCart size={16} />
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleToggleWishlist(product);
+                        }}
+                        className="p-2 bg-white rounded-full shadow-lg hover:bg-red-500 hover:text-white transition-all duration-300"
+                        title="Ajouter aux favoris"
+                      >
+                        <FaHeart 
+                          className={state.wishlist.find((item) => item._id === product.id) ? "text-red-500" : ""} 
+                          size={16} 
+                        />
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          router.push(`/product/${product.id}`);
+                        }}
+                        className="p-2 bg-white rounded-full shadow-lg hover:bg-green-500 hover:text-white transition-all duration-300"
+                        title="Voir le produit"
+                      >
+                        <FaEye size={16} />
+                      </motion.button>
+                    </div>
+                  </div>
+
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                    className="p-4"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <motion.span 
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="text-xs text-gray-500"
+                      >
+                        {product.subcategory?.name}
+                      </motion.span>
+                      <motion.div 
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex items-center"
+                      >
+                        <FaStar className="text-yellow-400 w-4 h-4" />
+                        <span className="text-xs text-gray-500 ml-1">4.5</span>
+                      </motion.div>
+                    </div>
+                    <motion.h3 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="font-medium text-gray-900 mb-1 truncate"
+                    >
+                      {product.name}
+                    </motion.h3>
+                    <motion.p 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="text-sm text-gray-500 mb-2 line-clamp-2"
+                    >
+                      {product.shortDescription}
+                    </motion.p>
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="flex items-center justify-between"
+                    >
+                      <p className="text-blue-600 font-bold">{product.price.toLocaleString()} CFA</p>
+                    </motion.div>
+                  </motion.div>
+                </Link>
+
+                {/* Nouveau bouton Acheter */}
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="px-4 pb-4"
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (product.quantity > 0) {
@@ -389,29 +471,160 @@ export default function CategoryPage() {
                       }
                     }}
                     disabled={product.quantity === 0}
-                    className={`text-white text-sm font-medium ${
-                      product.quantity === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
+                    className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-medium text-sm transition-all duration-300 ${
+                      product.quantity === 0 
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
                     }`}
                   >
-                    {product.quantity === 0 ? 'Indisponible' : 'Acheter'}
-                  </button>
-                  <img 
-                    src="/Logo blanc.png" 
-                    alt="Logo" 
-                    className="w-4 h-4 mt-1"
-                  />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+                    {product.quantity === 0 ? 'Indisponible' : 'Acheter maintenant'}
+                    {product.quantity > 0 && (
+                      <img 
+                        src="/Logo blanc.png" 
+                        alt="Logo" 
+                        className="w-4 h-4"
+                      />
+                    )}
+                  </motion.button>
+                </motion.div>
+              </motion.div>
+            ))}
+          </div>
 
-      {filteredProducts.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          Aucun produit trouvé avec les filtres sélectionnés.
+          {filteredProducts.length === 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-8 text-gray-500"
+            >
+              Aucun produit trouvé avec les filtres sélectionnés.
+            </motion.div>
+          )}
         </div>
-      )}
-    </div>
+
+        {/* Sections d'informations */}
+        <div className="lg:w-1/4 space-y-6">
+          {/* Paiement Sécurisé */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white rounded-lg shadow p-6"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <FaCreditCard className="text-blue-600 text-2xl" />
+              <h3 className="text-lg font-semibold">Paiement Sécurisé</h3>
+            </div>
+            <p className="text-gray-600 text-sm mb-3">
+              Nous utilisons FedaPay, une plateforme de paiement sécurisée et fiable en Afrique.
+            </p>
+            <ul className="text-sm text-gray-600 space-y-2">
+              <li className="flex items-center gap-2">
+                <FaCheckCircle className="text-green-500" />
+                Transactions cryptées
+              </li>
+              <li className="flex items-center gap-2">
+                <FaCheckCircle className="text-green-500" />
+                Paiement mobile simple
+              </li>
+              <li className="flex items-center gap-2">
+                <FaCheckCircle className="text-green-500" />
+                Protection contre la fraude
+              </li>
+            </ul>
+          </motion.div>
+
+          {/* Livraison Rapide */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-white rounded-lg shadow p-6"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <FaTruck className="text-blue-600 text-2xl" />
+              <h3 className="text-lg font-semibold">Livraison Express</h3>
+            </div>
+            <p className="text-gray-600 text-sm mb-3">
+              Service de livraison rapide et fiable dans toute la région.
+            </p>
+            <ul className="text-sm text-gray-600 space-y-2">
+              <li className="flex items-center gap-2">
+                <FaClock className="text-blue-500" />
+                Livraison en 24-48h
+              </li>
+              <li className="flex items-center gap-2">
+                <FaCheckCircle className="text-green-500" />
+                Suivi en temps réel
+              </li>
+              <li className="flex items-center gap-2">
+                <FaCheckCircle className="text-green-500" />
+                Emballage sécurisé
+              </li>
+            </ul>
+          </motion.div>
+
+          {/* Garantie et Remboursement */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-white rounded-lg shadow p-6"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <FaShieldAlt className="text-blue-600 text-2xl" />
+              <h3 className="text-lg font-semibold">Garantie Qualité</h3>
+            </div>
+            <p className="text-gray-600 text-sm mb-3">
+              Nous garantissons la qualité de tous nos produits.
+            </p>
+            <ul className="text-sm text-gray-600 space-y-2">
+              <li className="flex items-center gap-2">
+                <FaUndo className="text-blue-500" />
+                Remboursement sous 7 jours
+              </li>
+              <li className="flex items-center gap-2">
+                <FaCheckCircle className="text-green-500" />
+                Produits authentiques
+              </li>
+              <li className="flex items-center gap-2">
+                <FaCheckCircle className="text-green-500" />
+                Service après-vente réactif
+              </li>
+            </ul>
+          </motion.div>
+
+          {/* Sécurité de la Plateforme */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6 }}
+            className="bg-white rounded-lg shadow p-6"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <FaShieldAlt className="text-blue-600 text-2xl" />
+              <h3 className="text-lg font-semibold">Plateforme Sécurisée</h3>
+            </div>
+            <p className="text-gray-600 text-sm mb-3">
+              Votre sécurité est notre priorité absolue.
+            </p>
+            <ul className="text-sm text-gray-600 space-y-2">
+              <li className="flex items-center gap-2">
+                <FaCheckCircle className="text-green-500" />
+                Protection des données
+              </li>
+              <li className="flex items-center gap-2">
+                <FaCheckCircle className="text-green-500" />
+                Vendeurs vérifiés
+              </li>
+              <li className="flex items-center gap-2">
+                <FaCheckCircle className="text-green-500" />
+                Support client 24/7
+              </li>
+            </ul>
+          </motion.div>
+        </div>
+      </div>
+    </motion.div>
   );
 }

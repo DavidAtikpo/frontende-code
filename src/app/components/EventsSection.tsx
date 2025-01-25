@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaCalendar, FaMapMarkerAlt, FaClock, FaUsers, FaTicketAlt } from 'react-icons/fa';
+import { FaCalendar, FaMapMarkerAlt, FaClock, FaUsers, FaTicketAlt, FaEye } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { API_CONFIG } from '@/utils/config';
 const { BASE_URL } = API_CONFIG;
@@ -196,8 +196,8 @@ export default function EventsSection() {
                     className="block text-center bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                   >
                     <span className="flex items-center justify-center gap-2">
-                      <FaTicketAlt />
-                      Réserver ma place
+                      <FaEye />
+                      Détails
                     </span>
                   </Link>
                 </motion.div>

@@ -6,13 +6,16 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
 import { FaCalendar, FaUsers, FaMapMarkerAlt, FaClock, FaGraduationCap } from 'react-icons/fa';
+import { API_CONFIG } from '@/utils/config';
+
+const { BASE_URL } = API_CONFIG;
 
 const DEFAULT_IMAGE = '/default-training.jpg';
 
 // Fonction pour gérer les URLs des images
 const getImageUrl = (path: string) => {
   if (!path) return DEFAULT_IMAGE;
-  return path.startsWith('http') ? path : `${process.env.NEXT_PUBLIC_API_URL}/${path}`;
+  return path.startsWith('http') ? path : `${BASE_URL}/${path}`;
 };
 
 interface TrainingDetails {
@@ -41,46 +44,56 @@ const TrainingDetailsClient = ({ trainingId, searchParams }: TrainingDetailsClie
   const router = useRouter();
   const [training, setTraining] = useState<TrainingDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [enrolling, setEnrolling] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTraining = async () => {
+      if (!trainingId) {
+        setError('ID de formation invalide');
+        setLoading(false);
+        return;
+      }
+
       try {
-        console.log('Fetching training with ID:', trainingId);
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/training/${trainingId}`);
-        console.log('Training response:', response.data);
+        const response = await axios.get(`${BASE_URL}/api/training/details/${trainingId}`);
+        
         if (response.data.success) {
-          const trainingData = response.data.data;
-          // S'assurer que nous avons un _id
-          setTraining({
-            ...trainingData,
-            _id: trainingData._id || trainingData.id
-          });
+          setTraining(response.data.data);
+          setError(null);
         } else {
+          setError('Formation non trouvée');
           toast.error('Formation non trouvée');
-          router.push('/trainings');
         }
       } catch (error) {
         console.error('Error fetching training:', error);
+        setError('Erreur lors du chargement de la formation');
         toast.error('Erreur lors du chargement de la formation');
-        router.push('/trainings');
       } finally {
         setLoading(false);
       }
     };
 
-    if (trainingId) {
-      fetchTraining();
-    } else {
-      toast.error('ID de formation invalide');
-      router.push('/trainings');
-    }
-  }, [trainingId, router]);
+    fetchTraining();
+  }, [trainingId]);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="min-h-[400px] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-[400px] flex flex-col items-center justify-center">
+        <p className="text-red-500 mb-4">{error}</p>
+        <button
+          onClick={() => router.push('/trainings')}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Retour aux formations
+        </button>
       </div>
     );
   }
@@ -168,18 +181,21 @@ const TrainingDetailsClient = ({ trainingId, searchParams }: TrainingDetailsClie
           <div className="flex justify-center">
             <button
               onClick={() => {
-                router.push(`/trainings/register?trainingId=${training._id}&title=${encodeURIComponent(training.title)}`);
+                const id = training._id || training.id;
+                if (!id) {
+                  toast.error('ID de formation invalide');
+                  return;
+                }
+                router.push(`/trainings/register?trainingId=${id}&title=${encodeURIComponent(training.title)}`);
               }}
-              disabled={enrolling || training.enrolledCount >= training.maxParticipants}
+              disabled={training.enrolledCount >= training.maxParticipants}
               className={`px-8 py-3 rounded-lg text-white font-medium ${
-                enrolling || training.enrolledCount >= training.maxParticipants
+                training.enrolledCount >= training.maxParticipants
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700'
               }`}
             >
-              {enrolling ? 'Inscription en cours...' :
-               training.enrolledCount >= training.maxParticipants ? 'Complet' :
-               "S'inscrire à la formation"}
+              {training.enrolledCount >= training.maxParticipants ? 'Complet' : "S'inscrire à la formation"}
             </button>
           </div>
         </div>
