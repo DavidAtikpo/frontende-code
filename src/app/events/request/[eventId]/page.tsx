@@ -1,29 +1,35 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaArrowLeft } from 'react-icons/fa';
-import { API_CONFIG } from '@/utils/config';
-const { BASE_URL } = API_CONFIG;
 
-interface Props {
-  params: {
-    eventId: string;
-  };
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+interface EventRequest {
+  name: string;
+  email: string;
+  phone: string;
+  guestCount: number;
+  requestedDate: string;
+  budget: number;
+  preferences: string;
+  specialRequests: string;
 }
 
-export default function EventRequestPage({ params }: Props) {
+export default function EventRequestPage() {
+  const params = useParams();
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<EventRequest>({
     name: '',
     email: '',
     phone: '',
-    date: '',
-    guestCount: '',
-    budget: '',
-    specialRequests: '',
-    preferences: ''
+    guestCount: 0,
+    requestedDate: '',
+    budget: 0,
+    preferences: '',
+    specialRequests: ''
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -35,18 +41,26 @@ export default function EventRequestPage({ params }: Props) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-      if (data.success) {
-        router.push('/events/request-success');
-      } else {
-        setError('Erreur lors de l\'envoi de la demande');
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'envoi de la demande');
       }
+
+      router.push('/events/request/success');
     } catch (error) {
-      setError('Erreur lors de l\'envoi de la demande');
+      console.error('Erreur:', error);
+      alert('Une erreur est survenue lors de l\'envoi de votre demande');
     }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   return (
@@ -86,96 +100,120 @@ export default function EventRequestPage({ params }: Props) {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nom complet</label>
               <input
                 type="text"
-                required
+                id="name"
+                name="name"
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
               <input
                 type="email"
-                required
+                id="email"
+                name="email"
                 value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Téléphone</label>
               <input
                 type="tel"
-                required
+                id="phone"
+                name="phone"
                 value={formData.phone}
-                onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date souhaitée du mariage</label>
+              <label htmlFor="guestCount" className="block text-sm font-medium text-gray-700">Nombre d'invités</label>
+              <input
+                type="number"
+                id="guestCount"
+                name="guestCount"
+                value={formData.guestCount}
+                onChange={handleChange}
+                min="1"
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="requestedDate" className="block text-sm font-medium text-gray-700">Date souhaitée</label>
               <input
                 type="date"
+                id="requestedDate"
+                name="requestedDate"
+                value={formData.requestedDate}
+                onChange={handleChange}
                 required
-                value={formData.date}
-                onChange={(e) => setFormData({...formData, date: e.target.value})}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre d'invités estimé</label>
+              <label htmlFor="budget" className="block text-sm font-medium text-gray-700">Budget (€)</label>
               <input
                 type="number"
-                required
-                value={formData.guestCount}
-                onChange={(e) => setFormData({...formData, guestCount: e.target.value})}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Budget approximatif (CFA)</label>
-              <input
-                type="number"
-                required
+                id="budget"
+                name="budget"
                 value={formData.budget}
-                onChange={(e) => setFormData({...formData, budget: e.target.value})}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                onChange={handleChange}
+                min="0"
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Préférences de style</label>
+              <label htmlFor="preferences" className="block text-sm font-medium text-gray-700">Préférences</label>
               <textarea
+                id="preferences"
+                name="preferences"
                 value={formData.preferences}
-                onChange={(e) => setFormData({...formData, preferences: e.target.value})}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                onChange={handleChange}
                 rows={3}
-                placeholder="Décrivez le style de mariage que vous souhaitez (traditionnel, moderne, mixte...)"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Demandes spéciales</label>
+              <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700">Demandes spéciales</label>
               <textarea
+                id="specialRequests"
+                name="specialRequests"
                 value={formData.specialRequests}
-                onChange={(e) => setFormData({...formData, specialRequests: e.target.value})}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                onChange={handleChange}
                 rows={3}
-                placeholder="Avez-vous des demandes ou besoins particuliers ?"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
-            <div className="flex justify-end gap-4 mt-8">
+
+            <div className="flex justify-end space-x-4">
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
               >
                 Annuler
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Envoyer la demande
               </button>
