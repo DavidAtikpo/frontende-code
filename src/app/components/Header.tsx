@@ -35,27 +35,14 @@ const { BASE_URL } = API_CONFIG;
 const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDEwMEM4OC45NTQzIDEwMCA4MCAxMDguOTU0IDgwIDEyMEM4MCAxMzEuMDQ2IDg4Ljk1NDMgMTQwIDEwMCAxNDBDMTExLjA0NiAxNDAgMTIwIDEzMS4wNDYgMTIwIDEyMEMxMjAgMTA4Ljk1NCAxMTEuMDQ2IDEwMCAxMDAgMTAwWk04NSAxMjBDODUgMTExLjcxNiA5MS43MTU3IDEwNSAxMDAgMTA1QzEwOC4yODQgMTA1IDExNSAxMTEuNzE2IDExNSAxMjBDMTE1IDEyOC4yODQgMTA4LjI4NCAxMzUgMTAwIDEzNUM5MS43MTU3IDEzNSA4NSAxMjguMjg0IDg1IDEyMFoiIGZpbGw9IiM5Q0EzQUYiLz48L3N2Zz4=';
 
 // Fonction pour gérer les URLs des images
-const getImageUrl = (imagePath: string | string[]) => {
-  if (!imagePath) return DEFAULT_IMAGE;
-  const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
-  if (!path) return DEFAULT_IMAGE;
-  if (path.startsWith("http")) return path;
-  return `${BASE_URL}/${path}`;
-};
+
 
 const getProfileImageUrl = (imagePath: string | null) => {
   if (!imagePath) return DEFAULT_IMAGE;
   if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
     return imagePath;
   }
-  // Nettoyer le chemin en supprimant les doubles slashes et en s'assurant qu'il commence par /uploads
-  const cleanPath = imagePath
-    .replace(/^[\/\\]+/, '')  // Supprime les slashes au début
-    .replace(/^uploads[\/\\]?/, '')  // Supprime 'uploads/' au début s'il existe
-    .replace(/\\/g, '/');  // Remplace les backslashes par des forward slashes
-  
-  return `${BASE_URL}/uploads/${cleanPath}`;
-};
+}
 
 interface SearchResult {
   _id: string;
@@ -123,15 +110,12 @@ const Header = () => {
         const firstName = user.name?.split(' ')[0] || '';
         
         // Construire l'URL de la photo de profil
-        let photoURL = null;
-        if (user.profilePhotoUrl) {
-          photoURL = getProfileImageUrl(user.profilePhotoUrl);
-        }
+
 
         setUserInfo({
           name: user.name || '',
           email: user.email || '',
-          profilePhotoURL: photoURL
+          profilePhotoURL: user.profilePhotoURL
         });
         setIsAuthenticated(true);
       } catch (error) {

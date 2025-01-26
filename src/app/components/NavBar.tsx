@@ -11,19 +11,14 @@ const { BASE_URL } = API_CONFIG;
 const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDEwMEM4OC45NTQzIDEwMCA4MCAxMDguOTU0IDgwIDEyMEM4MCAxMzEuMDQ2IDg4Ljk1NDMgMTQwIDEwMCAxNDBDMTExLjA0NiAxNDAgMTIwIDEzMS4wNDYgMTIwIDEyMEMxMjAgMTA4Ljk1NCAxMTEuMDQ2IDEwMCAxMDAgMTAwWk04NSAxMjBDODUgMTExLjcxNiA5MS43MTU3IDEwNSAxMDAgMTA1QzEwOC4yODQgMTA1IDExNSAxMTEuNzE2IDExNSAxMjBDMTE1IDEyOC4yODQgMTA4LjI4NCAxMzUgMTAwIDEzNUM5MS43MTU3IDEzNSA4NSAxMjguMjg0IDg1IDEyMFoiIGZpbGw9IiM5Q0EzQUYiLz48L3N2Zz4=';
 
 // Fonction pour gérer les URLs des images
-const getImageUrl = (imagePath: string | string[]) => {
-  if (!imagePath) return DEFAULT_IMAGE;
-  const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
-  if (!path) return DEFAULT_IMAGE;
-  return path.startsWith('http') ? path : `${BASE_URL}/${path}`;
-};
+
 
 // Types mis à jour selon la structure du backend
 interface Product {
   id: string;
   name: string;
   price: number;
-  images: string[];
+  image: string;
   description?: string;
   categoryId: string;
 }
@@ -240,7 +235,7 @@ const NavigationBar = () => {
                           onClick={() => handleProductClick(selectedProduct.id)}
                         >
                           <img
-                            src={getImageUrl(selectedProduct.images)}
+                            src={selectedProduct.image}
                             alt={selectedProduct.name}
                             className="w-full h-full object-cover rounded-lg shadow-sm"
                             onError={(e) => {

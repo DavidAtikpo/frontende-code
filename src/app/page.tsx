@@ -12,6 +12,7 @@ import ProductVivriere from "./components/ProductVivriere";
 import ShopsSection from "./components/ShopsSection";
 import ProductCongeles from "./components/ProductCongeles";
 
+
 export default function Home() {
   return (
     <div className="space-y-0">
@@ -31,6 +32,7 @@ export default function Home() {
       <section className="py-12">
           <ShopsSection />
       </section>
+
 
       {/* Section Promotions */}
       

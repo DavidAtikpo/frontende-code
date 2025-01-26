@@ -27,6 +27,7 @@ interface TrainingDetails {
   enrolledCount: number;
   price: number;
   image: string;
+  syllabus:string;
   category: string;
   level: string;
   instructor?: string;
@@ -154,6 +155,7 @@ const TrainingDetailsClient = ({ trainingId, searchParams }: TrainingDetailsClie
               <div className="flex items-center text-gray-600">
                 <FaMapMarkerAlt className="w-5 h-5 mr-3" />
                 <span>{training.location}</span>
+                <span>{training.syllabus}</span>
               </div>
             </div>
             <div className="space-y-4">

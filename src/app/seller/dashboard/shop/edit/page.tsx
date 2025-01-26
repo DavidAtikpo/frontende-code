@@ -38,31 +38,7 @@ interface Shop {
 const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDEwMEM4OC45NTQzIDEwMCA4MCAxMDguOTU0IDgwIDEyMEM4MCAxMzEuMDQ2IDg4Ljk1NDMgMTQwIDEwMCAxNDBDMTExLjA0NiAxNDAgMTIwIDEzMS4wNDYgMTIwIDEyMEMxMjAgMTA4Ljk1NCAxMTEuMDQ2IDEwMCAxMDAgMTAwWk04NSAxMjBDODUgMTExLjcxNiA5MS43MTU3IDEwNSAxMDAgMTA1QzEwOC4yODQgMTA1IDExNSAxMTEuNzE2IDExNSAxMjBDMTE1IDEyOC4yODQgMTA4LjI4NCAxMzUgMTAwIDEzNUM5MS43MTU3IDEzNSA4NSAxMjguMjg0IDg1IDEyMFoiIGZpbGw9IiM5Q0EzQUYiLz48L3N2Zz4=';
 
 // Fonction pour gérer les URLs des images
-const getImageUrl = (imagePath: string | string[]) => {
-  if (!imagePath) return DEFAULT_IMAGE;
-  
-  try {
-    // Si c'est un tableau, prendre la première image
-    const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
-    if (!path) return DEFAULT_IMAGE;
-  
-    // Si c'est déjà une URL complète
-    if (path.startsWith('http')) {
-      return path;
-    }
-  
-    // Si le chemin commence par 'uploads'
-    if (path.startsWith('uploads')) {
-      return `${BASE_URL}/${path}`;
-    }
 
-    // Pour tout autre cas
-    return `${BASE_URL}/uploads/shops/${path.replace(/^\/+/, '')}`;
-  } catch (error) {
-    console.error('Erreur dans getImageUrl:', error);
-    return DEFAULT_IMAGE;
-  }
-};
 
 export default function EditShopPage() {
   const router = useRouter();
@@ -80,10 +56,11 @@ export default function EditShopPage() {
       if (!token) return;
 
       try {
-        const response = await axios.get(
-          API_CONFIG.getFullUrl('/seller/shop'),
+        const response = await axios.get(`${BASE_URL}/shops`,
           {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
           }
         );
 
@@ -161,8 +138,7 @@ export default function EditShopPage() {
     }
 
     try {
-      const response = await axios.put(
-        API_CONFIG.getFullUrl('/seller/shop'),
+      const response = await axios.put(`${BASE_URL}/seller/shop`,
         formData,
         {
           headers: { 
@@ -250,7 +226,7 @@ export default function EditShopPage() {
                     />
                   ) : shop.logo ? (
                     <Image
-                      src={getImageUrl(shop.logo)}
+                      src={shop.logo}
                       alt="Current logo"
                       width={200}
                       height={200}
@@ -286,7 +262,7 @@ export default function EditShopPage() {
                     />
                   ) : shop.coverImage ? (
                     <Image
-                      src={getImageUrl(shop.coverImage)}
+                      src={shop.coverImage}
                       alt="Current cover"
                       width={800}
                       height={200}
