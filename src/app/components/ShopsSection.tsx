@@ -22,28 +22,7 @@ interface Shop {
 }
 
 const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDEwMEM4OC45NTQzIDEwMCA4MCAxMDguOTU0IDgwIDEyMEM4MCAxMzEuMDQ2IDg4Ljk1NDMgMTQwIDEwMCAxNDBDMTExLjA0NiAxNDAgMTIwIDEzMS4wNDYgMTIwIDEyMEMxMjAgMTA4Ljk1NCAxMTEuMDQ2IDEwMCAxMDAgMTAwWk04NSAxMjBDODUgMTExLjcxNiA5MS43MTU3IDEwNSAxMDAgMTA1QzEwOC4yODQgMTA1IDExNSAxMTEuNzE2IDExNSAxMjBDMTE1IDEyOC4yODQgMTA4LjI4NCAxMzUgMTAwIDEzNUM5MS43MTU3IDEzNSA4NSAxMjguMjg0IDg1IDEyMFoiIGZpbGw9IiM5Q0EzQUYiLz48L3N2Zz4=';
-
-const getImageUrl = (imagePath: string | null | undefined): string => {
-  if (!imagePath) return DEFAULT_IMAGE;
-  
-  if (Array.isArray(imagePath)) {
-    imagePath = imagePath[0];
-    if (!imagePath) return DEFAULT_IMAGE;
-  }
-  
-  if (typeof imagePath === 'string') {
-    if (imagePath.startsWith('http')) {
-      return imagePath;
-    }
-    
-    if (imagePath.startsWith('uploads')) {
-      return `${BASE_URL}/${imagePath}`;
-    }
-  }
-  
-  return DEFAULT_IMAGE;
-};
-
+ 
 const ShopsSection = () => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,15 +127,25 @@ const ShopsSection = () => {
               >
                 <div className="relative h-24 sm:h-28 w-full">
                   <img
-                    src={getImageUrl(shop.logo)}
+                    src={shop.coverImage || 'DEFAULT_IMAGE'}
                     alt={shop.name}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.src = DEFAULT_IMAGE;
                     }}
+                    
+                  />
+                  <div className=''>
+                  <img
+                    src={shop.logo}
+                    width={40}
+                    height={40}
+                    className="rounded-full  border-2 border-white"
                   />
                 </div>
+                </div>
+                
                 <div className="p-2">
                   <h3 className="font-medium text-xs truncate">{shop.name}</h3>
                   <p className="text-gray-600 text-xs mb-1 line-clamp-1">{shop.description}</p>
