@@ -7,6 +7,7 @@ import { getCookie } from 'cookies-next';
 import { API_CONFIG } from '@/utils/config';
 import { useToast } from '@/components/ui/use-toast';
 import ProductImage from '@/app/components/ProductImage';
+const {BASE_URL} = API_CONFIG
 
 interface ShippingAddress {
   firstName: string;
@@ -125,7 +126,7 @@ const PaymentMethodPage = () => {
     const token = getCookie('token')?.toString();
     if (!token) throw new Error('Token non trouvé');
 
-    const response = await fetch(`${API_CONFIG.BASE_URL}/api/orders`, {
+    const response = await fetch(`${BASE_URL}/api/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -175,7 +176,7 @@ const PaymentMethodPage = () => {
 
       console.log('💳 Données paiement envoyées:', paymentData);
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/payment/create`, {
+      const response = await fetch(`${BASE_URL}/api/payment/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

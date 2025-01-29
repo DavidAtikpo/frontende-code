@@ -96,7 +96,7 @@ const ProductCategories = () => {
         _id: product.id,
         title: product.name,
         finalPrice: product.price,
-        sellerId: product.seller?.storeName || 'unknown',
+        sellerId: product.seller?.id || 'unknown',
         images: product.images,
         quantity: 1
       }
