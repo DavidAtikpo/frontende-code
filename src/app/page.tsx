@@ -8,7 +8,7 @@ import RestaurantsSection from "./components/RestaurantsSection";
 import WhyChooseUsSection from "./components/WhyChooseUsSection";   
 import ProductSuCategory from "./components/ProductCategories"
 import TrainingsSection from "./components/TrainingsSection";
-import ProductVivriere from "./components/ProductVivriere";
+// import ProductVivriere from "./components/ProductVivriere";
 import ShopsSection from "./components/ShopsSection";
 import ProductCongeles from "./components/ProductCongeles";
 
@@ -54,9 +54,9 @@ export default function Home() {
           <ProductCongeles/>
         </div>
       
-        <div>
+        {/* <div>
           <ProductVivriere/>
-        </div>
+        </div> */}
 
       {/* Section Formations */}
       <section className="py-0">
