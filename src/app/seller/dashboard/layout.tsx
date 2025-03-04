@@ -18,7 +18,8 @@ import {
   History,
   Menu,
   Bell,
-  Loader2
+  Loader2,
+  MessageCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,11 @@ const sidebarLinks = [
     title: "Clients",
     href: "/seller/dashboard/customers",
     icon: Users,
+  },
+  {
+    title: "Boite de dialogue",
+    href: "/seller/dashboard/messages",
+    icon: MessageCircle,
   },
   {
     title: "Analytics",

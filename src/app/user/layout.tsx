@@ -21,7 +21,8 @@ import {
   Activity,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { API_CONFIG } from "@/utils/config";
@@ -46,13 +47,14 @@ const navigation = [
   },
   {
     name: "Mes Formations",
-    href: "/trainings/my-trainings",
+    href: "/user/my-trainings",
     icon: Clock
   },
   {
     name: "Demande d'organisation",
-    href: "/dashboard/requests",
+    href: "/user/requests",
     icon: Clock
+
   },
   {
     name: "Favoris",
@@ -63,6 +65,11 @@ const navigation = [
     name: "Adresses",
     href: "/user/addresses",
     icon: MapPin
+  },
+  {
+    name: "Boite de dialogue",
+    href: "/user/messages",
+    icon: MessageCircle
   },
   {
     name: "Activités",

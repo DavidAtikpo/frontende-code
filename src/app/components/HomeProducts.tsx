@@ -33,7 +33,7 @@ interface Product {
   };
   quantity: number;
   seller: {
-    storeName: string;
+    shopName: string;
     status: string;
     id: string;
   };
@@ -245,7 +245,7 @@ const HomeProducts = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="relative bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl shadow-lg p-8 mb-8 text-center"
+          className="relative bg-gradient-to-r from-blue-600 to-blue-800  shadow-lg p-2 mb-2 text-center"
         >
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
             Produits Populaires

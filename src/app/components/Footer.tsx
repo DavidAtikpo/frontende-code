@@ -166,7 +166,7 @@ const Footer = () => {
             <h4 className="text-xl font-bold text-white mb-6">Notre Application</h4>
             <div className="flex gap-4 mb-8">
               <Link 
-                href="https://play.google.com"
+                href="https://play.google.com/store/apps/details?id=com.ebonservice.app"
                 className="bg-gray-800 p-3 rounded-lg hover:bg-gray-700 transition-colors"
                 target="_blank"
               >

@@ -28,6 +28,9 @@ const CartPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
+  const [showChatBox, setShowChatBox] = useState<boolean>(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [message, setMessage] = useState<string>("");
 
   // Charger le panier depuis le backend ou localStorage
   useEffect(() => {
@@ -173,6 +176,50 @@ const handleUpdateQuantity = async (productId: string, delta: number) => {
     router.push(hasShippingAddress ? "/checkout/payment-method" : "/checkout/shipping-address");
   };
 
+  // Fonction pour ouvrir la boîte de dialogue
+  const handleNegotiatePrice = (product: any) => {
+    setSelectedProduct(product);
+    setShowChatBox(true);
+  };
+
+  // Fonction pour envoyer un message
+  const handleSendMessage = async () => {
+    try {
+      const token = getCookie('token');
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      const response = await fetch(`${BASE_URL}/api/negotiations/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: selectedProduct._id,
+          message,
+          proposedPrice: null // Le prix proposé peut être ajouté plus tard
+        })
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Message envoyé",
+          description: "Le vendeur vous répondra bientôt"
+        });
+        setMessage("");
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'envoyer le message",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (isLoading) return <div>Chargement...</div>;
 
   return (
@@ -249,6 +296,14 @@ const handleUpdateQuantity = async (productId: string, delta: number) => {
                       <td className="py-4">
                         {((typeof item.finalPrice === 'number' ? item.finalPrice : parseFloat(String(item.finalPrice)) || 0) * (item.quantity || 1)).toFixed(2)} CFA
                       </td>
+                      <td className="py-4">
+                        <button
+                          onClick={() => handleNegotiatePrice(item)}
+                          className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                        >
+                          Négocier le prix
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -310,6 +365,54 @@ const handleUpdateQuantity = async (productId: string, delta: number) => {
           </div>
         </motion.div>
       </div>
+      {/* Ajouter la boîte de dialogue de chat */}
+      {showChatBox && selectedProduct && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-80">
+            {/* En-tête du chat */}
+            <div className="flex justify-between items-center p-3 border-b bg-gray-50 rounded-t-lg">
+              <h3 className="text-sm font-semibold truncate">
+                Négocier: {selectedProduct.title}
+              </h3>
+              <button
+                onClick={() => setShowChatBox(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* Zone des messages */}
+            <div className="h-48 overflow-y-auto p-3">
+              {/* Les messages seront affichés ici */}
+            </div>
+
+            {/* Zone de saisie */}
+            <div className="p-3 border-t">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Votre message..."
+                  className="flex-1 px-2 py-1 text-sm border rounded"
+                />
+                <button
+                  onClick={handleSendMessage}
+                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Envoyer
+                </button>
+              </div>
+              <div className="mt-2 text-xs text-gray-500">
+                <Link href="/user/negotiations" className="text-blue-600 hover:underline">
+                  Voir l'historique
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

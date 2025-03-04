@@ -20,7 +20,7 @@ interface Product {
   mainImage: string;
   seller?: {
     id: string;
-    storeName: string;
+    shopName: string;
   };
 }
 
@@ -101,7 +101,7 @@ const ProductCongeles = () => {
         _id: product.id,
         title: product.name,
         finalPrice: product.price,
-        sellerId: product.seller?.storeName || 'unknown',
+        sellerId: product.seller?.shopName || 'unknown',
         images: product.images
       }
     });
@@ -115,7 +115,7 @@ const ProductCongeles = () => {
         _id: product.id,
         title: product.name,
         finalPrice: product.price,
-        sellerId: product.seller?.storeName || 'unknown',
+        sellerId: product.seller?.shopName || 'unknown',
         images: product.images,
         quantity: 1
       }
@@ -162,7 +162,7 @@ const ProductCongeles = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="relative bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl shadow-lg p-8 mb-8 text-center"
+          className="relative bg-gradient-to-r from-blue-600 to-blue-800  shadow-lg p-2 mb-2 text-center"
         >
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
             Nos Produits Congelés
@@ -172,113 +172,96 @@ const ProductCongeles = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {currentProducts.map((product, index) => (
-            <motion.div 
-              key={product.id} 
-              initial={{ opacity: 0, scale: 0.8, y: 20 }}
-              whileInView={{ opacity: 1, scale: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ 
-                duration: 0.5,
-                delay: index * 0.1,
-                type: "spring",
-                stiffness: 100
-              }}
-              whileHover={{ 
-                scale: 1.05,
-                transition: { duration: 0.2 }
-              }}
-              className="bg-white rounded-xl shadow-lg overflow-hidden group relative border-2 border-blue-500 hover:shadow-xl transition-all duration-300"
-            >
-              <div className="relative aspect-square">
-                <Link href={`/product/${product.id}`}>
-                  <Image 
-                    src={getImageUrl(product)} 
-                    alt={product.name} 
-                    width={200}
-                    height={200}
-                    className="object-cover w-full h-full"
-                    priority={index < 4}
-                  />
-                </Link>
-                <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={(e) => handleAddToWishlist(e, product)}
-                    className="p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors"
-                    title="Ajouter à la liste de souhaits"
-                  >
-                    <FaHeart className="text-red-500" size={14} />
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={(e) => handleAddToCart(e, product)}
-                    className="p-2 bg-white rounded-full shadow-md hover:bg-blue-50 transition-colors"
-                    title="Ajouter au panier"
-                  >
-                    <FaShoppingCart className="text-blue-500" size={14} />
-                  </motion.button>
-                </div>
-              </div>
-              <div className="p-3">
-                <h4 className="text-sm font-semibold truncate">{product.name}</h4>
-                <p className="text-blue-800 font-bold mt-1 text-sm">{product.price.toLocaleString()} CFA</p>
-                {product.seller && (
-                  <Link 
-                    href={`/store/${product.seller.id}`}
-                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline mt-1 block truncate"
-                  >
-                    {product.seller.storeName}
-                  </Link>
-                )}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={(e) => handleBuyNow(e, product)}
-                  className="w-full mt-2 bg-blue-600 text-white py-1.5 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-1 text-sm"
+        <div className="relative">
+          <div className="overflow-x-auto pb-4 hide-scrollbar">
+            <div className="flex space-x-3 md:space-x-4">
+              {currentProducts.map((product, index) => (
+                <motion.div 
+                  key={product.id} 
+                  initial={{ opacity: 0, scale: 0.8, x: 20 }}
+                  whileInView={{ opacity: 1, scale: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ 
+                    duration: 0.5,
+                    delay: index * 0.1,
+                    type: "spring",
+                    stiffness: 100
+                  }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    transition: { duration: 0.2 }
+                  }}
+                  className="bg-white rounded-xl shadow-lg overflow-hidden group relative border border-blue-500 hover:shadow-xl transition-all duration-300 w-[calc(33.333%-8px)] md:w-[calc(16.666%-12px)] flex-shrink-0"
                 >
-                  <FaShoppingBag size={14} />
-                  <span>Acheter</span>
-                </motion.button>
-              </div>
-            </motion.div>
-          ))}
+                  <div className="relative aspect-square">
+                    <Link href={`/product/${product.id}`}>
+                      <Image 
+                        src={getImageUrl(product)} 
+                        alt={product.name} 
+                        width={150}
+                        height={150}
+                        className="object-cover w-full h-full"
+                        priority={index < 4}
+                      />
+                    </Link>
+                    <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => handleAddToWishlist(e, product)}
+                        className="p-1.5 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors"
+                        title="Ajouter à la liste de souhaits"
+                      >
+                        <FaHeart className="text-red-500" size={12} />
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => handleAddToCart(e, product)}
+                        className="p-1.5 bg-white rounded-full shadow-md hover:bg-blue-50 transition-colors"
+                        title="Ajouter au panier"
+                      >
+                        <FaShoppingCart className="text-blue-500" size={12} />
+                      </motion.button>
+                    </div>
+                  </div>
+                  <div className="p-2">
+                    <h4 className="text-xs font-semibold truncate">{product.name}</h4>
+                    <p className="text-blue-800 font-bold mt-0.5 text-xs">{product.price.toLocaleString()} CFA</p>
+                    {product.seller && (
+                      <Link 
+                        href={`/store/${product.seller.id}`}
+                        className="text-[10px] text-blue-600 hover:text-blue-800 hover:underline mt-0.5 block truncate"
+                      >
+                        {product.seller.shopName}
+                      </Link>
+                    )}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={(e) => handleBuyNow(e, product)}
+                      className="w-full mt-1 bg-blue-600 text-white py-1 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-1 text-xs"
+                    >
+                      <FaShoppingBag size={10} />
+                      <span>Acheter</span>
+                    </motion.button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex justify-center items-center gap-4 mt-8"
-          >
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <FaChevronLeft size={20} />
-            </motion.button>
-            <span className="text-sm">
-              Page {currentPage} sur {totalPages}
-            </span>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <FaChevronRight size={20} />
-            </motion.button>
-          </motion.div>
-        )}
+        {/* Suppression de la pagination car nous affichons tout sur une ligne */}
+        <style jsx global>{`
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
       </div>
     </motion.section>
   );

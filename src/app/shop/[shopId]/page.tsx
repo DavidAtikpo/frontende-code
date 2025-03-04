@@ -10,6 +10,7 @@ import { getCookie } from 'cookies-next';
 import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
 import { API_CONFIG } from '@/utils/config';
+import ChatBox from "@/app/components/ChatBox";
 
 const { BASE_URL } = API_CONFIG;
 
@@ -42,6 +43,9 @@ interface Shop {
   businessHours: {
     open: string;
     close: string;
+  };
+  seller: {
+    id: string;
   };
 }
 
@@ -87,6 +91,8 @@ export default function ShopPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [showChatBox, setShowChatBox] = useState<boolean>(false);
+  const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchShopAndProducts = async () => {
@@ -213,7 +219,11 @@ export default function ShopPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="max-w-7xl mx-auto px-4 py-8"
+    >
       {loading ? (
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
@@ -435,8 +445,26 @@ export default function ShopPage() {
               </button>
             </div>
           )}
+
+          {/* Bouton pour ouvrir la boîte de dialogue */}
+          {shop && shop.seller && (
+            <button 
+              onClick={() => { 
+                setShowChatBox(true); 
+                setSelectedSellerId(shop.seller.id); 
+              }} 
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Discuter avec le vendeur
+            </button>
+          )}
+
+          {/* Afficher la boîte de dialogue si elle est ouverte */}
+          {showChatBox && selectedSellerId && (
+            <ChatBox sellerId={selectedSellerId} onClose={() => setShowChatBox(false)} />
+          )}
         </>
       )}
-    </div>
+    </motion.div>
   );
 } 

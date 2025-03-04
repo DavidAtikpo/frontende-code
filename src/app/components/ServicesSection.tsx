@@ -121,85 +121,116 @@ export default function ServicesSection() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="relative bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl shadow-lg p-8 mb-8 text-center"
+          className="relative bg-gradient-to-r from-blue-600 to-blue-800  shadow-lg p-2 mb-2 text-center"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-            Nos Services
-          </h2>
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <motion.div
+              animate={{ 
+                rotate: [0, 20, -20, 0],
+                scale: [1, 1.2, 1.2, 1]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                repeatDelay: 3,
+                ease: "easeInOut"
+              }}
+              className="text-white"
+            >
+              <FaTools size={40} />
+            </motion.div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">
+              Nos Services
+            </h2>
+          </div>
           <p className="text-blue-100 max-w-2xl mx-auto">
             Découvrez notre gamme de services professionnels
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map((service, index) => (
-            <motion.div
-              key={service._id}
-              initial={{ opacity: 0, scale: 0.8, y: 20 }}
-              whileInView={{ opacity: 1, scale: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ 
-                duration: 0.5,
-                delay: index * 0.1,
-                type: "spring",
-                stiffness: 100
-              }}
-              whileHover={{ 
-                scale: 1.02,
-                transition: { duration: 0.2 }
-              }}
-              className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300"
-            >
-              <div className="relative h-48">
-                {service.images && service.images.length > 0 ? (
-                  <>
-                    <Image
-                      src={getImageUrl(service.images)}
-                      alt={service.title}
-                      width={500}
-                      height={300}
-                      className="object-cover w-full h-full"
-                      priority={index < 3}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  </>
-                ) : (
-                  <div className="h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                    <div className="text-5xl text-white">
-                      {getIcon(service.icon)}
+        <div className="relative">
+          <div className="overflow-x-auto pb-4 hide-scrollbar">
+            <div className="flex space-x-3 md:space-x-4">
+              {services.map((service, index) => (
+                <motion.div
+                  key={service._id}
+                  initial={{ opacity: 0, scale: 0.8, x: 20 }}
+                  whileInView={{ opacity: 1, scale: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ 
+                    duration: 0.5,
+                    delay: index * 0.1,
+                    type: "spring",
+                    stiffness: 100
+                  }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    transition: { duration: 0.2 }
+                  }}
+                  className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 w-[calc(33.333%-8px)] md:w-[calc(16.666%-12px)] flex-shrink-0"
+                >
+                  <div className="relative h-32">
+                    {service.images && service.images.length > 0 ? (
+                      <>
+                        <Image
+                          src={getImageUrl(service.images)}
+                          alt={service.title}
+                          width={300}
+                          height={200}
+                          className="object-cover w-full h-full"
+                          priority={index < 4}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      </>
+                    ) : (
+                      <div className="h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                        <div className="text-3xl text-white">
+                          {getIcon(service.icon)}
+                        </div>
+                      </div>
+                    )}
+                    <div className="absolute bottom-2 left-2 right-2">
+                      <h3 className="text-sm font-bold text-white truncate">{service.title}</h3>
                     </div>
                   </div>
-                )}
-                <div className="absolute bottom-4 left-4 right-4">
-                  <h3 className="text-xl font-bold text-white truncate">{service.title}</h3>
-                </div>
-              </div>
-              <div className="p-4">
-                <p className="text-gray-600 mb-4 line-clamp-2 h-12">{service.description}</p>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <FaUser className="text-blue-500" />
-                    <span className="text-sm truncate">{service.provider?.name || 'Dubon Service'}</span>
+                  <div className="p-2">
+                    <p className="text-xs text-gray-600 mb-2 line-clamp-2 h-8">{service.description}</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-1 text-gray-600">
+                        <FaUser className="text-blue-500 text-xs" />
+                        <span className="text-[10px] truncate">{service.provider?.name || 'Dubon Service'}</span>
+                      </div>
+                      <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                        {service.category}
+                      </span>
+                    </div>
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Link 
+                        href={`/service/request`}
+                        className="block text-center bg-blue-600 text-white py-1 px-3 rounded-md hover:bg-blue-700 transition-colors text-xs"
+                      >
+                        Demander ce Service
+                      </Link>
+                    </motion.div>
                   </div>
-                  <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                    {service.category}
-                  </span>
-                </div>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Link 
-                    href={`/service/request`}
-                    className="block text-center bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-                  >
-                    Demander ce Service
-                  </Link>
                 </motion.div>
-              </div>
-            </motion.div>
-          ))}
+              ))}
+            </div>
+          </div>
         </div>
+
+        <style jsx global>{`
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
       </div>
     </motion.section>
   );

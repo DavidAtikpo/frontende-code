@@ -89,7 +89,7 @@ const ShopsSection = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="relative bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl shadow-lg p-8 mb-8 text-center"
+          className="relative bg-gradient-to-r from-blue-600 to-blue-800  shadow-lg p-2 mb-2 text-center"
         >
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
             Nos Boutiques Partenaires
@@ -105,7 +105,7 @@ const ShopsSection = () => {
             <p className="text-gray-500">Aucune boutique disponible pour le moment.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {shops.map((shop, index) => (
               <motion.div 
                 key={shop._id}
@@ -125,45 +125,48 @@ const ShopsSection = () => {
                 className="bg-white rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
                 onClick={() => router.push(`/shop/${shop._id}`)}
               >
-                <div className="relative h-24 sm:h-28 w-full">
-                  <img
-                    src={shop.coverImage || 'DEFAULT_IMAGE'}
-                    alt={shop.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = DEFAULT_IMAGE;
-                    }}
-                    
-                  />
-                  <div className=''>
-                  <img
-                    src={shop.logo}
-                    width={40}
-                    height={40}
-                    className="rounded-full  border-2 border-white"
-                  />
-                </div>
-                </div>
-                
-                <div className="p-2">
-                  <h3 className="font-medium text-xs truncate">{shop.name}</h3>
-                  <p className="text-gray-600 text-xs mb-1 line-clamp-1">{shop.description}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-1">
-                      <span className="text-yellow-500">★</span>
-                      <span className="text-xs">{shop.rating.toFixed(1)}</span>
-                    </div>
-                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                      shop.status === 'verified' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {shop.status === 'verified' ? 'Ouvert' : 'Fermé'}
-                    </span>
+                <div className="grid grid-cols-12 gap-4 p-4">
+                  {/* Logo à gauche */}
+                  <div className="col-span-3 flex items-center justify-center">
+                    <img
+                      src={shop.logo || DEFAULT_IMAGE}
+                      alt={shop.name}
+                      className="w-16 h-16 rounded-full border-2 border-white"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = DEFAULT_IMAGE;
+                      }}
+                    />
                   </div>
-                  <p className="text-[10px] text-gray-500 mt-1 truncate">
-                    <FaMapMarkerAlt className="inline mr-1" />
-                    {shop.location || 'Emplacement non spécifié'}
-                  </p>
+
+                  {/* Produits au milieu */}
+                  <div className="col-span-6">
+                    <h3 className="font-medium text-sm truncate">{shop.name}</h3>
+                    <p className="text-gray-600 text-xs mb-1 line-clamp-1">{shop.description}</p>
+                    <div className="flex items-center space-x-1 text-yellow-500 text-xs">
+                      <FaStar />
+                      <span>{shop.rating.toFixed(1)}</span>
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-1">
+                      {/* Afficher quelques produits aléatoires */}
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="w-full h-16 bg-gray-100 rounded"></div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Image de couverture à droite */}
+                  <div className="col-span-3">
+                    <img
+                      src={shop.coverImage || DEFAULT_IMAGE}
+                      alt={shop.name}
+                      className="w-full h-full object-cover rounded"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = DEFAULT_IMAGE;
+                      }}
+                    />
+                  </div>
                 </div>
               </motion.div>
             ))}

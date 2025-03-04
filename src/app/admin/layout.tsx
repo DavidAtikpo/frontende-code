@@ -21,7 +21,8 @@ import {
   BarChart,
   Database,
   Image as ImageIcon,
-  Megaphone
+  Megaphone,
+  MessageCircle
 } from "lucide-react";
 import LogoutButton from "@/components/auth/LogoutButton";
 import { LoadingSpinner } from "@/components/ui/loading";
@@ -88,6 +89,12 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       label: "Utilisateurs", 
       href: "/admin/users",
       description: "Gestion des utilisateurs et rôles"
+    },
+    { 
+      icon: MessageCircle, 
+      label: "Conversations", 
+      href: "/admin/conversations",
+      description: "Gestion des conversations"
     },
     {
       icon: Users,
