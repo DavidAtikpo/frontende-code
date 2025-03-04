@@ -178,12 +178,12 @@ const ProductCongeles = () => {
               <FaSnowflake className="text-white text-3xl md:text-4xl" />
             </motion.div>
             <h2 className="text-3xl md:text-4xl font-bold text-white">
-              Nos Produits Congelés
+              Produits Congelés
             </h2>
           </div>
-          <p className="text-blue-100 max-w-2xl mx-auto">
+          {/* <p className="text-blue-100 max-w-2xl mx-auto">
             Découvrez notre sélection de produits congelés de qualité
-          </p>
+          </p> */}
         </motion.div>
 
         <div className="relative">
@@ -205,7 +205,7 @@ const ProductCongeles = () => {
                     scale: 1.05,
                     transition: { duration: 0.2 }
                   }}
-                  className="bg-white rounded-xl shadow-lg overflow-hidden group relative border border-blue-500 hover:shadow-xl transition-all duration-300 w-[calc(33.333%-8px)] md:w-[calc(16.666%-12px)] flex-shrink-0"
+                  className="bg-white rounded-xl shadow-lg overflow-hidden group relative border border-blue-500 hover:shadow-xl transition-all duration-300 w-[calc(50%-8px)] md:w-[calc(16.666%-12px)] flex-shrink-0"
                 >
                   <div className="relative aspect-square">
                     <Link href={`/product/${product.id}`}>

@@ -235,7 +235,7 @@ const ProductCategories = () => {
                     scale: 1.05,
                     transition: { duration: 0.2 }
                   }}
-                  className="bg-white rounded-xl shadow-lg overflow-hidden group relative border border-blue-500 hover:shadow-xl transition-all duration-300 w-[calc(33.333%-8px)] md:w-[calc(16.666%-12px)] flex-shrink-0"
+                  className="bg-white rounded-xl shadow-lg overflow-hidden group relative border border-blue-500 hover:shadow-xl transition-all duration-300 w-[calc(50%-8px)] md:w-[calc(16.666%-12px)] flex-shrink-0"
                 >
                   <div className="relative aspect-square">
                     <Link href={`/product/${product.id}`}>

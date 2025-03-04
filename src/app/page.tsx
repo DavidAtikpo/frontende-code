@@ -15,7 +15,7 @@ import ProductCongeles from "./components/ProductCongeles";
 
 export default function Home() {
   return (
-    <div className="space-y-0">
+    <div>
       {/* Slider principal */}
       
         <div>
