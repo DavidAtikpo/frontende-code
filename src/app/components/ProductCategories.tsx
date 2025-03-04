@@ -8,6 +8,7 @@ import { FaShoppingCart, FaHeart, FaShoppingBag, FaChevronLeft, FaChevronRight }
 import { useRouter } from 'next/navigation';
 import { useCartContext } from "../context/CartContext";
 import { motion } from "framer-motion";
+import { getCookie } from 'cookies-next';
 
 const { BASE_URL } = API_CONFIG;
 
@@ -111,26 +112,44 @@ const ProductCategories = () => {
         _id: product.id,
         title: product.name,
         finalPrice: product.price,
-        sellerId: product.seller?.shopName || 'unknown',
+        sellerId: product.seller?.id || 'unknown',
         images: product.images
       }
     });
   };
 
-  const handleBuyNow = (e: React.MouseEvent, product: Product) => {
+  const handleBuyNow = async (e: React.MouseEvent, product: Product) => {
     e.preventDefault(); // Empêcher la navigation
-    dispatch({ 
-      type: "ADD_TO_CART", 
-      payload: {
+    try {
+      const token = getCookie('token');
+      
+      if (!token) {
+        localStorage.setItem('pendingPurchase', JSON.stringify({
+          productId: product.id,
+          redirect: '/checkout/shipping-address'
+        }));
+        router.push('/login');
+        return;
+      }
+
+      const cartItem = {
         _id: product.id,
         title: product.name,
         finalPrice: product.price,
-        sellerId: product.seller?.shopName || 'unknown',
+        sellerId: product.seller?.id || 'unknown',
         images: product.images,
         quantity: 1
-      }
-    });
-    router.push('/checkout/payment-method');
+      };
+
+      dispatch({ 
+        type: "ADD_TO_CART", 
+        payload: cartItem
+      });
+
+      router.push('/checkout/shipping-address');
+    } catch (error) {
+      console.error('Erreur lors de l\'achat:', error);
+    }
   };
 
   if (loading) {

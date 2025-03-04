@@ -8,6 +8,7 @@ import { FaShoppingCart, FaHeart, FaShoppingBag, FaChevronLeft, FaChevronRight }
 import { useRouter } from 'next/navigation';
 import { useCartContext } from "../context/CartContext";
 import { motion } from "framer-motion";
+import { getCookie } from 'cookies-next';
 
 const { BASE_URL } = API_CONFIG;
 const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDEwMEM4OC45NTQzIDEwMCA4MCAxMDguOTU0IDgwIDEyMEM4MCAxMzEuMDQ2IDg4Ljk1NDMgMTQwIDEwMCAxNDBDMTExLjA0NiAxNDAgMTIwIDEzMS4wNDYgMTIwIDEyMEMxMjAgMTA4Ljk1NCAxMTEuMDQ2IDEwMCAxMDAgMTAwWk04NSAxMjBDODUgMTExLjcxNiA5MS43MTU3IDEwNSAxMDAgMTA1QzEwOC4yODQgMTA1IDExNSAxMTEuNzE2IDExNSAxMjBDMTE1IDEyOC4yODQgMTA4LjI4NCAxMzUgMTAwIDEzNUM5MS43MTU3IDEzNSA4NSAxMjguMjg0IDg1IDEyMFoiIGZpbGw9IiM5Q0EzQUYiLz48L3N2Zz4=';
@@ -101,26 +102,44 @@ const ProductCongeles = () => {
         _id: product.id,
         title: product.name,
         finalPrice: product.price,
-        sellerId: product.seller?.shopName || 'unknown',
+        sellerId: product.seller?.id || 'unknown',
         images: product.images
       }
     });
   };
 
-  const handleBuyNow = (e: React.MouseEvent, product: Product) => {
+  const handleBuyNow = async (e: React.MouseEvent, product: Product) => {
     e.preventDefault(); // Empêcher la navigation
-    dispatch({ 
-      type: "ADD_TO_CART", 
-      payload: {
+    try {
+      const token = getCookie('token');
+      
+      if (!token) {
+        localStorage.setItem('pendingPurchase', JSON.stringify({
+          productId: product.id,
+          redirect: '/checkout/shipping-address'
+        }));
+        router.push('/login');
+        return;
+      }
+
+      const cartItem = {
         _id: product.id,
         title: product.name,
         finalPrice: product.price,
-        sellerId: product.seller?.shopName || 'unknown',
+        sellerId: product.seller?.id || 'unknown',
         images: product.images,
         quantity: 1
-      }
-    });
-    router.push('/checkout/payment-method');
+      };
+
+      dispatch({ 
+        type: "ADD_TO_CART", 
+        payload: cartItem
+      });
+
+      router.push('/checkout/shipping-address');
+    } catch (error) {
+      console.error('Erreur lors de l\'achat:', error);
+    }
   };
 
   if (loading) {
