@@ -4,11 +4,10 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { API_CONFIG } from '@/utils/config';
 import Link from 'next/link';
-import { FaShoppingCart, FaHeart, FaShoppingBag, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaShoppingCart, FaHeart, FaShoppingBag, FaChevronLeft, FaChevronRight, FaSnowflake } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { useCartContext } from "../context/CartContext";
 import { motion } from "framer-motion";
-import { getCookie } from 'cookies-next';
 
 const { BASE_URL } = API_CONFIG;
 const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMTAwIDEwMEM4OC45NTQzIDEwMCA4MCAxMDguOTU0IDgwIDEyMEM4MCAxMzEuMDQ2IDg4Ljk1NDMgMTQwIDEwMCAxNDBDMTExLjA0NiAxNDAgMTIwIDEzMS4wNDYgMTIwIDEyMEMxMjAgMTA4Ljk1NCAxMTEuMDQ2IDEwMCAxMDAgMTAwWk04NSAxMjBDODUgMTExLjcxNiA5MS43MTU3IDEwNSAxMDAgMTA1QzEwOC4yODQgMTA1IDExNSAxMTEuNzE2IDExNSAxMjBDMTE1IDEyOC4yODQgMTA4LjI4NCAxMzUgMTAwIDEzNUM5MS43MTU3IDEzNSA4NSAxMjguMjg0IDg1IDEyMFoiIGZpbGw9IiM5Q0EzQUYiLz48L3N2Zz4=';
@@ -102,44 +101,26 @@ const ProductCongeles = () => {
         _id: product.id,
         title: product.name,
         finalPrice: product.price,
-        sellerId: product.seller?.id || 'unknown',
+        sellerId: product.seller?.shopName || 'unknown',
         images: product.images
       }
     });
   };
 
-  const handleBuyNow = async (e: React.MouseEvent, product: Product) => {
+  const handleBuyNow = (e: React.MouseEvent, product: Product) => {
     e.preventDefault(); // Empêcher la navigation
-    try {
-      const token = getCookie('token');
-      
-      if (!token) {
-        localStorage.setItem('pendingPurchase', JSON.stringify({
-          productId: product.id,
-          redirect: '/checkout/shipping-address'
-        }));
-        router.push('/login');
-        return;
-      }
-
-      const cartItem = {
+    dispatch({ 
+      type: "ADD_TO_CART", 
+      payload: {
         _id: product.id,
         title: product.name,
         finalPrice: product.price,
-        sellerId: product.seller?.id || 'unknown',
+        sellerId: product.seller?.shopName || 'unknown',
         images: product.images,
         quantity: 1
-      };
-
-      dispatch({ 
-        type: "ADD_TO_CART", 
-        payload: cartItem
-      });
-
-      router.push('/checkout/shipping-address');
-    } catch (error) {
-      console.error('Erreur lors de l\'achat:', error);
-    }
+      }
+    });
+    router.push('/checkout/payment-method');
   };
 
   if (loading) {
@@ -183,9 +164,23 @@ const ProductCongeles = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="relative bg-gradient-to-r from-blue-600 to-blue-800  shadow-lg p-2 mb-2 text-center"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-            Nos Produits Congelés
-          </h2>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <motion.div
+              animate={{
+                rotate: 360
+              }}
+              transition={{
+                duration: 1,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            >
+              <FaSnowflake className="text-white text-3xl md:text-4xl" />
+            </motion.div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">
+              Nos Produits Congelés
+            </h2>
+          </div>
           <p className="text-blue-100 max-w-2xl mx-auto">
             Découvrez notre sélection de produits congelés de qualité
           </p>

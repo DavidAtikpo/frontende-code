@@ -247,9 +247,27 @@ const HomeProducts = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="relative bg-gradient-to-r from-blue-600 to-blue-800  shadow-lg p-2 mb-2 text-center"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-            Produits Populaires
-          </h2>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <motion.div
+              animate={{
+                scale: [1, 1.2, 1],
+                rotate: [0, 10, -10, 0]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="flex gap-1"
+            >
+              {[...Array(5)].map((_, i) => (
+                <FaStar key={i} className="text-yellow-400 text-2xl md:text-3xl" />
+              ))}
+            </motion.div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">
+              Produits Populaires
+            </h2>
+          </div>
           <p className="text-blue-100 max-w-2xl mx-auto">
             Découvrez notre sélection des produits les plus appréciés
           </p>

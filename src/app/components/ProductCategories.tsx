@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { API_CONFIG } from '@/utils/config';
 import Link from 'next/link';
-import { FaShoppingCart, FaHeart, FaShoppingBag, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaShoppingCart, FaHeart, FaShoppingBag, FaChevronLeft, FaChevronRight, FaLeaf } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { useCartContext } from "../context/CartContext";
 import { motion } from "framer-motion";
@@ -193,9 +193,24 @@ const ProductCategories = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="relative bg-gradient-to-r from-blue-600 to-blue-800  shadow-lg p-2 mb-2 text-center"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-            Nos Produits Frais
-          </h2>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <motion.div
+              animate={{
+                scale: [1, 1.2, 1],
+                rotate: [0, 10, -10, 0]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <FaLeaf className="text-white text-3xl md:text-4xl" />
+            </motion.div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">
+              Nos Produits Frais
+            </h2>
+          </div>
           <p className="text-blue-100 max-w-2xl mx-auto">
             Découvrez notre sélection de produits frais de qualité
           </p>
