@@ -89,7 +89,7 @@ const ProductCategories = () => {
     }
   };
 
-  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>, product: Product): void => {
     e.preventDefault(); // Empêcher la navigation
     dispatch({ 
       type: "ADD_TO_CART", 
