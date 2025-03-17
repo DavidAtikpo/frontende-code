@@ -7,8 +7,8 @@ import { motion } from "framer-motion";
 import { FaArrowRight, FaBox, FaTag } from "react-icons/fa";
 import LoadingSpinner from "./LoadingSpinner";
 import { API_CONFIG } from '@/utils/config';
-// const { BASE_URL } = API_CONFIG;
-const BASE_URL = "http://localhost:5000";
+const { BASE_URL } = API_CONFIG;
+// const BASE_URL = "http://localhost:5000";
 // Définir les types pour les données
 interface Product {
   _id: string;
