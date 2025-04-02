@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Upload, X } from "lucide-react";
 import { SellerFormData } from "../page";
 import Image from "next/image";
+import { API_CONFIG } from '@/utils/config';
+import { getCookie } from '@/utils/cookies';
+
+// const { BASE_URL } = API_CONFIG;
+const BASE_URL = "http://localhost:5000";
 
 interface BusinessInfoFormProps {
   data: SellerFormData;
@@ -18,6 +23,15 @@ interface BusinessInfoFormProps {
 }
 
 const businessTypes = ["Retail", "Wholesale", "Service", "Manufacturing"];
+const countries = [
+  "Burkina Faso",
+  "Mali",
+  "Niger",
+  "Côte d'Ivoire",
+  "Togo",
+  "Bénin",
+  "Sénégal"
+];
 
 export function BusinessInfoForm({
   data,
@@ -27,30 +41,58 @@ export function BusinessInfoForm({
 }: BusinessInfoFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Array<{ id: string, name: string }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const categories = ["Électromenage", "Mode", "Beauté", "Alimentation"];
   const paymentTypes = ["Compte bancaire", "Mobile Money"];
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const token = getCookie('token');
+        if (!token) {
+          console.error('Token non trouvé');
+          return;
+        }
+
+        const response = await fetch(`${BASE_URL}/api/seller/categories`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setCategories(data.data);
+      } catch (error) {
+        console.error('Erreur:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const saveToLocalStorage = (updatedData: SellerFormData) => {
     localStorage.setItem('sellerFormData', JSON.stringify(updatedData));
   };
 
   const handleChange = (field: string, value: string) => {
+    console.log(`Changement de ${field}:`, value);
+    console.log('Type de la valeur:', typeof value);
     const updatedData = {
       ...data,
       businessInfo: {
         ...data.businessInfo,
         [field]: value,
       },
-    };
-    onUpdate(updatedData);
-    saveToLocalStorage(updatedData);
-  };
-
-  const handleBusinessTypeChange = (value: string) => {
-    const updatedData = {
-      ...data,
-      businessType: value,
     };
     onUpdate(updatedData);
     saveToLocalStorage(updatedData);
@@ -67,6 +109,23 @@ export function BusinessInfoForm({
       businessInfo: {
         ...data.businessInfo,
         shopImage: file
+      },
+    };
+    onUpdate(updatedData);
+    saveToLocalStorage(updatedData);
+  };
+
+  const handleVideoUpload = (files: FileList | null) => {
+    if (!files || !files[0]) return;
+    
+    const file = files[0];
+    setVideoPreview(URL.createObjectURL(file));
+    
+    const updatedData = {
+      ...data,
+      businessInfo: {
+        ...data.businessInfo,
+        shopVideo: file
       },
     };
     onUpdate(updatedData);
@@ -90,6 +149,23 @@ export function BusinessInfoForm({
     saveToLocalStorage(updatedData);
   };
 
+  const removeVideo = () => {
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    setVideoPreview(null);
+    
+    const updatedData = {
+      ...data,
+      businessInfo: {
+        ...data.businessInfo,
+        shopVideo: null
+      },
+    };
+    onUpdate(updatedData);
+    saveToLocalStorage(updatedData);
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     const info = data.businessInfo;
@@ -98,6 +174,7 @@ export function BusinessInfoForm({
     if (!info.category) newErrors.category = "La catégorie est requise";
     if (!info.description) newErrors.description = "La description est requise";
     if (!info.shopImage) newErrors.shopImage = "L'image de la boutique est requise";
+    if (!info.country) newErrors.country = "Le pays est requis";
     if (!info.paymentType) newErrors.paymentType = "Le type de paiement est requis";
     if (!info.paymentDetails) newErrors.paymentDetails = "Les détails de paiement sont requis";
 
@@ -112,6 +189,10 @@ export function BusinessInfoForm({
       onNext();
     }
   };
+
+  if (isLoading) {
+    return <div>Chargement des catégories...</div>;
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -131,6 +212,31 @@ export function BusinessInfoForm({
           )}
         </div>
 
+        {/* Pays */}
+        <div className="space-y-2">
+          <Label htmlFor="country">
+            Pays <span className="text-red-500">*</span>
+          </Label>
+          <Select
+            value={data.businessInfo.country}
+            onValueChange={(value) => handleChange("country", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionnez votre pays" />
+            </SelectTrigger>
+            <SelectContent>
+              {countries.map((country) => (
+                <SelectItem key={country} value={country}>
+                  {country}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.country && (
+            <p className="text-sm text-red-500">{errors.country}</p>
+          )}
+        </div>
+
         {/* Catégorie */}
         <div className="space-y-2">
           <Label htmlFor="category">
@@ -145,8 +251,8 @@ export function BusinessInfoForm({
             </SelectTrigger>
             <SelectContent>
               {categories.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category}
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -159,7 +265,7 @@ export function BusinessInfoForm({
         {/* Description */}
         <div className="space-y-2">
           <Label htmlFor="description">
-            Description de votre activité <span className="text-red-500">*</span>
+            Description de votre activité (50 caractères minimum)<span className="text-red-500">*</span>
           </Label>
           <Textarea
             id="description"
@@ -219,6 +325,49 @@ export function BusinessInfoForm({
           )}
         </div>
 
+        {/* Vidéo de la boutique */}
+        <div className="space-y-2">
+          <Label htmlFor="shopVideo">
+            Vidéo de présentation
+          </Label>
+          <div className="relative">
+            <Input
+              id="shopVideo"
+              type="file"
+              className="hidden"
+              onChange={(e) => handleVideoUpload(e.target.files)}
+              accept="video/*"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => document.getElementById('shopVideo')?.click()}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Ajouter une vidéo
+            </Button>
+          </div>
+          {videoPreview && (
+            <div className="relative w-full mt-2">
+              <video
+                src={videoPreview}
+                controls
+                className="w-full rounded-lg"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2"
+                onClick={removeVideo}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+
         {/* Type de paiement */}
         <div className="space-y-2">
           <Label htmlFor="paymentType">
@@ -263,7 +412,6 @@ export function BusinessInfoForm({
             <p className="text-sm text-red-500">{errors.paymentDetails}</p>
           )}
         </div>
-
       </div>
 
       <div className="flex justify-between">

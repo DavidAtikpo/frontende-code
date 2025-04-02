@@ -2,30 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { UserStats } from "@/components/dashboard/user/UserStats";
-import { RecentOrders } from "@/components/dashboard/user/RecentOrders";
+import RecentOrders from "@/components/dashboard/user/RecentOrders";
 import { RecentActivity } from "@/components/dashboard/user/RecentActivity";
 import { FavoriteProducts } from "@/components/dashboard/user/FavoriteProducts";
 import { API_CONFIG } from "@/utils/config";
 import { getCookie } from "cookies-next";
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { Order, OrderItem } from "@/types/order";
 
-const { BASE_URL } = API_CONFIG;
+// const { BASE_URL } = API_CONFIG;
 
-interface Order {
-  id: string;
-  orderNumber: string;
-  total: number;
-  status: string;
-  createdAt: string;
-  items: Array<{
-    name: string;
-    quantity: number;
-  }>;
-}
+const BASE_URL = 'http://localhost:5000';
 
 interface DashboardData {
-  recentOrders: Order[];
+  deliveredOrders: Order[];
+  paidOrders: Order[];
+  pendingOrders: Order[];
   recentReviews: Array<{
     id: string;
     productName: string;
@@ -62,7 +55,9 @@ interface DashboardData {
 }
 
 const defaultDashboardData: DashboardData = {
-  recentOrders: [],
+  deliveredOrders: [],
+  paidOrders: [],
+  pendingOrders: [],
   recentReviews: [],
   recentActivities: [],
   favoriteProducts: [],
@@ -87,7 +82,7 @@ export default function DashboardPage() {
       setError(null);
       
       const token = getCookie('token');
-      console.log('Token:', token); // Debug log
+      console.log('Token:', token);
 
       const response = await axios.get(`${BASE_URL}/api/user/dashboard`, {
         headers: {
@@ -95,12 +90,14 @@ export default function DashboardPage() {
         }
       });
 
-      console.log('Dashboard response:', response.data); // Debug log
+      console.log('Dashboard response:', response.data);
 
       if (response.data.success) {
         const { dashboard } = response.data;
         setDashboardData({
-          recentOrders: dashboard.recentOrders || [],
+          deliveredOrders: dashboard.deliveredOrders || [],
+          paidOrders: dashboard.paidOrders || [],
+          pendingOrders: dashboard.pendingOrders || [],
           recentReviews: dashboard.recentReviews || [],
           recentActivities: dashboard.recentActivities || [],
           favoriteProducts: dashboard.favoriteProducts || [],
@@ -192,7 +189,11 @@ export default function DashboardPage() {
       <UserStats stats={dashboardData.stats} />
       
       <div className="grid gap-6 md:grid-cols-2">
-        <RecentOrders orders={dashboardData.recentOrders} />
+        <RecentOrders 
+          deliveredOrders={dashboardData.deliveredOrders}
+          paidOrders={dashboardData.paidOrders}
+          pendingOrders={dashboardData.pendingOrders}
+        />
         <RecentActivity activities={dashboardData.recentActivities} />
       </div>
       

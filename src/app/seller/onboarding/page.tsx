@@ -6,7 +6,6 @@ import { Stepper } from "@/components/ui/stepper";
 import { PersonalInfoForm } from "./components/PersonalInfoForm";
 import { DocumentUploadForm } from "./components/DocumentUploadForm";
 import { ContractSigningForm } from "./components/ContractSigningForm";
-import { VideoVerificationForm } from "./components/VideoVerificationForm";
 import { BusinessInfoForm } from "./components/BusinessInfoForm";
 import { ComplianceForm } from "./components/ComplianceForm";
 import { useRouter } from "next/navigation";
@@ -60,6 +59,8 @@ export interface SellerFormData {
     category: string;
     description: string;
     shopImage: File | null;
+    shopVideo: File | null;
+    country: string;
     paymentType: string;
     paymentDetails: string;
   };
@@ -71,11 +72,6 @@ export interface SellerFormData {
   contract: {
     signed: boolean;
     signedDocument: DocumentFile | null;
-  };
-  videoVerification: {
-    recordingBlob?: Blob;
-    completed?: boolean;
-    recordingUrl?: string;
   };
   validation?: {
     status?: 'not_started' | 'pending' | 'approved' | 'rejected';
@@ -124,10 +120,6 @@ const steps: Step[] = [
     component: ContractSigningForm,
   },
   {
-    title: "Vérification vidéo",
-    component: VideoVerificationForm,
-  },
-  {
     title: "Informations commerciales",
     component: BusinessInfoForm,
   },
@@ -158,11 +150,16 @@ export default function SellerOnboardingPage() {
       type: "individual",
       personalInfo: {},
       documents: { photos: [] },
-      videoVerification: { completed: false },
       contract: { signed: false },
       businessInfo: {
-        products: [],
-        bankDetails: {},
+        shopName: "",
+        category: "",
+        description: "",
+        shopImage: null,
+        shopVideo: null,
+        country: "",
+        paymentType: "",
+        paymentDetails: "",
       },
       compliance: {},
       validation: { status: "not_started" }

@@ -8,7 +8,8 @@ import { SellerFormData } from "../page";
 import { API_CONFIG } from "@/utils/config";
 import { getCookie } from "cookies-next";
 
-const { BASE_URL } = API_CONFIG;
+// const { BASE_URL } = API_CONFIG;
+const BASE_URL = "http://localhost:5000";
 
 interface ComplianceError {
   message: string;
@@ -96,9 +97,6 @@ export function ComplianceForm({
       if (!data.documents.proofOfAddress?.file) missingDocuments.push("Justificatif de domicile");
       if (!data.documents.taxCertificate?.file) missingDocuments.push("Attestation fiscale");
       if (!data.documents.photos?.[0]?.file) missingDocuments.push("Photo d'identité");
-      if (!data.videoVerification.recordingBlob) {
-        missingDocuments.push("Vidéo de vérification");
-      }
 
       if (missingDocuments.length > 0) {
         throw new Error(`Documents manquants : ${missingDocuments.join(', ')}`);
@@ -121,7 +119,10 @@ export function ComplianceForm({
           category: data.businessInfo.category,
           description: data.businessInfo.description,
           paymentType: data.businessInfo.paymentType,
-          paymentDetails: data.businessInfo.paymentDetails
+          paymentDetails: data.businessInfo.paymentDetails,
+          country: data.businessInfo.country,
+          shopVideo: data.businessInfo.shopVideo,
+          shopImage: data.businessInfo.shopImage
         },
         compliance: {
           termsAccepted: data.compliance.termsAccepted,
@@ -152,19 +153,16 @@ export function ComplianceForm({
       if (data.contract.signedDocument?.file instanceof File) {
         formData.append('signedDocument', data.contract.signedDocument.file);
       }
-
-      // Ajout de la vidéo
-      const videoBlob = data.videoVerification.recordingBlob;
-      if (videoBlob) {
-        try {
-          formData.append('verificationVideo', new Blob([videoBlob], { type: 'video/webm' }), 'verification.webm');
-        } catch (error) {
-          console.error('Erreur lors de l\'ajout de la vidéo:', error);
-        }
+      if (data.businessInfo.shopVideo instanceof File) {
+        formData.append('shopVideo', data.businessInfo.shopVideo);
       }
 
       // Log pour debug
-      console.log('Données envoyées:', JSON.parse(formData.get('data') as string));
+      const dataToSend = JSON.parse(formData.get('data') as string);
+      console.log('Données envoyées:', dataToSend);
+      console.log('Catégorie envoyée:', dataToSend.businessInfo.category);
+      console.log('Type de la catégorie:', typeof dataToSend.businessInfo.category);
+      console.log('Structure complète de businessInfo:', dataToSend.businessInfo);
       console.log('Documents à envoyer:', {
         idCard: data.documents.idCard?.file,
         proofOfAddress: data.documents.proofOfAddress?.file,
@@ -172,11 +170,11 @@ export function ComplianceForm({
         photos: data.documents.photos?.[0]?.file,
         shopImage: data.businessInfo.shopImage,
         signedDocument: data.contract.signedDocument?.file,
-        verificationVideo: data.videoVerification.recordingBlob ? 'Vidéo présente' : 'Pas de vidéo'
+        shopVideo: data.businessInfo.shopVideo
       });
 
       console.log("Envoi de la requête...");
-      const response = await fetch(`${BASE_URL}/api/seller/register`, {
+      const response = await fetch(`${BASE_URL}/api/seller/post/register`, {
         method: "POST",
         headers: {
           'Authorization': `Bearer ${token}`
